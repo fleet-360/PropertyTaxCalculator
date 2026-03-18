@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --version)",
+      "Bash(npm --version)",
+      "Bash(where node)",
+      "Bash(where npm)",
+      "Bash(export PATH=\"/c/Program Files/nodejs:$PATH\")",
+      "Bash(npx next build)",
+      "Bash(curl -s http://localhost:3000/admin/login)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(npm run build)",
+      "Bash(node ./node_modules/.bin/next build)",
+      "Bash(\"C:\\\\Program Files\\\\nodejs\\\\node.exe\" --version)",
+      "Bash(\"C:\\\\Program Files\\\\nodejs\\\\node.exe\" \"C:\\\\Users\\\\benny\\\\Desktop\\\\projects\\\\blogsManagerTemplate\\\\node_modules\\\\.bin\\\\next\" build)",
+      "Bash(\"C:\\\\Program Files\\\\nodejs\\\\node.exe\" \"C:\\\\Users\\\\benny\\\\Desktop\\\\projects\\\\blogsManagerTemplate\\\\node_modules\\\\next\\\\dist\\\\bin\\\\next\" build)"
+    ]
+  }
+}
