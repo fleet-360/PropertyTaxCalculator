@@ -5,6 +5,8 @@ import createCache from '@emotion/cache';
 import { CacheProvider } from '@emotion/react';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import rtlPlugin from 'stylis-plugin-rtl';
+import { prefixer } from 'stylis';
 import theme from './theme';
 
 interface ThemeRegistryProps {
@@ -13,7 +15,10 @@ interface ThemeRegistryProps {
 
 export default function ThemeRegistry({ children }: ThemeRegistryProps) {
   const [{ cache, flush }] = React.useState(() => {
-    const cache = createCache({ key: 'mui' });
+    const cache = createCache({
+      key: 'muirtl',
+      stylisPlugins: [prefixer, rtlPlugin],
+    });
     cache.compat = true;
     const prevInsert = cache.insert;
     let inserted: string[] = [];

@@ -2,6 +2,7 @@
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
+  direction: 'rtl',
   palette: {
     primary: {
       main: '#1976d2',
@@ -9,17 +10,23 @@ const theme = createTheme({
       dark: '#1565c0',
     },
     secondary: {
-      main: '#9c27b0',
-      light: '#ba68c8',
-      dark: '#7b1fa2',
+      main: '#f57c00',
+      light: '#ffb74d',
+      dark: '#e65100',
     },
     background: {
-      default: '#f5f5f5',
+      default: '#fafafa',
       paper: '#ffffff',
+    },
+    success: {
+      main: '#2e7d32',
+    },
+    error: {
+      main: '#d32f2f',
     },
   },
   typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Heebo", "Roboto", "Arial", sans-serif',
     h1: { fontWeight: 700, fontSize: '2.5rem' },
     h2: { fontWeight: 600, fontSize: '2rem' },
     h3: { fontWeight: 600, fontSize: '1.75rem' },
@@ -43,6 +50,21 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)',
+        },
+      },
+    },
+    MuiTextField: {
+      defaultProps: {
+        variant: 'outlined',
+        size: 'medium',
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          right: 14,
+          left: 'auto',
+          transformOrigin: 'top right',
         },
       },
     },

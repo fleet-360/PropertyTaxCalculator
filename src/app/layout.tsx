@@ -1,17 +1,17 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Heebo } from 'next/font/google';
 import ThemeRegistry from '@/theme/ThemeRegistry';
 import '@/styles/globals.css';
 
-const inter = Inter({
-  subsets: ['latin'],
+const heebo = Heebo({
+  subsets: ['latin', 'hebrew'],
   display: 'swap',
-  variable: '--font-inter',
+  variable: '--font-heebo',
 });
 
 export const metadata: Metadata = {
-  title: 'Blog Manager',
-  description: 'A modern blog management system built with Next.js and Material UI',
+  title: 'מחשבון ארנונה - בדוק אם אתה משלם יותר מדי',
+  description: 'מחשבון ארנונה חכם - בדוק את חיוב הארנונה שלך מול צו הארנונה העירוני וגלה אם אתה זכאי להנחה',
 };
 
 export default function RootLayout({
@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="he" dir="rtl" className={heebo.variable}>
       <body suppressHydrationWarning>
         <ThemeRegistry>
           {children}
