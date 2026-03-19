@@ -1,0 +1,2744 @@
+[
+  {
+    "cityName": "נתניה",
+    "cityNameEn": "Netanya",
+    "slug": "netanya",
+    "year": 2026,
+    "isActive": true,
+    "ordinanceUrl": "/ordinances/netanya-2026.pdf",
+    "availableZones": [
+      {
+        "code": "א",
+        "label": "אזור א"
+      },
+      {
+        "code": "ב",
+        "label": "אזור ב"
+      },
+      {
+        "code": "ג",
+        "label": "אזור ג"
+      },
+      {
+        "code": "ד",
+        "label": "אזור ד"
+      },
+      {
+        "code": "ה",
+        "label": "אזור ה"
+      }
+    ],
+    "types": [
+      {
+        "code": "residential",
+        "label": "מגורים",
+        "subtypes": [
+          {
+            "code": "type_1",
+            "label": "מגורים סוג 1",
+            "hasSizeRanges": false,
+            "zones": [
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א",
+                "rate": 94.85,
+                "propertyCode": "211"
+              },
+              {
+                "zone": "ב",
+                "zoneLabel": "אזור ב",
+                "rate": 88.49,
+                "propertyCode": "212"
+              },
+              {
+                "zone": "ג",
+                "zoneLabel": "אזור ג",
+                "rate": 79.23,
+                "propertyCode": "213"
+              },
+              {
+                "zone": "ד",
+                "zoneLabel": "אזור ד",
+                "rate": 65.51,
+                "propertyCode": "214"
+              },
+              {
+                "zone": "ה",
+                "zoneLabel": "אזור ה",
+                "rate": 48.66,
+                "propertyCode": "215"
+              }
+            ]
+          },
+          {
+            "code": "type_2",
+            "label": "מגורים סוג 2",
+            "hasSizeRanges": false,
+            "zones": [
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א",
+                "rate": 78.42,
+                "propertyCode": "221"
+              },
+              {
+                "zone": "ב",
+                "zoneLabel": "אזור ב",
+                "rate": 68.14,
+                "propertyCode": "222"
+              },
+              {
+                "zone": "ג",
+                "zoneLabel": "אזור ג",
+                "rate": 61.63,
+                "propertyCode": "223"
+              },
+              {
+                "zone": "ד",
+                "zoneLabel": "אזור ד",
+                "rate": 56.44,
+                "propertyCode": "224"
+              },
+              {
+                "zone": "ה",
+                "zoneLabel": "אזור ה",
+                "rate": 44.93,
+                "propertyCode": "225"
+              }
+            ]
+          },
+          {
+            "code": "type_3",
+            "label": "מגורים סוג 3",
+            "hasSizeRanges": false,
+            "zones": [
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א",
+                "rate": 56.15,
+                "propertyCode": "231"
+              },
+              {
+                "zone": "ב",
+                "zoneLabel": "אזור ב",
+                "rate": 51.5,
+                "propertyCode": "232"
+              },
+              {
+                "zone": "ג",
+                "zoneLabel": "אזור ג",
+                "rate": 47.71,
+                "propertyCode": "233"
+              },
+              {
+                "zone": "ד",
+                "zoneLabel": "אזור ד",
+                "rate": 41.05,
+                "propertyCode": "234"
+              },
+              {
+                "zone": "ה",
+                "zoneLabel": "אזור ה",
+                "rate": 41.05,
+                "propertyCode": "235"
+              }
+            ]
+          },
+          {
+            "code": "special",
+            "label": "דירות מיוחדות",
+            "hasSizeRanges": false,
+            "zones": [
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א",
+                "rate": 108.46
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "code": "business",
+        "label": "עסקים",
+        "subtypes": [
+          {
+            "code": "commerce",
+            "label": "מסחר, משרדים ושירותים",
+            "hasSizeRanges": true,
+            "zones": [
+              {
+                "zone": "1",
+                "zoneLabel": "אזור 1",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 15,
+                    "rate": 374.34,
+                    "propertyCode": "311"
+                  },
+                  {
+                    "min": 16,
+                    "max": 50,
+                    "rate": 355.71,
+                    "propertyCode": "311"
+                  },
+                  {
+                    "min": 51,
+                    "max": 100,
+                    "rate": 286.06,
+                    "propertyCode": "311"
+                  },
+                  {
+                    "min": 101,
+                    "max": 360,
+                    "rate": 188.95,
+                    "propertyCode": "311"
+                  },
+                  {
+                    "min": 361,
+                    "max": 1000,
+                    "rate": 136.18,
+                    "propertyCode": "311"
+                  },
+                  {
+                    "min": 1001,
+                    "max": 15000,
+                    "rate": 149.24,
+                    "propertyCode": "311"
+                  },
+                  {
+                    "min": 15001,
+                    "max": -1,
+                    "rate": 89.72,
+                    "propertyCode": "301"
+                  }
+                ]
+              },
+              {
+                "zone": "2",
+                "zoneLabel": "אזור 2",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 15,
+                    "rate": 225.11,
+                    "propertyCode": "312"
+                  },
+                  {
+                    "min": 16,
+                    "max": 50,
+                    "rate": 215.17,
+                    "propertyCode": "312"
+                  },
+                  {
+                    "min": 51,
+                    "max": 100,
+                    "rate": 170.38,
+                    "propertyCode": "312"
+                  },
+                  {
+                    "min": 101,
+                    "max": 360,
+                    "rate": 124.37,
+                    "propertyCode": "312"
+                  },
+                  {
+                    "min": 436,
+                    "max": 1000,
+                    "rate": 103.22,
+                    "propertyCode": "322"
+                  },
+                  {
+                    "min": 1001,
+                    "max": -1,
+                    "rate": 111.92,
+                    "propertyCode": "312"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "code": "industry",
+        "label": "תעשייה ומלאכה",
+        "subtypes": [
+          {
+            "code": "standard_401",
+            "label": "תעשייה ומלאכה",
+            "hasSizeRanges": true,
+            "zones": [
+              {
+                "zone": "all",
+                "zoneLabel": "בכל העיר",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 3500,
+                    "rate": 180.05,
+                    "propertyCode": "401"
+                  },
+                  {
+                    "min": 3501,
+                    "max": 5000,
+                    "rate": 132.88,
+                    "propertyCode": "401"
+                  },
+                  {
+                    "min": 5001,
+                    "max": -1,
+                    "rate": 103.99,
+                    "propertyCode": "401"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "code": "tech_414",
+            "label": "תעשייה עתירת ידע",
+            "hasSizeRanges": true,
+            "zones": [
+              {
+                "zone": "all",
+                "zoneLabel": "בכל העיר",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 3500,
+                    "rate": 164.68,
+                    "propertyCode": "414"
+                  },
+                  {
+                    "min": 3501,
+                    "max": 5000,
+                    "rate": 104.73,
+                    "propertyCode": "414"
+                  },
+                  {
+                    "min": 5001,
+                    "max": -1,
+                    "rate": 80.83,
+                    "propertyCode": "414"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "exemptions": [
+      {
+        "sectionCode": "1",
+        "sectionLabel": "אזרח ותיק",
+        "subSections": [
+          {
+            "code": "senior_25",
+            "description": "אזרח ותיק שאינו מקבל גמלת הבטחת הכנסה",
+            "discountPercent": 25,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודת זהות"
+            ]
+          },
+          {
+            "code": "senior_30",
+            "description": "אזרח ותיק המקבל גמלת הבטחת הכנסה",
+            "discountPercent": 30,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודת זהות",
+              "אישור ביטוח לאומי"
+            ]
+          },
+          {
+            "code": "senior_100",
+            "description": "אזרח ותיק המקבל גמלת סיעוד מלאה",
+            "discountPercent": 100,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "2",
+        "sectionLabel": "נכה",
+        "subSections": [
+          {
+            "code": "disabled_40",
+            "description": "נכה בדרגת נכות 75% ומעלה",
+            "discountPercent": 40,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          },
+          {
+            "code": "disabled_80",
+            "description": "נכה המקבל קצבת נכות מלאה + השלמת הכנסה",
+            "discountPercent": 80,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          },
+          {
+            "code": "disabled_100",
+            "description": "נכה הזכאי לקצבה מיוחדת לנכה",
+            "discountPercent": 100,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "3",
+        "sectionLabel": "מקבל תגמולים",
+        "subSections": [
+          {
+            "code": "benefits_66",
+            "description": "מקבל תגמולים לפי חוק נכי רדיפות הנאצים",
+            "discountPercent": 66,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור משרד האוצר"
+            ]
+          },
+          {
+            "code": "benefits_25",
+            "description": "מקבל תגמולים לפי חוקי השיקום",
+            "discountPercent": 25,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור משרד הביטחון"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "4",
+        "sectionLabel": "הורה יחיד",
+        "subSections": [
+          {
+            "code": "single_parent_20",
+            "description": "הורה יחיד",
+            "discountPercent": 20,
+            "restrictions": {},
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "5",
+        "sectionLabel": "עולה חדש",
+        "subSections": [
+          {
+            "code": "immigrant_90",
+            "description": "עולה חדש - 12 חודשים ראשונים",
+            "discountPercent": 90,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודת עולה"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "6",
+        "sectionLabel": "נכס ריק",
+        "subSections": [
+          {
+            "code": "empty_full",
+            "description": "נכס ריק מכל חפץ ואדם ואינו בשימוש",
+            "discountPercent": 100,
+            "restrictions": {},
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תצהיר"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "7",
+        "sectionLabel": "הכנסה נמוכה",
+        "subSections": [
+          {
+            "code": "income_80_small",
+            "description": "הכנסה נמוכה - עד 4 נפשות",
+            "discountPercent": 80,
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_80_large",
+            "description": "הכנסה נמוכה - 5 נפשות ומעלה",
+            "discountPercent": 80,
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_60_small",
+            "description": "הכנסה נמוכה-בינונית - עד 4 נפשות",
+            "discountPercent": 60,
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_60_large",
+            "description": "הכנסה נמוכה-בינונית - 5 נפשות ומעלה",
+            "discountPercent": 60,
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_40_small",
+            "description": "הכנסה בינונית - עד 4 נפשות",
+            "discountPercent": 40,
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_40_large",
+            "description": "הכנסה בינונית - 5 נפשות ומעלה",
+            "discountPercent": 40,
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "8",
+        "sectionLabel": "משפחה ברוכת ילדים",
+        "subSections": [
+          {
+            "code": "large_family",
+            "description": "משפחה עם 4 ילדים ומעלה עד גיל 18",
+            "discountPercent": 20,
+            "restrictions": {
+              "minChildren": 4
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודות זהות",
+              "אישורי לידה"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "cityName": "ראשון לציון",
+    "cityNameEn": "Rishon LeZion",
+    "slug": "rishon-lezion",
+    "year": 2026,
+    "isActive": true,
+    "ordinanceUrl": "/ordinances/rishon-lezion-2026.pdf",
+    "availableZones": [
+      {
+        "code": "אא",
+        "label": "אזור אא'"
+      },
+      {
+        "code": "א",
+        "label": "אזור א'"
+      },
+      {
+        "code": "ב",
+        "label": "אזור ב'"
+      },
+      {
+        "code": "ג",
+        "label": "אזור ג'"
+      }
+    ],
+    "types": [
+      {
+        "code": "residential",
+        "label": "מגורים",
+        "subtypes": [
+          {
+            "code": "apartments",
+            "label": "דירות מגורים",
+            "hasSizeRanges": false,
+            "zones": [
+              {
+                "zone": "אא",
+                "zoneLabel": "אזור אא'",
+                "rate": 77.1
+              },
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א'",
+                "rate": 69.69
+              },
+              {
+                "zone": "ב",
+                "zoneLabel": "אזור ב'",
+                "rate": 47.92
+              },
+              {
+                "zone": "ג",
+                "zoneLabel": "אזור ג'",
+                "rate": 42.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "code": "business",
+        "label": "עסקים",
+        "subtypes": [
+          {
+            "code": "retail_2_1",
+            "label": "מסחר ושירותים (סעיף 2.1)",
+            "hasSizeRanges": true,
+            "zones": [
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 150,
+                    "rate": 320.27
+                  },
+                  {
+                    "min": 151,
+                    "max": -1,
+                    "rate": 271.73
+                  }
+                ]
+              },
+              {
+                "zone": "ב",
+                "zoneLabel": "אזור ב",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 150,
+                    "rate": 198.57
+                  },
+                  {
+                    "min": 151,
+                    "max": -1,
+                    "rate": 156.14
+                  }
+                ]
+              },
+              {
+                "zone": "ג",
+                "zoneLabel": "אזור ג",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 150,
+                    "rate": 145.3
+                  },
+                  {
+                    "min": 151,
+                    "max": -1,
+                    "rate": 118.7
+                  }
+                ]
+              },
+              {
+                "zone": "ד",
+                "zoneLabel": "אזור ד",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 150,
+                    "rate": 120.63
+                  },
+                  {
+                    "min": 151,
+                    "max": -1,
+                    "rate": 97.82
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "code": "offices_2_2",
+            "label": "משרדים (סעיף 2.2)",
+            "hasSizeRanges": true,
+            "zones": [
+              {
+                "zone": "ג",
+                "zoneLabel": "אזור ג בלבד",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 300,
+                    "rate": 265.5
+                  },
+                  {
+                    "min": 301,
+                    "max": 5000,
+                    "rate": 230.0
+                  },
+                  {
+                    "min": 5001,
+                    "max": -1,
+                    "rate": 200.0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "code": "supermarket_2_2",
+            "label": "סופרמרקטים / בתי ספר לנהיגה (סעיף 2.2)",
+            "hasSizeRanges": false,
+            "zones": [
+              {
+                "zone": "all",
+                "zoneLabel": "בכל העיר",
+                "rate": 402.53
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "code": "industry",
+        "label": "תעשייה ומלאכה",
+        "subtypes": [
+          {
+            "code": "standard",
+            "label": "תעשייה",
+            "hasSizeRanges": true,
+            "zones": [
+              {
+                "zone": "all",
+                "zoneLabel": "בכל העיר",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 3500,
+                    "rate": 145.0
+                  },
+                  {
+                    "min": 3501,
+                    "max": 5000,
+                    "rate": 120.0
+                  },
+                  {
+                    "min": 5001,
+                    "max": -1,
+                    "rate": 100.0
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "exemptions": [
+      {
+        "sectionCode": "1",
+        "sectionLabel": "אזרח ותיק",
+        "subSections": [
+          {
+            "code": "senior_25",
+            "description": "אזרח ותיק שאינו מקבל גמלת הבטחת הכנסה",
+            "discountPercent": 25,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודת זהות"
+            ]
+          },
+          {
+            "code": "senior_30",
+            "description": "אזרח ותיק המקבל גמלת הבטחת הכנסה",
+            "discountPercent": 30,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודת זהות",
+              "אישור ביטוח לאומי"
+            ]
+          },
+          {
+            "code": "senior_100",
+            "description": "אזרח ותיק המקבל גמלת סיעוד מלאה",
+            "discountPercent": 100,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "2",
+        "sectionLabel": "נכה",
+        "subSections": [
+          {
+            "code": "disabled_40",
+            "description": "נכה בדרגת נכות 75% ומעלה",
+            "discountPercent": 40,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          },
+          {
+            "code": "disabled_80",
+            "description": "נכה המקבל קצבת נכות מלאה + השלמת הכנסה",
+            "discountPercent": 80,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          },
+          {
+            "code": "disabled_100",
+            "description": "נכה הזכאי לקצבה מיוחדת לנכה",
+            "discountPercent": 100,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "3",
+        "sectionLabel": "מקבל תגמולים",
+        "subSections": [
+          {
+            "code": "benefits_66",
+            "description": "מקבל תגמולים לפי חוק נכי רדיפות הנאצים",
+            "discountPercent": 66,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור משרד האוצר"
+            ]
+          },
+          {
+            "code": "benefits_25",
+            "description": "מקבל תגמולים לפי חוקי השיקום",
+            "discountPercent": 25,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור משרד הביטחון"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "4",
+        "sectionLabel": "הורה יחיד",
+        "subSections": [
+          {
+            "code": "single_parent_20",
+            "description": "הורה יחיד",
+            "discountPercent": 20,
+            "restrictions": {},
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "5",
+        "sectionLabel": "עולה חדש",
+        "subSections": [
+          {
+            "code": "immigrant_90",
+            "description": "עולה חדש - 12 חודשים ראשונים",
+            "discountPercent": 90,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודת עולה"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "6",
+        "sectionLabel": "נכס ריק",
+        "subSections": [
+          {
+            "code": "empty_full",
+            "description": "נכס ריק מכל חפץ ואדם ואינו בשימוש",
+            "discountPercent": 100,
+            "restrictions": {},
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תצהיר"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "7",
+        "sectionLabel": "הכנסה נמוכה",
+        "subSections": [
+          {
+            "code": "income_80_small",
+            "description": "הכנסה נמוכה - עד 4 נפשות",
+            "discountPercent": 80,
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_80_large",
+            "description": "הכנסה נמוכה - 5 נפשות ומעלה",
+            "discountPercent": 80,
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_60_small",
+            "description": "הכנסה נמוכה-בינונית - עד 4 נפשות",
+            "discountPercent": 60,
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_60_large",
+            "description": "הכנסה נמוכה-בינונית - 5 נפשות ומעלה",
+            "discountPercent": 60,
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_40_small",
+            "description": "הכנסה בינונית - עד 4 נפשות",
+            "discountPercent": 40,
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_40_large",
+            "description": "הכנסה בינונית - 5 נפשות ומעלה",
+            "discountPercent": 40,
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "8",
+        "sectionLabel": "משפחה ברוכת ילדים",
+        "subSections": [
+          {
+            "code": "large_family",
+            "description": "משפחה עם 4 ילדים ומעלה עד גיל 18",
+            "discountPercent": 20,
+            "restrictions": {
+              "minChildren": 4
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודות זהות",
+              "אישורי לידה"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "cityName": "אשדוד",
+    "cityNameEn": "Ashdod",
+    "slug": "ashdod",
+    "year": 2026,
+    "isActive": true,
+    "ordinanceUrl": "/ordinances/ashdod-2026.pdf",
+    "availableZones": [
+      {
+        "code": "א",
+        "label": "אזור א"
+      },
+      {
+        "code": "ב",
+        "label": "אזור ב"
+      },
+      {
+        "code": "ג",
+        "label": "אזור ג"
+      },
+      {
+        "code": "ד",
+        "label": "אזור ד"
+      },
+      {
+        "code": "ה",
+        "label": "אזור ה"
+      }
+    ],
+    "types": [
+      {
+        "code": "residential",
+        "label": "מגורים",
+        "subtypes": [
+          {
+            "code": "apartments",
+            "label": "דירות",
+            "hasSizeRanges": true,
+            "zones": [
+              {
+                "zone": "all",
+                "zoneLabel": "בכל העיר",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 75,
+                    "rate": 43.62
+                  },
+                  {
+                    "min": 76,
+                    "max": -1,
+                    "rate": 65.19
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "code": "business",
+        "label": "מסחר ומשרדים",
+        "subtypes": [
+          {
+            "code": "retail",
+            "label": "חנויות ומסחר",
+            "hasSizeRanges": true,
+            "zones": [
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 20,
+                    "rate": 230.91,
+                    "propertyCode": "301"
+                  },
+                  {
+                    "min": 21,
+                    "max": 40,
+                    "rate": 213.93,
+                    "propertyCode": "302"
+                  },
+                  {
+                    "min": 41,
+                    "max": 60,
+                    "rate": 206.46,
+                    "propertyCode": "303"
+                  },
+                  {
+                    "min": 61,
+                    "max": -1,
+                    "rate": 198.4,
+                    "propertyCode": "309"
+                  }
+                ]
+              },
+              {
+                "zone": "ב",
+                "zoneLabel": "אזור ב",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 20,
+                    "rate": 213.93,
+                    "propertyCode": "301"
+                  },
+                  {
+                    "min": 21,
+                    "max": 40,
+                    "rate": 198.4,
+                    "propertyCode": "302"
+                  },
+                  {
+                    "min": 41,
+                    "max": 60,
+                    "rate": 190.76,
+                    "propertyCode": "303"
+                  },
+                  {
+                    "min": 61,
+                    "max": -1,
+                    "rate": 183.19,
+                    "propertyCode": "309"
+                  }
+                ]
+              },
+              {
+                "zone": "ג",
+                "zoneLabel": "אזור ג",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 20,
+                    "rate": 206.46,
+                    "propertyCode": "301"
+                  },
+                  {
+                    "min": 21,
+                    "max": 40,
+                    "rate": 190.76,
+                    "propertyCode": "302"
+                  },
+                  {
+                    "min": 41,
+                    "max": 60,
+                    "rate": 183.19,
+                    "propertyCode": "303"
+                  },
+                  {
+                    "min": 61,
+                    "max": -1,
+                    "rate": 175.82,
+                    "propertyCode": "309"
+                  }
+                ]
+              },
+              {
+                "zone": "ד",
+                "zoneLabel": "אזור ד",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 20,
+                    "rate": 198.4,
+                    "propertyCode": "301"
+                  },
+                  {
+                    "min": 21,
+                    "max": 40,
+                    "rate": 183.19,
+                    "propertyCode": "302"
+                  },
+                  {
+                    "min": 41,
+                    "max": 60,
+                    "rate": 175.82,
+                    "propertyCode": "303"
+                  },
+                  {
+                    "min": 61,
+                    "max": -1,
+                    "rate": 168.47,
+                    "propertyCode": "309"
+                  }
+                ]
+              },
+              {
+                "zone": "ה",
+                "zoneLabel": "אזור ה",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 20,
+                    "rate": 193.89,
+                    "propertyCode": "301"
+                  },
+                  {
+                    "min": 21,
+                    "max": 40,
+                    "rate": 179.39,
+                    "propertyCode": "302"
+                  },
+                  {
+                    "min": 41,
+                    "max": 60,
+                    "rate": 172.47,
+                    "propertyCode": "303"
+                  },
+                  {
+                    "min": 61,
+                    "max": -1,
+                    "rate": 165.13,
+                    "propertyCode": "309"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "code": "industry",
+        "label": "תעשייה",
+        "subtypes": [
+          {
+            "code": "standard_401",
+            "label": "תעשייה ומלאכה",
+            "hasSizeRanges": true,
+            "zones": [
+              {
+                "zone": "all",
+                "zoneLabel": "בכל העיר",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 200,
+                    "rate": 135.0,
+                    "propertyCode": "401"
+                  },
+                  {
+                    "min": 201,
+                    "max": 10000,
+                    "rate": 110.0,
+                    "propertyCode": "401"
+                  },
+                  {
+                    "min": 10001,
+                    "max": -1,
+                    "rate": 90.0,
+                    "propertyCode": "402"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "exemptions": [
+      {
+        "sectionCode": "1",
+        "sectionLabel": "אזרח ותיק",
+        "subSections": [
+          {
+            "code": "senior_25",
+            "description": "אזרח ותיק שאינו מקבל גמלת הבטחת הכנסה",
+            "discountPercent": 25,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודת זהות"
+            ]
+          },
+          {
+            "code": "senior_30",
+            "description": "אזרח ותיק המקבל גמלת הבטחת הכנסה",
+            "discountPercent": 30,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודת זהות",
+              "אישור ביטוח לאומי"
+            ]
+          },
+          {
+            "code": "senior_100",
+            "description": "אזרח ותיק המקבל גמלת סיעוד מלאה",
+            "discountPercent": 100,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "2",
+        "sectionLabel": "נכה",
+        "subSections": [
+          {
+            "code": "disabled_40",
+            "description": "נכה בדרגת נכות 75% ומעלה",
+            "discountPercent": 40,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          },
+          {
+            "code": "disabled_80",
+            "description": "נכה המקבל קצבת נכות מלאה + השלמת הכנסה",
+            "discountPercent": 80,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          },
+          {
+            "code": "disabled_100",
+            "description": "נכה הזכאי לקצבה מיוחדת לנכה",
+            "discountPercent": 100,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "3",
+        "sectionLabel": "מקבל תגמולים",
+        "subSections": [
+          {
+            "code": "benefits_66",
+            "description": "מקבל תגמולים לפי חוק נכי רדיפות הנאצים",
+            "discountPercent": 66,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור משרד האוצר"
+            ]
+          },
+          {
+            "code": "benefits_25",
+            "description": "מקבל תגמולים לפי חוקי השיקום",
+            "discountPercent": 25,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור משרד הביטחון"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "4",
+        "sectionLabel": "הורה יחיד",
+        "subSections": [
+          {
+            "code": "single_parent_20",
+            "description": "הורה יחיד",
+            "discountPercent": 20,
+            "restrictions": {},
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "5",
+        "sectionLabel": "עולה חדש",
+        "subSections": [
+          {
+            "code": "immigrant_90",
+            "description": "עולה חדש - 12 חודשים ראשונים",
+            "discountPercent": 90,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודת עולה"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "6",
+        "sectionLabel": "נכס ריק",
+        "subSections": [
+          {
+            "code": "empty_full",
+            "description": "נכס ריק מכל חפץ ואדם ואינו בשימוש",
+            "discountPercent": 100,
+            "restrictions": {},
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תצהיר"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "7",
+        "sectionLabel": "הכנסה נמוכה",
+        "subSections": [
+          {
+            "code": "income_80_small",
+            "description": "הכנסה נמוכה - עד 4 נפשות",
+            "discountPercent": 80,
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_80_large",
+            "description": "הכנסה נמוכה - 5 נפשות ומעלה",
+            "discountPercent": 80,
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_60_small",
+            "description": "הכנסה נמוכה-בינונית - עד 4 נפשות",
+            "discountPercent": 60,
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_60_large",
+            "description": "הכנסה נמוכה-בינונית - 5 נפשות ומעלה",
+            "discountPercent": 60,
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_40_small",
+            "description": "הכנסה בינונית - עד 4 נפשות",
+            "discountPercent": 40,
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_40_large",
+            "description": "הכנסה בינונית - 5 נפשות ומעלה",
+            "discountPercent": 40,
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "8",
+        "sectionLabel": "משפחה ברוכת ילדים",
+        "subSections": [
+          {
+            "code": "large_family",
+            "description": "משפחה עם 4 ילדים ומעלה עד גיל 18",
+            "discountPercent": 20,
+            "restrictions": {
+              "minChildren": 4
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודות זהות",
+              "אישורי לידה"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "cityName": "הרצליה",
+    "cityNameEn": "Herzliya",
+    "slug": "herzliya",
+    "year": 2026,
+    "isActive": true,
+    "ordinanceUrl": "/ordinances/herzliya-2026.pdf",
+    "availableZones": [
+      {
+        "code": "א",
+        "label": "אזור א"
+      },
+      {
+        "code": "ב",
+        "label": "אזור ב"
+      },
+      {
+        "code": "ג",
+        "label": "אזור ג"
+      },
+      {
+        "code": "ד",
+        "label": "אזור ד"
+      },
+      {
+        "code": "ה",
+        "label": "אזור ה"
+      },
+      {
+        "code": "ו",
+        "label": "אזור ו"
+      },
+      {
+        "code": "ז",
+        "label": "אזור ז"
+      }
+    ],
+    "types": [
+      {
+        "code": "residential",
+        "label": "מגורים",
+        "subtypes": [
+          {
+            "code": "apartments",
+            "label": "דירות מגורים",
+            "hasSizeRanges": false,
+            "zones": [
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א",
+                "rate": 142.31
+              },
+              {
+                "zone": "ב",
+                "zoneLabel": "אזור ב",
+                "rate": 101.57
+              },
+              {
+                "zone": "ג",
+                "zoneLabel": "אזור ג",
+                "rate": 92.35
+              },
+              {
+                "zone": "ד",
+                "zoneLabel": "אזור ד",
+                "rate": 76.66
+              },
+              {
+                "zone": "ה",
+                "zoneLabel": "אזור ה",
+                "rate": 76.66
+              },
+              {
+                "zone": "ו",
+                "zoneLabel": "אזור ו",
+                "rate": 57.25
+              },
+              {
+                "zone": "ז",
+                "zoneLabel": "אזור ז",
+                "rate": 42.63
+              }
+            ]
+          },
+          {
+            "code": "mixed_use",
+            "label": "דירה המשמשת גם לעסק",
+            "hasSizeRanges": false,
+            "zones": [
+              {
+                "zone": "all",
+                "zoneLabel": "בכל העיר",
+                "rate": 138.72
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "code": "business",
+        "label": "עסקים",
+        "subtypes": [
+          {
+            "code": "retail_2_1",
+            "label": "חנויות ומסחר (סעיף 2.1)",
+            "hasSizeRanges": true,
+            "zones": [
+              {
+                "zone": "all",
+                "zoneLabel": "בכל העיר",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 1000,
+                    "rate": 389.09
+                  },
+                  {
+                    "min": 1001,
+                    "max": -1,
+                    "rate": 319.69
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "code": "special_2_2",
+            "label": "עסקים מיוחדים (סעיף 2.2)",
+            "hasSizeRanges": false,
+            "zones": [
+              {
+                "zone": "all",
+                "zoneLabel": "בכל העיר",
+                "rate": 148.63
+              }
+            ]
+          },
+          {
+            "code": "offices_2_4",
+            "label": "משרדים (סעיף 2.4)",
+            "hasSizeRanges": true,
+            "zones": [
+              {
+                "zone": "all",
+                "zoneLabel": "בכל העיר",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 5000,
+                    "rate": 389.09
+                  },
+                  {
+                    "min": 5001,
+                    "max": 10000,
+                    "rate": 373.64
+                  },
+                  {
+                    "min": 10001,
+                    "max": -1,
+                    "rate": 301.5
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "code": "industry",
+        "label": "תעשייה ומלאכה",
+        "subtypes": [
+          {
+            "code": "standard",
+            "label": "תעשייה",
+            "hasSizeRanges": true,
+            "zones": [
+              {
+                "zone": "all",
+                "zoneLabel": "בכל העיר",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 5000,
+                    "rate": 158.9
+                  },
+                  {
+                    "min": 5001,
+                    "max": -1,
+                    "rate": 146.21
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "exemptions": [
+      {
+        "sectionCode": "1",
+        "sectionLabel": "אזרח ותיק",
+        "subSections": [
+          {
+            "code": "senior_25",
+            "description": "אזרח ותיק שאינו מקבל גמלת הבטחת הכנסה",
+            "discountPercent": 25,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודת זהות"
+            ]
+          },
+          {
+            "code": "senior_30",
+            "description": "אזרח ותיק המקבל גמלת הבטחת הכנסה",
+            "discountPercent": 30,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודת זהות",
+              "אישור ביטוח לאומי"
+            ]
+          },
+          {
+            "code": "senior_100",
+            "description": "אזרח ותיק המקבל גמלת סיעוד מלאה",
+            "discountPercent": 100,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "2",
+        "sectionLabel": "נכה",
+        "subSections": [
+          {
+            "code": "disabled_40",
+            "description": "נכה בדרגת נכות 75% ומעלה",
+            "discountPercent": 40,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          },
+          {
+            "code": "disabled_80",
+            "description": "נכה המקבל קצבת נכות מלאה + השלמת הכנסה",
+            "discountPercent": 80,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          },
+          {
+            "code": "disabled_100",
+            "description": "נכה הזכאי לקצבה מיוחדת לנכה",
+            "discountPercent": 100,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "3",
+        "sectionLabel": "מקבל תגמולים",
+        "subSections": [
+          {
+            "code": "benefits_66",
+            "description": "מקבל תגמולים לפי חוק נכי רדיפות הנאצים",
+            "discountPercent": 66,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור משרד האוצר"
+            ]
+          },
+          {
+            "code": "benefits_25",
+            "description": "מקבל תגמולים לפי חוקי השיקום",
+            "discountPercent": 25,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור משרד הביטחון"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "4",
+        "sectionLabel": "הורה יחיד",
+        "subSections": [
+          {
+            "code": "single_parent_20",
+            "description": "הורה יחיד",
+            "discountPercent": 20,
+            "restrictions": {},
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "5",
+        "sectionLabel": "עולה חדש",
+        "subSections": [
+          {
+            "code": "immigrant_90",
+            "description": "עולה חדש - 12 חודשים ראשונים",
+            "discountPercent": 90,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודת עולה"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "6",
+        "sectionLabel": "נכס ריק",
+        "subSections": [
+          {
+            "code": "empty_full",
+            "description": "נכס ריק מכל חפץ ואדם ואינו בשימוש",
+            "discountPercent": 100,
+            "restrictions": {},
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תצהיר"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "7",
+        "sectionLabel": "הכנסה נמוכה",
+        "subSections": [
+          {
+            "code": "income_80_small",
+            "description": "הכנסה נמוכה - עד 4 נפשות",
+            "discountPercent": 80,
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_80_large",
+            "description": "הכנסה נמוכה - 5 נפשות ומעלה",
+            "discountPercent": 80,
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_60_small",
+            "description": "הכנסה נמוכה-בינונית - עד 4 נפשות",
+            "discountPercent": 60,
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_60_large",
+            "description": "הכנסה נמוכה-בינונית - 5 נפשות ומעלה",
+            "discountPercent": 60,
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_40_small",
+            "description": "הכנסה בינונית - עד 4 נפשות",
+            "discountPercent": 40,
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_40_large",
+            "description": "הכנסה בינונית - 5 נפשות ומעלה",
+            "discountPercent": 40,
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "8",
+        "sectionLabel": "משפחה ברוכת ילדים",
+        "subSections": [
+          {
+            "code": "large_family",
+            "description": "משפחה עם 4 ילדים ומעלה עד גיל 18",
+            "discountPercent": 20,
+            "restrictions": {
+              "minChildren": 4
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודות זהות",
+              "אישורי לידה"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "cityName": "פתח תקווה",
+    "cityNameEn": "Petah Tikva",
+    "slug": "petah-tikva",
+    "year": 2026,
+    "isActive": true,
+    "ordinanceUrl": "/ordinances/petah-tikva-2026.pdf",
+    "availableZones": [
+      {
+        "code": "אא",
+        "label": "אזור אא"
+      },
+      {
+        "code": "א",
+        "label": "אזור א"
+      },
+      {
+        "code": "ב",
+        "label": "אזור ב"
+      },
+      {
+        "code": "ג",
+        "label": "אזור ג"
+      },
+      {
+        "code": "ד",
+        "label": "אזור ד"
+      }
+    ],
+    "types": [
+      {
+        "code": "residential",
+        "label": "מגורים",
+        "subtypes": [
+          {
+            "code": "type_a",
+            "label": "מגורים סוג א",
+            "hasSizeRanges": false,
+            "zones": [
+              {
+                "zone": "אא",
+                "zoneLabel": "אזור אא",
+                "rate": 84.96
+              },
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א",
+                "rate": 79.2
+              },
+              {
+                "zone": "ב",
+                "zoneLabel": "אזור ב",
+                "rate": 67.51
+              },
+              {
+                "zone": "ג",
+                "zoneLabel": "אזור ג",
+                "rate": 56.15
+              },
+              {
+                "zone": "ד",
+                "zoneLabel": "אזור ד",
+                "rate": 47.8
+              }
+            ]
+          },
+          {
+            "code": "type_b",
+            "label": "מגורים סוג ב",
+            "hasSizeRanges": false,
+            "zones": [
+              {
+                "zone": "אא",
+                "zoneLabel": "אזור אא",
+                "rate": 74.58
+              },
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א",
+                "rate": 69.5
+              },
+              {
+                "zone": "ב",
+                "zoneLabel": "אזור ב",
+                "rate": 59.3
+              },
+              {
+                "zone": "ג",
+                "zoneLabel": "אזור ג",
+                "rate": 49.3
+              },
+              {
+                "zone": "ד",
+                "zoneLabel": "אזור ד",
+                "rate": 41.95
+              }
+            ]
+          },
+          {
+            "code": "type_c",
+            "label": "מגורים סוג ג",
+            "hasSizeRanges": false,
+            "zones": [
+              {
+                "zone": "אא",
+                "zoneLabel": "אזור אא",
+                "rate": 48.54
+              },
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א",
+                "rate": 45.3
+              },
+              {
+                "zone": "ב",
+                "zoneLabel": "אזור ב",
+                "rate": 38.63
+              },
+              {
+                "zone": "ג",
+                "zoneLabel": "אזור ג",
+                "rate": 32.1
+              },
+              {
+                "zone": "ד",
+                "zoneLabel": "אזור ד",
+                "rate": 27.3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "code": "business",
+        "label": "עסקים",
+        "subtypes": [
+          {
+            "code": "retail_2_2_3",
+            "label": "חנויות ומסחר (סעיף 2.2.3)",
+            "hasSizeRanges": true,
+            "zones": [
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 50,
+                    "rate": 427.96
+                  },
+                  {
+                    "min": 51,
+                    "max": 100,
+                    "rate": 380.0
+                  },
+                  {
+                    "min": 101,
+                    "max": 200,
+                    "rate": 340.0
+                  },
+                  {
+                    "min": 201,
+                    "max": 299,
+                    "rate": 300.0
+                  },
+                  {
+                    "min": 300,
+                    "max": 25000,
+                    "rate": 260.0
+                  },
+                  {
+                    "min": 25001,
+                    "max": -1,
+                    "rate": 220.0
+                  }
+                ]
+              },
+              {
+                "zone": "ב",
+                "zoneLabel": "אזור ב",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 50,
+                    "rate": 349.89
+                  },
+                  {
+                    "min": 51,
+                    "max": 100,
+                    "rate": 310.0
+                  },
+                  {
+                    "min": 101,
+                    "max": 200,
+                    "rate": 278.0
+                  },
+                  {
+                    "min": 201,
+                    "max": 299,
+                    "rate": 245.0
+                  },
+                  {
+                    "min": 300,
+                    "max": 25000,
+                    "rate": 213.0
+                  },
+                  {
+                    "min": 25001,
+                    "max": -1,
+                    "rate": 180.0
+                  }
+                ]
+              },
+              {
+                "zone": "ג",
+                "zoneLabel": "אזור ג",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 50,
+                    "rate": 263.87
+                  },
+                  {
+                    "min": 51,
+                    "max": 100,
+                    "rate": 234.0
+                  },
+                  {
+                    "min": 101,
+                    "max": 200,
+                    "rate": 210.0
+                  },
+                  {
+                    "min": 201,
+                    "max": 299,
+                    "rate": 185.0
+                  },
+                  {
+                    "min": 300,
+                    "max": 25000,
+                    "rate": 160.0
+                  },
+                  {
+                    "min": 25001,
+                    "max": -1,
+                    "rate": 135.0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "code": "offices_2_2_1",
+            "label": "משרדים (סעיף 2.2.1)",
+            "hasSizeRanges": true,
+            "zones": [
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 100,
+                    "rate": 400.0
+                  },
+                  {
+                    "min": 101,
+                    "max": 500,
+                    "rate": 350.0
+                  },
+                  {
+                    "min": 501,
+                    "max": -1,
+                    "rate": 300.0
+                  }
+                ]
+              },
+              {
+                "zone": "ב",
+                "zoneLabel": "אזור ב",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 100,
+                    "rate": 330.0
+                  },
+                  {
+                    "min": 101,
+                    "max": 500,
+                    "rate": 290.0
+                  },
+                  {
+                    "min": 501,
+                    "max": -1,
+                    "rate": 245.0
+                  }
+                ]
+              },
+              {
+                "zone": "ג",
+                "zoneLabel": "אזור ג",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 100,
+                    "rate": 250.0
+                  },
+                  {
+                    "min": 101,
+                    "max": 500,
+                    "rate": 218.0
+                  },
+                  {
+                    "min": 501,
+                    "max": -1,
+                    "rate": 185.0
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "code": "industry",
+        "label": "תעשייה ומלאכה",
+        "subtypes": [
+          {
+            "code": "standard",
+            "label": "תעשייה",
+            "hasSizeRanges": true,
+            "zones": [
+              {
+                "zone": "all",
+                "zoneLabel": "בכל העיר",
+                "sizeRanges": [
+                  {
+                    "min": 0,
+                    "max": 5000,
+                    "rate": 155.0
+                  },
+                  {
+                    "min": 5001,
+                    "max": 10000,
+                    "rate": 135.0
+                  },
+                  {
+                    "min": 10001,
+                    "max": -1,
+                    "rate": 115.0
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "exemptions": [
+      {
+        "sectionCode": "1",
+        "sectionLabel": "אזרח ותיק",
+        "subSections": [
+          {
+            "code": "senior_25",
+            "description": "אזרח ותיק שאינו מקבל גמלת הבטחת הכנסה",
+            "discountPercent": 25,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודת זהות"
+            ]
+          },
+          {
+            "code": "senior_30",
+            "description": "אזרח ותיק המקבל גמלת הבטחת הכנסה",
+            "discountPercent": 30,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודת זהות",
+              "אישור ביטוח לאומי"
+            ]
+          },
+          {
+            "code": "senior_100",
+            "description": "אזרח ותיק המקבל גמלת סיעוד מלאה",
+            "discountPercent": 100,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "2",
+        "sectionLabel": "נכה",
+        "subSections": [
+          {
+            "code": "disabled_40",
+            "description": "נכה בדרגת נכות 75% ומעלה",
+            "discountPercent": 40,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          },
+          {
+            "code": "disabled_80",
+            "description": "נכה המקבל קצבת נכות מלאה + השלמת הכנסה",
+            "discountPercent": 80,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          },
+          {
+            "code": "disabled_100",
+            "description": "נכה הזכאי לקצבה מיוחדת לנכה",
+            "discountPercent": 100,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "3",
+        "sectionLabel": "מקבל תגמולים",
+        "subSections": [
+          {
+            "code": "benefits_66",
+            "description": "מקבל תגמולים לפי חוק נכי רדיפות הנאצים",
+            "discountPercent": 66,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור משרד האוצר"
+            ]
+          },
+          {
+            "code": "benefits_25",
+            "description": "מקבל תגמולים לפי חוקי השיקום",
+            "discountPercent": 25,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור משרד הביטחון"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "4",
+        "sectionLabel": "הורה יחיד",
+        "subSections": [
+          {
+            "code": "single_parent_20",
+            "description": "הורה יחיד",
+            "discountPercent": 20,
+            "restrictions": {},
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "5",
+        "sectionLabel": "עולה חדש",
+        "subSections": [
+          {
+            "code": "immigrant_90",
+            "description": "עולה חדש - 12 חודשים ראשונים",
+            "discountPercent": 90,
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודת עולה"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "6",
+        "sectionLabel": "נכס ריק",
+        "subSections": [
+          {
+            "code": "empty_full",
+            "description": "נכס ריק מכל חפץ ואדם ואינו בשימוש",
+            "discountPercent": 100,
+            "restrictions": {},
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תצהיר"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "7",
+        "sectionLabel": "הכנסה נמוכה",
+        "subSections": [
+          {
+            "code": "income_80_small",
+            "description": "הכנסה נמוכה - עד 4 נפשות",
+            "discountPercent": 80,
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_80_large",
+            "description": "הכנסה נמוכה - 5 נפשות ומעלה",
+            "discountPercent": 80,
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_60_small",
+            "description": "הכנסה נמוכה-בינונית - עד 4 נפשות",
+            "discountPercent": 60,
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_60_large",
+            "description": "הכנסה נמוכה-בינונית - 5 נפשות ומעלה",
+            "discountPercent": 60,
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_40_small",
+            "description": "הכנסה בינונית - עד 4 נפשות",
+            "discountPercent": 40,
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          },
+          {
+            "code": "income_40_large",
+            "description": "הכנסה בינונית - 5 נפשות ומעלה",
+            "discountPercent": 40,
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
+          }
+        ]
+      },
+      {
+        "sectionCode": "8",
+        "sectionLabel": "משפחה ברוכת ילדים",
+        "subSections": [
+          {
+            "code": "large_family",
+            "description": "משפחה עם 4 ילדים ומעלה עד גיל 18",
+            "discountPercent": 20,
+            "restrictions": {
+              "minChildren": 4
+            },
+            "requiresDocuments": true,
+            "documentTypes": [
+              "תעודות זהות",
+              "אישורי לידה"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -139,7 +139,7 @@ export function resolveExemption(
     for (const sub of section.subSections) {
       if (sub.code === subSectionCode) {
         // Validate restrictions
-        const r = sub.restrictions;
+        const r = sub.restrictions ?? {};
         if (r.minHouseholdSize && (!householdSize || householdSize < r.minHouseholdSize)) {
           return null; // Not eligible — household too small
         }
