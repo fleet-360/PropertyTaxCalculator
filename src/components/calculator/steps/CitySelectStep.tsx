@@ -11,7 +11,7 @@ import type { StepProps } from '../CalculatorWizard';
 
 interface CityOption {
   _id: string;
-  name: string;
+  cityName: string;
   slug: string;
 }
 
@@ -55,7 +55,7 @@ export default function CitySelectStep({ state, dispatch }: StepProps) {
 
       <Autocomplete
         options={cities}
-        getOptionLabel={(o) => o.name}
+        getOptionLabel={(o) => o.cityName}
         loading={loading}
         value={selected}
         onChange={(_, v) => handleSelect(v)}

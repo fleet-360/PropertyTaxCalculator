@@ -63,8 +63,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           right: 14,
-          left: 'auto',
-          transformOrigin: 'top right',
+          transformOrigin: 'top left',
         },
       },
     },

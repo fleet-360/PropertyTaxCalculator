@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +15,8 @@ import Divider from '@mui/material/Divider';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { StepProps } from '../CalculatorWizard';
+import { IPropertyType, ISubType, IZoneRate } from '@/lib/models/CityTariff';
+import TaxBillUpload from '../TaxBillUpload';
 
 interface FormData {
   fullName: string;
@@ -69,13 +72,18 @@ const baseSchema = z.object({
 });
 
 export default function DataEntryStep({ state, dispatch }: StepProps) {
+  const [formKey, setFormKey] = useState(0);
+  const handleFieldsApplied = useCallback(() => {
+    setFormKey((prev) => prev + 1); // Force form re-init with new state values
+  }, []);
+
   const cityData = state.cityData;
   const isBusiness = state.propertyType === 'business';
 
   // Extract options from city data
-  const types: string[] = cityData?.types ?? [];
-  const subtypes: string[] = cityData?.subtypes ?? [];
-  const zones: string[] = cityData?.zones ?? [];
+  const types: IPropertyType[] = cityData?.types ?? [];
+  const subtypes: ISubType[] = types.flatMap((t: IPropertyType) => t.subtypes) ?? [];
+  const zones: IZoneRate[] = subtypes.flatMap((s: ISubType) => s.zones) ?? [];
 
   const {
     control,
@@ -122,7 +130,10 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+    <>
+      <TaxBillUpload state={state} dispatch={dispatch} onFieldsApplied={handleFieldsApplied} />
+
+    <Box key={formKey} component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
       <Typography variant="h5" textAlign="center" mb={3}>
         פרטי הנכס
       </Typography>
@@ -176,8 +187,8 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
             render={({ field }) => (
               <TextField {...field} label="ייעוד הנכס" select fullWidth>
                 <MenuItem value="">בחר</MenuItem>
-                {types.map((t: string) => (
-                  <MenuItem key={t} value={t}>{t}</MenuItem>
+                {types.map((t: IPropertyType) => (
+                  <MenuItem key={t.code} value={t.code}>{t.label}</MenuItem>
                 ))}
               </TextField>
             )}
@@ -265,8 +276,8 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
             render={({ field }) => (
               <TextField {...field} label="קוד סיווג" select fullWidth>
                 <MenuItem value="">בחר</MenuItem>
-                {subtypes.map((s: string) => (
-                  <MenuItem key={s} value={s}>{s}</MenuItem>
+                {subtypes.map((s: ISubType) => (
+                  <MenuItem key={s.code} value={s.code}>{s.label}</MenuItem>
                 ))}
               </TextField>
             )}
@@ -279,8 +290,8 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
             render={({ field }) => (
               <TextField {...field} label="סוג/סיווג" select fullWidth>
                 <MenuItem value="">בחר</MenuItem>
-                {subtypes.map((s: string) => (
-                  <MenuItem key={s} value={s}>{s}</MenuItem>
+                {subtypes.map((s: ISubType) => (
+                  <MenuItem key={s.code} value={s.code}>{s.label}</MenuItem>
                 ))}
               </TextField>
             )}
@@ -293,8 +304,8 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
             render={({ field }) => (
               <TextField {...field} label="אזור" select fullWidth>
                 <MenuItem value="">בחר</MenuItem>
-                {zones.map((z: string) => (
-                  <MenuItem key={z} value={z}>{z}</MenuItem>
+                {zones.map((z: IZoneRate) => (
+                  <MenuItem key={z.zone} value={z.zone}>{z.zoneLabel}</MenuItem>
                 ))}
               </TextField>
             )}
@@ -334,8 +345,8 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                   render={({ field: f }) => (
                     <TextField {...f} label="סוג" select fullWidth size="small">
                       <MenuItem value="">בחר</MenuItem>
-                      {types.map((t: string) => (
-                        <MenuItem key={t} value={t}>{t}</MenuItem>
+                      {types.map((t: IPropertyType) => (
+                        <MenuItem key={t.code} value={t.code}>{t.label}</MenuItem>
                       ))}
                     </TextField>
                   )}
@@ -348,8 +359,8 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                   render={({ field: f }) => (
                     <TextField {...f} label="תת-סוג" select fullWidth size="small">
                       <MenuItem value="">בחר</MenuItem>
-                      {subtypes.map((s: string) => (
-                        <MenuItem key={s} value={s}>{s}</MenuItem>
+                      {subtypes.map((s: ISubType) => (
+                        <MenuItem key={s.code} value={s.code}>{s.label}</MenuItem>
                       ))}
                     </TextField>
                   )}
@@ -362,8 +373,8 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                   render={({ field: f }) => (
                     <TextField {...f} label="אזור" select fullWidth size="small">
                       <MenuItem value="">בחר</MenuItem>
-                      {zones.map((z: string) => (
-                        <MenuItem key={z} value={z}>{z}</MenuItem>
+                      {zones.map((z: IZoneRate) => (
+                        <MenuItem key={z.zone} value={z.zone}>{z.zoneLabel}</MenuItem>
                       ))}
                     </TextField>
                   )}
@@ -409,5 +420,6 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
         </Button>
       </Box>
     </Box>
+    </>
   );
 }

@@ -108,6 +108,7 @@ export type WizardAction =
   | { type: 'SET_CITY'; payload: { slug: string; data?: any } }
   | { type: 'SET_CITY_DATA'; payload: any }
   | { type: 'UPDATE_FIELD'; field: keyof WizardState; value: any }
+  | { type: 'UPDATE_FIELDS_BULK'; payload: Partial<WizardState> }
   | { type: 'SET_DESIGNATIONS'; payload: Designation[] }
   | { type: 'SET_MEASUREMENT_ERROR'; payload: WizardState['measurementError'] }
   | { type: 'SET_CLASSIFICATION_ERROR'; payload: WizardState['classificationError'] }
@@ -130,6 +131,8 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
       return { ...state, cityData: action.payload };
     case 'UPDATE_FIELD':
       return { ...state, [action.field]: action.value };
+    case 'UPDATE_FIELDS_BULK':
+      return { ...state, ...action.payload };
     case 'SET_DESIGNATIONS':
       return { ...state, designations: action.payload };
     case 'SET_MEASUREMENT_ERROR':

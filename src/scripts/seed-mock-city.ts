@@ -14,6 +14,7 @@ async function main() {
     console.log('Deleted existing mock-city documents');
 
     await CityTariff.insertMany(seedData);
+  
     console.log('Inserted mock-city seed data');
   } catch (err) {
     console.error('Seed failed:', err);
