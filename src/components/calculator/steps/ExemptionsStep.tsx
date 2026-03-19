@@ -10,19 +10,19 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import type { StepProps } from '../CalculatorWizard';
+import { IExemptionRestrictions } from '@/lib/models/CityTariff';
 
 interface ExemptionSubsection {
-  id: string;
+  code: string;
   label: string;
   description?: string;
   discountPercent: number;
-  minHouseholdSize?: number;
-  minChildren?: number;
+  restrictions: IExemptionRestrictions;
 }
 
 interface ExemptionSection {
   sectionLabel: string;
-  subsections: ExemptionSubsection[];
+  subSections: ExemptionSubsection[];
 }
 
 export default function ExemptionsStep({ state, dispatch }: StepProps) {
@@ -34,8 +34,9 @@ export default function ExemptionsStep({ state, dispatch }: StepProps) {
 
   // Find the currently selected subsection to check restrictions
   const selectedSub = exemptionSections
-    .flatMap((s) => s.subsections)
-    .find((sub) => sub.id === state.selectedExemption);
+    .flatMap((s) => s?.subSections)
+    .find((sub) => sub?.code === state.selectedExemption) ?? {} as ExemptionSubsection;
+
 
   return (
     <Box>
@@ -53,27 +54,27 @@ export default function ExemptionsStep({ state, dispatch }: StepProps) {
         </Typography>
       )}
 
-      {exemptionSections.map((section) => (
+      {exemptionSections?.map((section) => (
         <Paper key={section.sectionLabel} sx={{ p: 2, mb: 2 }} variant="outlined">
           <Typography variant="subtitle1" fontWeight={600} mb={1}>
             {section.sectionLabel}
           </Typography>
           <RadioGroup value={state.selectedExemption} onChange={(e) => handleExemptionChange(e.target.value)}>
-            {section.subsections.map((sub) => (
+            {section?.subSections?.map((sub) => (
               <FormControlLabel
-                key={sub.id}
-                value={sub.id}
+                key={sub.code}
+                value={sub.code}
                 control={<Radio />}
                 label={
                   <Box>
                     <Typography variant="body2">
-                      {sub.label} — {sub.discountPercent}% הנחה
+                      {sub.description} — {sub.discountPercent}% הנחה
                     </Typography>
-                    {sub.description && (
+                    {/* {sub.description && (
                       <Typography variant="caption" color="text.secondary">
                         {sub.description}
                       </Typography>
-                    )}
+                    )} */}
                   </Box>
                 }
               />
@@ -83,9 +84,9 @@ export default function ExemptionsStep({ state, dispatch }: StepProps) {
       ))}
 
       {/* Restriction inputs */}
-      {selectedSub && (selectedSub.minHouseholdSize || selectedSub.minChildren) && (
+      {selectedSub && (selectedSub?.restrictions?.minHouseholdSize || selectedSub?.restrictions?.minChildren) && (
         <Paper sx={{ p: 2, mb: 2 }} variant="outlined">
-          {selectedSub.minHouseholdSize && (
+          {selectedSub?.restrictions?.minHouseholdSize && (
             <TextField
               label="גודל משק בית"
               type="number"
@@ -97,7 +98,7 @@ export default function ExemptionsStep({ state, dispatch }: StepProps) {
               sx={{ mb: 2 }}
             />
           )}
-          {selectedSub.minChildren && (
+          {selectedSub?.restrictions?.minChildren && (
             <TextField
               label="מספר ילדים"
               type="number"

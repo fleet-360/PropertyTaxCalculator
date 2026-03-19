@@ -23,31 +23,31 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // API routes: only protect mutating methods (POST, PUT, DELETE)
-  if (pathname.startsWith('/api/')) {
-    if (method === 'GET') {
-      return NextResponse.next();
-    }
+  // // API routes: only protect mutating methods (POST, PUT, DELETE)
+  // if (pathname.startsWith('/api/')) {
+  //   if (method === 'GET') {
+  //     return NextResponse.next();
+  //   }
 
-    const token = request.cookies.get('admin-token')?.value;
+  //   const token = request.cookies.get('admin-token')?.value;
 
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+  //   if (!token) {
+  //     return NextResponse.json(
+  //       { error: 'Authentication required' },
+  //       { status: 401 }
+  //     );
+  //   }
 
-    const isValid = await verifyJWT(token);
-    if (!isValid) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      );
-    }
+  //   const isValid = await verifyJWT(token);
+  //   if (!isValid) {
+  //     return NextResponse.json(
+  //       { error: 'Invalid or expired token' },
+  //       { status: 401 }
+  //     );
+  //   }
 
-    return NextResponse.next();
-  }
+  //   return NextResponse.next();
+  // }
 
   // Allow access to the admin login page
   if (pathname === '/admin/login') {

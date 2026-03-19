@@ -20,6 +20,7 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
   }
 
   const outcome: string = result.outcome ?? 'match';
+  console.log('result', result);
 
   return (
     <Box>

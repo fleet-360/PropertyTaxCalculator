@@ -51,21 +51,26 @@ export default function DisclaimerStep({ state, dispatch }: StepProps) {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 citySlug: state.citySlug,
-                propertyType: state.propertyType,
-                propertyArea: state.propertyArea,
-                coveredBalconyArea: state.coveredBalconyArea,
-                storageArea: state.storageArea,
-                parkingArea: state.parkingArea,
-                zone: state.zone,
+                propertyType: state.propertyPurpose,
                 subType: state.subType,
-                classificationCode: state.classificationCode,
-                designations: state.designations,
+                zone: state.zone,
+                propertyAreaSqm: state.propertyArea,
+                coveredBalconySqm: state.coveredBalconyArea,
+                storageSqm: state.storageArea,
+                parkingSqm: state.parkingArea,
                 bimonthlyPayment: state.bimonthlyPayment,
-                selectedExemption: state.selectedExemption,
+                selectedExemptionCode: state.selectedExemption,
                 householdSize: state.householdSize,
                 childrenCount: state.childrenCount,
-                measurementError: state.measurementError,
-                classificationError: state.classificationError,
+                correctedAreaSqm: state.measurementError?.claimed,
+                designations: state.propertyType === 'business'
+                  ? state.designations.map((d) => ({
+                      typeCode: d.type,
+                      subtypeCode: d.subtype,
+                      zone: d.zone,
+                      areaSqm: d.area,
+                    }))
+                  : undefined,
               }),
             })
               .then((r) => r.json())

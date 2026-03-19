@@ -5,8 +5,8 @@ import Container from '@mui/material/Container';
 import WizardStepper from './WizardStepper';
 import PropertyTypeStep from './steps/PropertyTypeStep';
 import CitySelectStep from './steps/CitySelectStep';
+import DocumentUploadStep from './steps/DocumentUploadStep';
 import DataEntryStep from './steps/DataEntryStep';
-import RateInfoStep from './steps/RateInfoStep';
 import ErrorReportStep from './steps/ErrorReportStep';
 import ExemptionsStep from './steps/ExemptionsStep';
 import DisclaimerStep from './steps/DisclaimerStep';
@@ -47,6 +47,8 @@ export interface WizardState {
   zone: string;
   subType: string;
   bimonthlyPayment: number;
+  reportedPayment: number;
+  paymentPeriod: string;
   // Business
   designations: Designation[];
   // Errors
@@ -87,6 +89,8 @@ const initialState: WizardState = {
   zone: '',
   subType: '',
   bimonthlyPayment: 0,
+  reportedPayment: 0,
+  paymentPeriod: 'bimonthly',
   designations: [{ type: '', subtype: '', zone: '', area: 0 }],
   measurementError: null,
   classificationError: null,
@@ -160,8 +164,8 @@ export interface StepProps {
 const STEP_COMPONENTS = [
   PropertyTypeStep,    // 0
   CitySelectStep,      // 1
-  DataEntryStep,       // 2
-  RateInfoStep,        // 3
+  DocumentUploadStep,  // 2
+  DataEntryStep,       // 3
   ErrorReportStep,     // 4
   ExemptionsStep,      // 5
   DisclaimerStep,      // 6
@@ -178,7 +182,7 @@ export default function CalculatorWizard() {
   return (
     <Container maxWidth="md">
       <WizardStepper currentStep={state.currentStep} />
-      {StepComponent && <StepComponent state={state} dispatch={dispatch} />}
+      {StepComponent && <StepComponent key={state.currentStep} state={state} dispatch={dispatch} />}
     </Container>
   );
 }

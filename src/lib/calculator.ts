@@ -114,6 +114,48 @@ export function findRate(
   throw new Error(`לא נמצא תעריף עבור ${subType.label} באזור ${zoneRate.zoneLabel}`);
 }
 
+// ── Reverse lookup by property code ─────────────────────────────────────
+
+/**
+ * Given a propertyCode, find the matching type/subtype/zone in the tariff tree.
+ * This enables auto-populating classification fields when the code is extracted
+ * from a tax bill image.
+ */
+export function findByPropertyCode(
+  tariff: ICityTariff,
+  propertyCode: string
+): { typeCode: string; subtypeCode: string; zoneCode: string; rate: number } | null {
+  for (const pType of tariff.types) {
+    for (const sub of pType.subtypes) {
+      for (const zone of sub.zones) {
+        // Check size ranges first
+        if (zone.sizeRanges && zone.sizeRanges.length > 0) {
+          for (const sr of zone.sizeRanges) {
+            if (sr.propertyCode == propertyCode) {
+              return {
+                typeCode: pType.code,
+                subtypeCode: sub.code,
+                zoneCode: zone.zone,
+                rate: sr.rate,
+              };
+            }
+          }
+        }
+        // Check direct zone propertyCode
+        if (zone.propertyCode == propertyCode && zone.rate !== undefined && zone.rate !== null) {
+          return {
+            typeCode: pType.code,
+            subtypeCode: sub.code,
+            zoneCode: zone.zone,
+            rate: zone.rate,
+          };
+        }
+      }
+    }
+  }
+  return null;
+}
+
 // ── Exemption resolution ───────────────────────────────────────────────
 
 interface ResolvedExemption {

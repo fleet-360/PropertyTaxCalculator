@@ -8,13 +8,10 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import Chip from '@mui/material/Chip';
 import Paper from '@mui/material/Paper';
-import Divider from '@mui/material/Divider';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningIcon from '@mui/icons-material/Warning';
 import ErrorIcon from '@mui/icons-material/Error';
-import CloseIcon from '@mui/icons-material/Close';
-import IconButton from '@mui/material/IconButton';
 import type { WizardState, WizardAction } from './CalculatorWizard';
 import type { ExtractionResult } from '@/lib/vision/types';
 import type { TaxBillData } from '@/lib/vision/document-types/tax-bill';
@@ -29,13 +26,18 @@ const FIELD_LABELS: Record<keyof TaxBillData, string> = {
   address: 'כתובת',
   block: 'גוש',
   parcel: 'חלקה',
+  propertyPurposeDescription: 'ייעוד הנכס',
+  subTypeDescription: 'סוג הנכס',
+  classificationCode: 'קוד סיווג',
+  zone: 'אזור',
   propertyArea: 'שטח הנכס (מ"ר)',
   coveredBalconyArea: 'מרפסת מקורה (מ"ר)',
   storageArea: 'מחסן (מ"ר)',
   parkingArea: 'חניה (מ"ר)',
-  classificationCode: 'קוד סיווג',
-  zone: 'אזור',
-  bimonthlyPayment: 'תשלום דו-חודשי (₪)',
+  bimonthlyPayment: 'תשלום (₪)',
+  annualPayment: 'תשלום שנתי (₪)',
+  paymentPeriod: 'תקופת תשלום',
+  ratePerSqm: 'תעריף למ"ר (₪)',
 };
 
 // ── Confidence indicator ───────────────────────────────────────────
@@ -82,25 +84,45 @@ const ACCEPT = 'image/jpeg,image/png,image/webp,image/heic,image/heif,applicatio
 // ── Component ──────────────────────────────────────────────────────
 
 interface TaxBillUploadProps {
-  state: WizardState;
   dispatch: Dispatch<WizardAction>;
-  onFieldsApplied?: () => void;
+  /** Called after fields are dispatched to wizard state */
+  onExtracted?: () => void;
 }
 
-export default function TaxBillUpload({ dispatch, onFieldsApplied }: TaxBillUploadProps) {
+export default function TaxBillUpload({ dispatch, onExtracted }: TaxBillUploadProps) {
   const [status, setStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [extractionResult, setExtractionResult] = useState<ExtractionResult<TaxBillData> | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isDismissed, setIsDismissed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const applyFields = useCallback((result: ExtractionResult<TaxBillData>) => {
+    if (!result?.data) return;
+    const fieldsToApply: Partial<WizardState> = {};
+    for (const [key, field] of Object.entries(result.data)) {
+      if (field && field.value !== undefined && field.value !== null) {
+        // Map extraction field names to wizard state field names
+        if (key === 'bimonthlyPayment') {
+          // Store as reportedPayment in wizard state
+          (fieldsToApply as Record<string, unknown>)['reportedPayment'] = field.value;
+        } else if (key === 'propertyPurposeDescription' || key === 'subTypeDescription' ||
+                   key === 'ratePerSqm' || key === 'annualPayment') {
+          // These are extraction-only display fields — don't push to wizard state
+        } else {
+          (fieldsToApply as Record<string, unknown>)[key] = field.value;
+        }
+      }
+    }
+
+    dispatch({ type: 'UPDATE_FIELDS_BULK', payload: fieldsToApply });
+    onExtracted?.();
+  }, [dispatch, onExtracted]);
 
   const handleFileSelect = useCallback(async (file: File) => {
     setStatus('uploading');
     setErrorMessage('');
     setExtractionResult(null);
 
-    // Create preview URL for images
     if (file.type.startsWith('image/')) {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
@@ -129,6 +151,8 @@ export default function TaxBillUpload({ dispatch, onFieldsApplied }: TaxBillUplo
 
       if (!result.success) {
         setErrorMessage(result.warnings.join('. ') || 'לא ניתן היה לחלץ נתונים מהמסמך');
+      } else {
+        applyFields(result);
       }
     } catch (error) {
       setStatus('error');
@@ -136,7 +160,7 @@ export default function TaxBillUpload({ dispatch, onFieldsApplied }: TaxBillUplo
         error instanceof Error ? error.message : 'שגיאה בעיבוד המסמך'
       );
     }
-  }, []);
+  }, [applyFields]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -149,25 +173,6 @@ export default function TaxBillUpload({ dispatch, onFieldsApplied }: TaxBillUplo
     if (file) handleFileSelect(file);
   }, [handleFileSelect]);
 
-  const handleApplyFields = useCallback(() => {
-    if (!extractionResult?.data) return;
-
-    // Build partial state from extraction
-    const fieldsToApply: Partial<WizardState> = {};
-
-    for (const [key, field] of Object.entries(extractionResult.data)) {
-      if (field && field.value !== undefined && field.value !== null) {
-        (fieldsToApply as Record<string, unknown>)[key] = field.value;
-      }
-    }
-
-    // Dispatch bulk update
-    dispatch({ type: 'UPDATE_FIELDS_BULK', payload: fieldsToApply });
-
-    // Notify parent to re-initialize form
-    onFieldsApplied?.();
-  }, [extractionResult, dispatch, onFieldsApplied]);
-
   const handleReset = useCallback(() => {
     setStatus('idle');
     setExtractionResult(null);
@@ -178,19 +183,11 @@ export default function TaxBillUpload({ dispatch, onFieldsApplied }: TaxBillUplo
     }
   }, []);
 
-  // If dismissed, don't render
-  if (isDismissed) return null;
-
   return (
     <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-        <Typography variant="subtitle1" fontWeight="bold">
-          מילוי אוטומטי מצילום שובר
-        </Typography>
-        <IconButton size="small" onClick={() => setIsDismissed(true)} title="סגור">
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </Box>
+      <Typography variant="subtitle1" fontWeight="bold" mb={1}>
+        מילוי אוטומטי מצילום שובר
+      </Typography>
 
       {/* ── Upload zone ── */}
       {status === 'idle' && (
@@ -254,11 +251,11 @@ export default function TaxBillUpload({ dispatch, onFieldsApplied }: TaxBillUplo
         </Box>
       )}
 
-      {/* ── Success — show extracted fields ── */}
+      {/* ── Success — fields already applied, show summary ── */}
       {status === 'success' && extractionResult && (
         <Box>
-          <Alert severity="success" sx={{ mb: 2 }}>
-            חולצו {Object.keys(extractionResult.data).length} שדות מהמסמך
+          <Alert severity="success" icon={<CheckCircleIcon />} sx={{ mb: 2 }}>
+            חולצו ומולאו {Object.keys(extractionResult.data).length} שדות מהמסמך
             {extractionResult.processingTimeMs && (
               <Typography variant="caption" component="span" sx={{ mr: 1 }}>
                 ({(extractionResult.processingTimeMs / 1000).toFixed(1)} שניות)
@@ -266,14 +263,12 @@ export default function TaxBillUpload({ dispatch, onFieldsApplied }: TaxBillUplo
             )}
           </Alert>
 
-          {/* Warnings */}
           {extractionResult.warnings.length > 0 && (
             <Alert severity="warning" sx={{ mb: 2 }}>
               {extractionResult.warnings.join('. ')}
             </Alert>
           )}
 
-          {/* Fields preview */}
           <Box sx={{ mb: 2 }}>
             {Object.entries(extractionResult.data).map(([key, field]) => {
               if (!field) return null;
@@ -305,22 +300,9 @@ export default function TaxBillUpload({ dispatch, onFieldsApplied }: TaxBillUplo
             })}
           </Box>
 
-          <Divider sx={{ my: 1.5 }} />
-
-          {/* Action buttons */}
-          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-            <Button variant="outlined" size="small" onClick={handleReset}>
-              ביטול
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={handleApplyFields}
-              startIcon={<CheckCircleIcon />}
-            >
-              מלא טופס
-            </Button>
-          </Box>
+          <Typography variant="caption" color="text.secondary">
+            הנתונים ימולאו אוטומטית בטופס בשלב הבא.
+          </Typography>
         </Box>
       )}
     </Paper>

@@ -1,47 +1,58 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
 import Link from '@mui/material/Link';
 import type { StepProps } from '../CalculatorWizard';
+import { findRate } from '@/lib/calculator';
 
 export default function RateInfoStep({ state, dispatch }: StepProps) {
-  const [rate, setRate] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const result = useMemo(() => {
+    if (!state.cityData) {
+      return { error: 'לא נטענו נתוני עיר. יש לחזור ולבחור עיר.' };
+    }
 
-  useEffect(() => {
-    const fetchRate = async () => {
-      try {
-        const res = await fetch('/api/tax-rates/calculate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            citySlug: state.citySlug,
-            propertyType: state.propertyType,
-            propertyArea: state.propertyArea,
-            zone: state.zone,
-            subType: state.subType,
-            classificationCode: state.classificationCode,
-            designations: state.designations,
-          }),
-        });
-        const data = await res.json();
-        setRate(data.rate ?? data.ratePerSqm ?? null);
-      } catch {
-        setError('שגיאה בטעינת התעריף');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRate();
-  }, [state.citySlug, state.propertyType, state.propertyArea, state.zone, state.subType, state.classificationCode, state.designations]);
+    if (!state.propertyPurpose || !state.subType || !state.zone) {
+      return { error: 'חסרים שדות סיווג (ייעוד, סוג, אזור). יש לחזור ולמלא את הפרטים.' };
+    }
 
-  const ordinancePdfUrl = state.cityData?.ordinancePdfUrl;
+    const totalArea =
+      (state.propertyArea || 0) +
+      (state.coveredBalconyArea || 0) +
+      (state.storageArea || 0) +
+      (state.parkingArea || 0);
+
+    if (totalArea <= 0) {
+      return { error: 'שטח הנכס חייב להיות גדול מ-0.' };
+    }
+
+    try {
+      const { rate, propertyCode } = findRate(
+        state.cityData,
+        state.propertyPurpose,
+        state.subType,
+        state.zone,
+        totalArea,
+      );
+      return { rate, propertyCode, totalArea };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'שגיאה בחישוב התעריף' };
+    }
+  }, [
+    state.cityData,
+    state.propertyPurpose,
+    state.subType,
+    state.zone,
+    state.propertyArea,
+    state.coveredBalconyArea,
+    state.storageArea,
+    state.parkingArea,
+  ]);
+
+  const ordinanceUrl = state.cityData?.ordinanceUrl;
 
   return (
     <Box>
@@ -49,24 +60,26 @@ export default function RateInfoStep({ state, dispatch }: StepProps) {
         תעריף ארנונה
       </Typography>
 
-      {loading ? (
-        <Box textAlign="center" py={4}>
-          <CircularProgress />
-        </Box>
-      ) : error ? (
+      {'error' in result ? (
         <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
+          {result.error}
         </Alert>
       ) : (
         <>
           <Alert severity="info" sx={{ mb: 3, fontSize: '1.1rem' }}>
             {'תעריף הארנונה באזורך: '}
-            <strong>{rate ?? '---'} ₪ למ&quot;ר לשנה</strong>
+            <strong>{result.rate} ₪ למ&quot;ר לשנה</strong>
           </Alert>
 
-          {ordinancePdfUrl && (
+          {result.propertyCode && (
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              קוד סיווג: {result.propertyCode} | שטח כולל: {result.totalArea} מ&quot;ר
+            </Typography>
+          )}
+
+          {ordinanceUrl && (
             <Box mb={3}>
-              <Link href={ordinancePdfUrl} target="_blank" rel="noopener">
+              <Link href={ordinanceUrl} target="_blank" rel="noopener">
                 הורדת צו הארנונה (PDF)
               </Link>
             </Box>
@@ -78,7 +91,11 @@ export default function RateInfoStep({ state, dispatch }: StepProps) {
         <Button variant="outlined" onClick={() => dispatch({ type: 'PREV_STEP' })}>
           חזרה
         </Button>
-        <Button variant="contained" disabled={loading} onClick={() => dispatch({ type: 'NEXT_STEP' })}>
+        <Button
+          variant="contained"
+          disabled={'error' in result}
+          onClick={() => dispatch({ type: 'NEXT_STEP' })}
+        >
           הבא
         </Button>
       </Box>
