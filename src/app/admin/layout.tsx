@@ -18,7 +18,12 @@ import Divider from '@mui/material/Divider';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import CalculateIcon from '@mui/icons-material/Calculate';
+import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
+import PeopleIcon from '@mui/icons-material/People';
+import ContactMailIcon from '@mui/icons-material/ContactMail';
 import ArticleIcon from '@mui/icons-material/Article';
+import TuneIcon from '@mui/icons-material/Tune';
 import SettingsIcon from '@mui/icons-material/Settings';
 import MenuIcon from '@mui/icons-material/Menu';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -33,8 +38,13 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/admin', icon: <DashboardIcon /> },
-  { label: 'Posts', href: '/admin/posts', icon: <ArticleIcon /> },
-  { label: 'Settings', href: '/admin/settings', icon: <SettingsIcon /> },
+  { label: 'מחשבונים', href: '/admin/cities', icon: <CalculateIcon /> },
+  { label: 'קופונים', href: '/admin/coupons', icon: <ConfirmationNumberIcon /> },
+  { label: 'לקוחות', href: '/admin/customers', icon: <PeopleIcon /> },
+  { label: 'פניות', href: '/admin/contacts', icon: <ContactMailIcon /> },
+  { label: 'מאמרים', href: '/admin/posts', icon: <ArticleIcon /> },
+  { label: 'הגדרות מערכת', href: '/admin/system-config', icon: <TuneIcon /> },
+  { label: 'הגדרות בלוג', href: '/admin/settings', icon: <SettingsIcon /> },
 ];
 
 function isActive(pathname: string, href: string): boolean {

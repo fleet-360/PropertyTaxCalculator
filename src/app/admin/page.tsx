@@ -18,8 +18,12 @@ import Skeleton from '@mui/material/Skeleton';
 import Alert from '@mui/material/Alert';
 import ArticleIcon from '@mui/icons-material/Article';
 import PublishIcon from '@mui/icons-material/Publish';
-import DraftsIcon from '@mui/icons-material/Drafts';
-import ArchiveIcon from '@mui/icons-material/Archive';
+import LocationCityIcon from '@mui/icons-material/LocationCity';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import PeopleIcon from '@mui/icons-material/People';
+import ContactMailIcon from '@mui/icons-material/ContactMail';
+import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
+import PaymentIcon from '@mui/icons-material/Payment';
 import AddIcon from '@mui/icons-material/Add';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
@@ -49,7 +53,7 @@ const statusColorMap: Record<string, 'success' | 'warning' | 'default'> = {
 
 interface StatCardProps {
   title: string;
-  value: number;
+  value: number | string;
   icon: React.ReactNode;
   color: string;
   loading: boolean;
@@ -106,8 +110,12 @@ export default function DashboardPage() {
   const [stats, setStats] = React.useState({
     total: 0,
     published: 0,
-    draft: 0,
-    archived: 0,
+    cities: 0,
+    activeCoupons: 0,
+    totalCustomers: 0,
+    newContacts: 0,
+    systemEnabled: false,
+    paymentEnabled: false,
   });
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
@@ -118,18 +126,63 @@ export default function DashboardPage() {
         setLoading(true);
         setError('');
 
-        // Fetch all posts to calculate stats and get recent posts
-        const res = await fetch('/api/posts?page=1&limit=100');
-        if (!res.ok) throw new Error('Failed to fetch posts');
-        const data: PostsResponse = await res.json();
+        const [postsRes, couponsRes, customersRes, contactRes, systemRes, citiesRes] =
+          await Promise.all([
+            fetch('/api/posts?page=1&limit=5'),
+            fetch('/api/coupons'),
+            fetch('/api/customers?limit=1'),
+            fetch('/api/contact?limit=1&status=new'),
+            fetch('/api/system-config'),
+            fetch('/api/cities?all=true'),
+          ]);
 
-        const allPosts = data.posts;
-        setPosts(allPosts.slice(0, 5));
+        if (!postsRes.ok) throw new Error('Failed to fetch posts');
+        const postsData: PostsResponse = await postsRes.json();
+        setPosts(postsData.posts);
+
+        const publishedCount = postsData.posts.filter((p) => p.status === 'published').length;
+
+        let citiesCount = 0;
+        if (citiesRes.ok) {
+          const citiesData = await citiesRes.json();
+          citiesCount = citiesData.cities?.length ?? 0;
+        }
+
+        let activeCoupons = 0;
+        if (couponsRes.ok) {
+          const couponsData = await couponsRes.json();
+          activeCoupons = couponsData.coupons?.length ?? 0;
+        }
+
+        let totalCustomers = 0;
+        if (customersRes.ok) {
+          const customersData = await customersRes.json();
+          totalCustomers = customersData.total ?? 0;
+        }
+
+        let newContacts = 0;
+        if (contactRes.ok) {
+          const contactData = await contactRes.json();
+          newContacts = contactData.total ?? 0;
+        }
+
+        let systemEnabled = false;
+        let paymentEnabled = false;
+        if (systemRes.ok) {
+          const systemData = await systemRes.json();
+          systemEnabled = systemData.systemEnabled ?? false;
+          paymentEnabled = systemData.paymentEnabled ?? false;
+        }
+
         setStats({
-          total: data.total,
-          published: allPosts.filter((p) => p.status === 'published').length,
-          draft: allPosts.filter((p) => p.status === 'draft').length,
-          archived: allPosts.filter((p) => p.status === 'archived').length,
+          total: postsData.total,
+          published: publishedCount,
+          cities: citiesCount,
+          activeCoupons,
+          totalCustomers,
+          newContacts,
+          systemEnabled,
+          paymentEnabled,
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -141,11 +194,27 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
-  const statCards = [
-    { title: 'Total Posts', value: stats.total, icon: <ArticleIcon />, color: '#1976d2' },
-    { title: 'Published', value: stats.published, icon: <PublishIcon />, color: '#2e7d32' },
-    { title: 'Drafts', value: stats.draft, icon: <DraftsIcon />, color: '#ed6c02' },
-    { title: 'Archived', value: stats.archived, icon: <ArchiveIcon />, color: '#757575' },
+  const statCards: StatCardProps[] = [
+    { title: 'Total Posts', value: stats.total, icon: <ArticleIcon />, color: '#1976d2', loading },
+    { title: 'Published', value: stats.published, icon: <PublishIcon />, color: '#2e7d32', loading },
+    { title: 'Cities', value: stats.cities, icon: <LocationCityIcon />, color: '#9c27b0', loading },
+    { title: 'Active Coupons', value: stats.activeCoupons, icon: <LocalOfferIcon />, color: '#ff9800', loading },
+    { title: 'Total Customers', value: stats.totalCustomers, icon: <PeopleIcon />, color: '#00bcd4', loading },
+    { title: 'New Contacts', value: stats.newContacts, icon: <ContactMailIcon />, color: '#f44336', loading },
+    {
+      title: 'System Status',
+      value: stats.systemEnabled ? '\u05E4\u05E2\u05D9\u05DC' : '\u05DE\u05D5\u05E9\u05D1\u05EA',
+      icon: <PowerSettingsNewIcon />,
+      color: stats.systemEnabled ? '#4caf50' : '#f44336',
+      loading,
+    },
+    {
+      title: 'Payment Status',
+      value: stats.paymentEnabled ? '\u05E4\u05E2\u05D9\u05DC' : '\u05DE\u05D5\u05E9\u05D1\u05EA',
+      icon: <PaymentIcon />,
+      color: stats.paymentEnabled ? '#4caf50' : '#f44336',
+      loading,
+    },
   ];
 
   return (
@@ -157,7 +226,7 @@ export default function DashboardPage() {
             Dashboard
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-            Welcome back. Here is an overview of your blog.
+            Welcome back. Here is an overview of your site.
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
@@ -168,7 +237,7 @@ export default function DashboardPage() {
             target="_blank"
             sx={{ borderColor: '#e0e0e0', color: '#555' }}
           >
-            View Blog
+            View Site
           </Button>
           <Button
             variant="contained"
@@ -177,6 +246,15 @@ export default function DashboardPage() {
             href="/admin/posts/new"
           >
             New Post
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            component={Link}
+            href="/admin/cities/new"
+            color="secondary"
+          >
+            New City
           </Button>
         </Box>
       </Box>
@@ -191,7 +269,7 @@ export default function DashboardPage() {
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {statCards.map((stat) => (
           <Grid size={{ xs: 12, sm: 6, md: 3 }} key={stat.title}>
-            <StatCard {...stat} loading={loading} />
+            <StatCard {...stat} />
           </Grid>
         ))}
       </Grid>
