@@ -634,6 +634,7 @@
     ],
     "types": [
       {
+        "category":"privete",
         "code": "residential",
         "label": "מגורים",
         "subtypes": [
@@ -667,6 +668,7 @@
         ]
       },
       {
+        "category":"business",
         "code": "business",
         "label": "עסקים",
         "subtypes": [

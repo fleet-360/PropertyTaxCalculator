@@ -11,12 +11,13 @@ import MenuItem from '@mui/material/MenuItem';
 import Button from '@mui/material/Button';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import type { StepProps } from '../CalculatorWizard';
+import { IPropertyType, ISubType } from '@/lib/models/CityTariff';
 
 export default function ErrorReportStep({ state, dispatch }: StepProps) {
   const [claimedArea, setClaimedArea] = useState<number>(state.measurementError?.claimed ?? 0);
   const [suggestedClass, setSuggestedClass] = useState(state.classificationError?.suggested ?? '');
 
-  const subtypes: string[] = state.cityData?.subtypes ?? [];
+  const subtypes: ISubType[] = state.cityData?.types.flatMap((t: IPropertyType) => t.subtypes) ?? [];
 
   const handleNext = () => {
     if (claimedArea > 0) {
@@ -75,10 +76,10 @@ export default function ErrorReportStep({ state, dispatch }: StepProps) {
             fullWidth
           >
             <MenuItem value="">בחר</MenuItem>
-            {subtypes.map((s: string) => (
-              <MenuItem key={s} value={s}>
-                {s}
-              </MenuItem>
+            {subtypes.map((s: ISubType) => (
+              <MenuItem key={s.code} value={s.code}>
+                {s.label} 
+              </MenuItem> 
             ))}
           </TextField>
         </AccordionDetails>

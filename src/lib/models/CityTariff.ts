@@ -27,6 +27,7 @@ export interface ISubType {
 
 // ── Property type sub-document interface ─────────────────────────────
 export interface IPropertyType {
+  category: "private" | "business";
   code: string;
   label: string;
   subtypes: ISubType[];
