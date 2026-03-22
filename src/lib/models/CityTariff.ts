@@ -115,6 +115,11 @@ const SubTypeSchema = new Schema<ISubType>(
 // ── Property type schema ─────────────────────────────────────────────
 const PropertyTypeSchema = new Schema<IPropertyType>(
   {
+    category: {
+      type: String,
+      enum: ['private', 'business'],
+      required: true,
+    },
     code: { type: String, required: true },
     label: { type: String, required: true },
     subtypes: { type: [SubTypeSchema], default: [] },

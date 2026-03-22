@@ -20,7 +20,6 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
   }
 
   const outcome: string = result.outcome ?? 'match';
-  console.log('result', result);
 
   return (
     <Box>
@@ -29,15 +28,38 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
       </Typography>
 
       {outcome === 'match' && (
-        <Alert severity="success" sx={{ mb: 3, fontSize: '1rem' }}>
-          {'\u{1F60A}'} על פי המידע שהזנת, נראה שהחישוב תואם את הנתונים שגובה העירייה
-        </Alert>
+        <>
+          <Alert severity="success" sx={{ mb: 3, fontSize: '1rem' }}>
+            {'\u{1F60A}'} על פי המידע שהזנת, נראה שהחישוב תואם את הנתונים שגובה העירייה
+          </Alert>
+          <Typography textAlign="center" color="text.secondary" mb={3}>
+            תודה שהשתמשת במחשבון הארנונה
+          </Typography>
+          <Box textAlign="center">
+            <Button variant="contained" href="/">
+              חזרה לדף הבית
+            </Button>
+          </Box>
+        </>
       )}
 
       {outcome === 'underpaying' && (
-        <Alert severity="info" sx={{ mb: 3, fontSize: '1rem' }}>
-          {`לפי המחשבון, נמצא אי-התאמה בין תוצאת המחשבון לדו"ח הארנונה`}
-        </Alert>
+        <>
+          <Alert severity="info" sx={{ mb: 3, fontSize: '1rem' }}>
+            {`לפי המחשבון, נמצא אי-התאמה בין תוצאת המחשבון לדו"ח הארנונה`}
+          </Alert>
+          <Typography variant="body1" mb={2} textAlign="center">
+            אין התאמה — תרצה לראות את התוצאות?
+          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+            <Button variant="outlined" href="/">
+              חזרה לדף הבית
+            </Button>
+            <Button variant="contained" onClick={() => dispatch({ type: 'NEXT_STEP' })}>
+              צפה בתוצאות מפורטות
+            </Button>
+          </Box>
+        </>
       )}
 
       {outcome === 'overpaying' && (
@@ -48,7 +70,10 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
           <Typography variant="body1" mb={2} textAlign="center">
             לצפייה בתוצאות המפורטות: <strong>34₪</strong>
           </Typography>
-          <Box textAlign="center">
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+            <Button variant="outlined" href="/">
+              חזרה לדף הבית
+            </Button>
             <Button
               variant="contained"
               size="large"
@@ -58,17 +83,6 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
             </Button>
           </Box>
         </>
-      )}
-
-      {outcome !== 'overpaying' && (
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-          <Button variant="outlined" onClick={() => dispatch({ type: 'PREV_STEP' })}>
-            חזרה
-          </Button>
-          <Button variant="contained" onClick={() => dispatch({ type: 'NEXT_STEP' })}>
-            צפה בתוצאות מפורטות
-          </Button>
-        </Box>
       )}
     </Box>
   );

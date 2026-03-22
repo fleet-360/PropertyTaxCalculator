@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
       year: city.year,
       availableZones: city.availableZones,
       types: city.types.map((t) => ({
+        category: t.category,
         code: t.code,
         label: t.label,
         subtypes: t.subtypes.map((s) => ({

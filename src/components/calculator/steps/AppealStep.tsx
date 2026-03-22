@@ -10,8 +10,10 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import type { StepProps } from '../CalculatorWizard';
 
+const APPEAL_WAIVER_TEXT = `הנני מצהיר/ה ומאשר/ת כי ידוע לי שהגשת השגה באמצעות מחשבון הארנונה אינה מהווה ייעוץ משפטי. הנני מוותר/ת על כל טענה כלפי מפעילי המחשבון בנוגע לתוצאות ההשגה ו/או לכל נזק שעלול להיגרם כתוצאה מהגשתה. ידוע לי כי ההשגה מוגשת על בסיס הנתונים שהזנתי במחשבון ועל אחריותי בלבד.`;
+
 export default function AppealStep({ state, dispatch }: StepProps) {
-  const [consent, setConsent] = useState(false);
+  const [appealWaiverAccepted, setAppealWaiverAccepted] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = () => {
@@ -55,9 +57,19 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         </Typography>
       </Paper>
 
+      {/* Appeal-specific waiver */}
+      <Paper variant="outlined" sx={{ p: 2, mb: 2, maxHeight: 140, overflowY: 'auto', lineHeight: 1.8 }}>
+        <Typography variant="body2">{APPEAL_WAIVER_TEXT}</Typography>
+      </Paper>
+
       <FormControlLabel
-        control={<Checkbox checked={consent} onChange={(e) => setConsent(e.target.checked)} />}
-        label="קראתי את התקנון ומדיניות הפרטיות ואני מסכים/ה ומאשר/ת"
+        control={
+          <Checkbox
+            checked={appealWaiverAccepted}
+            onChange={(e) => setAppealWaiverAccepted(e.target.checked)}
+          />
+        }
+        label="קראתי את מכתב הויתור ואני מסכים/ה ומאשר/ת"
         sx={{ mb: 3 }}
       />
 
@@ -65,7 +77,7 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         <Button variant="outlined" onClick={() => dispatch({ type: 'PREV_STEP' })}>
           חזרה
         </Button>
-        <Button variant="contained" disabled={!consent} onClick={handleSubmit}>
+        <Button variant="contained" disabled={!appealWaiverAccepted} onClick={handleSubmit}>
           תשלום והכנת השגה
         </Button>
       </Box>

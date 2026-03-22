@@ -6,11 +6,8 @@ import StepLabel from '@mui/material/StepLabel';
 import Box from '@mui/material/Box';
 
 const STEPS = [
-  'סוג נכס',
-  'עיר',
-  'סריקת שובר',
+  'התחלה',
   'פרטי נכס',
-  'שגיאות',
   'הנחות',
   'הצהרה',
   'תוצאות',

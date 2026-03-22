@@ -73,20 +73,19 @@ export default function DisclaimerStep({ state, dispatch }: StepProps) {
                   : undefined,
               }),
             })
-              .then((r) => r.json())
+              .then((r) => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.json();
+              })
               .then((data) => {
                 dispatch({ type: 'SET_CALCULATION_RESULT', payload: data });
-              })
-              .catch(() => {
-                // mock result on error so wizard can proceed
-                dispatch({
-                  type: 'SET_CALCULATION_RESULT',
-                  payload: { outcome: 'match', calculated: state.bimonthlyPayment },
-                });
-              })
-              .finally(() => {
                 dispatch({ type: 'SET_LOADING', payload: false });
                 dispatch({ type: 'NEXT_STEP' });
+              })
+              .catch(() => {
+                // Route to contact redirect on any calculation error
+                dispatch({ type: 'SET_LOADING', payload: false });
+                dispatch({ type: 'SET_CONTACT_REDIRECT', payload: 'error' });
               });
           }}
         >

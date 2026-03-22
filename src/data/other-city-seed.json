@@ -1,0 +1,58 @@
+[
+  {
+    "cityName": "עיר אחרת",
+    "cityNameEn": "Other City",
+    "slug": "other",
+    "year": 2026,
+    "isActive": true,
+    "availableZones": [
+      {
+        "code": "א",
+        "label": "אזור א"
+      }
+    ],
+    "types": [
+      {
+        "category": "private",
+        "code": "residential",
+        "label": "מגורים",
+        "subtypes": [
+          {
+            "code": "standard",
+            "label": "דירת מגורים",
+            "hasSizeRanges": false,
+            "zones": [
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א",
+                "rate": 0,
+                "propertyCode": "000"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "category": "business",
+        "code": "business",
+        "label": "עסקי",
+        "subtypes": [
+          {
+            "code": "general",
+            "label": "נכס עסקי",
+            "hasSizeRanges": false,
+            "zones": [
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א",
+                "rate": 0,
+                "propertyCode": "000"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "exemptions": []
+  }
+]

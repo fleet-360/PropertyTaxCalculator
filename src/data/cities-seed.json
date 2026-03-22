@@ -30,6 +30,7 @@
     ],
     "types": [
       {
+        "category": "private",
         "code": "residential",
         "label": "מגורים",
         "subtypes": [
@@ -159,6 +160,7 @@
         ]
       },
       {
+        "category": "business",
         "code": "business",
         "label": "עסקים",
         "subtypes": [
@@ -262,6 +264,7 @@
         ]
       },
       {
+        "category": "business",
         "code": "industry",
         "label": "תעשייה ומלאכה",
         "subtypes": [
@@ -634,7 +637,7 @@
     ],
     "types": [
       {
-        "category":"privete",
+        "category": "private",
         "code": "residential",
         "label": "מגורים",
         "subtypes": [
@@ -668,7 +671,7 @@
         ]
       },
       {
-        "category":"business",
+        "category": "business",
         "code": "business",
         "label": "עסקים",
         "subtypes": [
@@ -760,12 +763,12 @@
                   {
                     "min": 301,
                     "max": 5000,
-                    "rate": 230.0
+                    "rate": 230
                   },
                   {
                     "min": 5001,
                     "max": -1,
-                    "rate": 200.0
+                    "rate": 200
                   }
                 ]
               }
@@ -786,6 +789,7 @@
         ]
       },
       {
+        "category": "business",
         "code": "industry",
         "label": "תעשייה ומלאכה",
         "subtypes": [
@@ -801,17 +805,17 @@
                   {
                     "min": 0,
                     "max": 3500,
-                    "rate": 145.0
+                    "rate": 145
                   },
                   {
                     "min": 3501,
                     "max": 5000,
-                    "rate": 120.0
+                    "rate": 120
                   },
                   {
                     "min": 5001,
                     "max": -1,
-                    "rate": 100.0
+                    "rate": 100
                   }
                 ]
               }
@@ -1128,6 +1132,7 @@
     ],
     "types": [
       {
+        "category": "private",
         "code": "residential",
         "label": "מגורים",
         "subtypes": [
@@ -1157,6 +1162,7 @@
         ]
       },
       {
+        "category": "business",
         "code": "business",
         "label": "מסחר ומשרדים",
         "subtypes": [
@@ -1320,6 +1326,7 @@
         ]
       },
       {
+        "category": "business",
         "code": "industry",
         "label": "תעשייה",
         "subtypes": [
@@ -1335,19 +1342,19 @@
                   {
                     "min": 0,
                     "max": 200,
-                    "rate": 135.0,
+                    "rate": 135,
                     "propertyCode": "401"
                   },
                   {
                     "min": 201,
                     "max": 10000,
-                    "rate": 110.0,
+                    "rate": 110,
                     "propertyCode": "401"
                   },
                   {
                     "min": 10001,
                     "max": -1,
-                    "rate": 90.0,
+                    "rate": 90,
                     "propertyCode": "402"
                   }
                 ]
@@ -1673,6 +1680,7 @@
     ],
     "types": [
       {
+        "category": "private",
         "code": "residential",
         "label": "מגורים",
         "subtypes": [
@@ -1733,6 +1741,7 @@
         ]
       },
       {
+        "category": "business",
         "code": "business",
         "label": "עסקים",
         "subtypes": [
@@ -1802,6 +1811,7 @@
         ]
       },
       {
+        "category": "business",
         "code": "industry",
         "label": "תעשייה ומלאכה",
         "subtypes": [
@@ -2139,6 +2149,7 @@
     ],
     "types": [
       {
+        "category": "private",
         "code": "residential",
         "label": "מגורים",
         "subtypes": [
@@ -2241,6 +2252,7 @@
         ]
       },
       {
+        "category": "business",
         "code": "business",
         "label": "עסקים",
         "subtypes": [
@@ -2261,27 +2273,27 @@
                   {
                     "min": 51,
                     "max": 100,
-                    "rate": 380.0
+                    "rate": 380
                   },
                   {
                     "min": 101,
                     "max": 200,
-                    "rate": 340.0
+                    "rate": 340
                   },
                   {
                     "min": 201,
                     "max": 299,
-                    "rate": 300.0
+                    "rate": 300
                   },
                   {
                     "min": 300,
                     "max": 25000,
-                    "rate": 260.0
+                    "rate": 260
                   },
                   {
                     "min": 25001,
                     "max": -1,
-                    "rate": 220.0
+                    "rate": 220
                   }
                 ]
               },
@@ -2297,27 +2309,27 @@
                   {
                     "min": 51,
                     "max": 100,
-                    "rate": 310.0
+                    "rate": 310
                   },
                   {
                     "min": 101,
                     "max": 200,
-                    "rate": 278.0
+                    "rate": 278
                   },
                   {
                     "min": 201,
                     "max": 299,
-                    "rate": 245.0
+                    "rate": 245
                   },
                   {
                     "min": 300,
                     "max": 25000,
-                    "rate": 213.0
+                    "rate": 213
                   },
                   {
                     "min": 25001,
                     "max": -1,
-                    "rate": 180.0
+                    "rate": 180
                   }
                 ]
               },
@@ -2333,27 +2345,27 @@
                   {
                     "min": 51,
                     "max": 100,
-                    "rate": 234.0
+                    "rate": 234
                   },
                   {
                     "min": 101,
                     "max": 200,
-                    "rate": 210.0
+                    "rate": 210
                   },
                   {
                     "min": 201,
                     "max": 299,
-                    "rate": 185.0
+                    "rate": 185
                   },
                   {
                     "min": 300,
                     "max": 25000,
-                    "rate": 160.0
+                    "rate": 160
                   },
                   {
                     "min": 25001,
                     "max": -1,
-                    "rate": 135.0
+                    "rate": 135
                   }
                 ]
               }
@@ -2371,17 +2383,17 @@
                   {
                     "min": 0,
                     "max": 100,
-                    "rate": 400.0
+                    "rate": 400
                   },
                   {
                     "min": 101,
                     "max": 500,
-                    "rate": 350.0
+                    "rate": 350
                   },
                   {
                     "min": 501,
                     "max": -1,
-                    "rate": 300.0
+                    "rate": 300
                   }
                 ]
               },
@@ -2392,17 +2404,17 @@
                   {
                     "min": 0,
                     "max": 100,
-                    "rate": 330.0
+                    "rate": 330
                   },
                   {
                     "min": 101,
                     "max": 500,
-                    "rate": 290.0
+                    "rate": 290
                   },
                   {
                     "min": 501,
                     "max": -1,
-                    "rate": 245.0
+                    "rate": 245
                   }
                 ]
               },
@@ -2413,17 +2425,17 @@
                   {
                     "min": 0,
                     "max": 100,
-                    "rate": 250.0
+                    "rate": 250
                   },
                   {
                     "min": 101,
                     "max": 500,
-                    "rate": 218.0
+                    "rate": 218
                   },
                   {
                     "min": 501,
                     "max": -1,
-                    "rate": 185.0
+                    "rate": 185
                   }
                 ]
               }
@@ -2432,6 +2444,7 @@
         ]
       },
       {
+        "category": "business",
         "code": "industry",
         "label": "תעשייה ומלאכה",
         "subtypes": [
@@ -2447,17 +2460,17 @@
                   {
                     "min": 0,
                     "max": 5000,
-                    "rate": 155.0
+                    "rate": 155
                   },
                   {
                     "min": 5001,
                     "max": 10000,
-                    "rate": 135.0
+                    "rate": 135
                   },
                   {
                     "min": 10001,
                     "max": -1,
-                    "rate": 115.0
+                    "rate": 115
                   }
                 ]
               }

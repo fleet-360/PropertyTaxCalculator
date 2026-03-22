@@ -87,13 +87,18 @@ interface TaxBillUploadProps {
   dispatch: Dispatch<WizardAction>;
   /** Called after fields are dispatched to wizard state */
   onExtracted?: () => void;
+  /** When true, file is stored but extraction only happens via triggerExtraction() */
+  deferExtraction?: boolean;
+  /** Called when a file is selected (deferred mode) — parent stores the File */
+  onFileReady?: (file: File | null) => void;
 }
 
-export default function TaxBillUpload({ dispatch, onExtracted }: TaxBillUploadProps) {
-  const [status, setStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+export default function TaxBillUpload({ dispatch, onExtracted, deferExtraction, onFileReady }: TaxBillUploadProps) {
+  const [status, setStatus] = useState<'idle' | 'uploading' | 'ready' | 'success' | 'error'>('idle');
   const [extractionResult, setExtractionResult] = useState<ExtractionResult<TaxBillData> | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const applyFields = useCallback((result: ExtractionResult<TaxBillData>) => {
@@ -119,7 +124,6 @@ export default function TaxBillUpload({ dispatch, onExtracted }: TaxBillUploadPr
   }, [dispatch, onExtracted]);
 
   const handleFileSelect = useCallback(async (file: File) => {
-    setStatus('uploading');
     setErrorMessage('');
     setExtractionResult(null);
 
@@ -129,6 +133,18 @@ export default function TaxBillUpload({ dispatch, onExtracted }: TaxBillUploadPr
     } else {
       setPreviewUrl(null);
     }
+
+    setSelectedFileName(file.name);
+
+    // In deferred mode, just store the file — don't extract yet
+    if (deferExtraction) {
+      setStatus('ready');
+      onFileReady?.(file);
+      return;
+    }
+
+    // Immediate extraction mode
+    setStatus('uploading');
 
     try {
       const formData = new FormData();
@@ -160,7 +176,7 @@ export default function TaxBillUpload({ dispatch, onExtracted }: TaxBillUploadPr
         error instanceof Error ? error.message : 'שגיאה בעיבוד המסמך'
       );
     }
-  }, [applyFields]);
+  }, [applyFields, deferExtraction, onFileReady]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -178,10 +194,12 @@ export default function TaxBillUpload({ dispatch, onExtracted }: TaxBillUploadPr
     setExtractionResult(null);
     setErrorMessage('');
     setPreviewUrl(null);
+    setSelectedFileName(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  }, []);
+    onFileReady?.(null);
+  }, [onFileReady]);
 
   return (
     <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
@@ -220,6 +238,26 @@ export default function TaxBillUpload({ dispatch, onExtracted }: TaxBillUploadPr
             onChange={handleInputChange}
             hidden
           />
+        </Box>
+      )}
+
+      {/* ── File ready (deferred mode) ── */}
+      {status === 'ready' && (
+        <Box sx={{ textAlign: 'center', py: 2 }}>
+          {previewUrl && (
+            <Box
+              component="img"
+              src={previewUrl}
+              alt="Preview"
+              sx={{ maxWidth: 200, maxHeight: 150, mb: 2, borderRadius: 1 }}
+            />
+          )}
+          <Alert severity="info" sx={{ mb: 1 }}>
+            הקובץ {selectedFileName} טעון ומוכן — הנתונים יחולצו בלחיצה על &quot;הבא&quot;
+          </Alert>
+          <Button variant="outlined" size="small" onClick={handleReset}>
+            החלף קובץ
+          </Button>
         </Box>
       )}
 

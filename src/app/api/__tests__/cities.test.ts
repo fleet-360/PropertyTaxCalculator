@@ -15,7 +15,8 @@ beforeAll(async () => {
 
 describe('GET /api/cities', () => {
   it('returns an array containing mock-city', async () => {
-    const res = await GET();
+    const req = new NextRequest('http://localhost/api/cities');
+    const res = await GET(req);
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -30,6 +31,7 @@ describe('GET /api/cities', () => {
     // Types should be stripped (no rate info, only code/label/subtypes)
     expect(mockCity.types.length).toBeGreaterThan(0);
     const firstType = mockCity.types[0];
+    expect(firstType).toHaveProperty('category');
     expect(firstType).toHaveProperty('code');
     expect(firstType).toHaveProperty('label');
     expect(firstType).toHaveProperty('subtypes');

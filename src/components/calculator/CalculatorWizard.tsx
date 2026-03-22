@@ -3,16 +3,14 @@
 import { useReducer, Dispatch } from 'react';
 import Container from '@mui/material/Container';
 import WizardStepper from './WizardStepper';
-import PropertyTypeStep from './steps/PropertyTypeStep';
-import CitySelectStep from './steps/CitySelectStep';
-import DocumentUploadStep from './steps/DocumentUploadStep';
+import InitialInfoStep from './steps/InitialInfoStep';
 import DataEntryStep from './steps/DataEntryStep';
-import ErrorReportStep from './steps/ErrorReportStep';
 import ExemptionsStep from './steps/ExemptionsStep';
 import DisclaimerStep from './steps/DisclaimerStep';
 import ResultsGateStep from './steps/ResultsGateStep';
 import ResultsDisplayStep from './steps/ResultsDisplayStep';
 import AppealStep from './steps/AppealStep';
+import ContactRedirectStep from './steps/ContactRedirectStep';
 
 // ── State ──
 
@@ -64,6 +62,8 @@ export interface WizardState {
   calculationResult: any | null;
   // Loading
   isLoading: boolean;
+  // Contact redirect reason (when calculation can't proceed)
+  contactRedirectReason: 'area' | 'designations' | 'city' | 'other_city' | 'error' | null;
 }
 
 const initialState: WizardState = {
@@ -100,7 +100,20 @@ const initialState: WizardState = {
   consentGiven: false,
   calculationResult: null,
   isLoading: false,
+  contactRedirectReason: null,
 };
+
+// ── Step definitions ──
+// Logical steps in the wizard flow:
+// 0: InitialInfoStep    — property type + city + document upload + initial waiver
+// 1: DataEntryStep      — property details + error report (merged)
+// 2: ExemptionsStep     — discounts (SKIPPED for business)
+// 3: DisclaimerStep     — consent + triggers calculation
+// 4: ResultsGateStep    — shows outcome
+// 5: ResultsDisplayStep — detailed results
+// 6: AppealStep         — appeal + waiver
+
+const EXEMPTIONS_STEP = 2;
 
 // ── Actions ──
 
@@ -117,16 +130,33 @@ export type WizardAction =
   | { type: 'SET_MEASUREMENT_ERROR'; payload: WizardState['measurementError'] }
   | { type: 'SET_CLASSIFICATION_ERROR'; payload: WizardState['classificationError'] }
   | { type: 'SET_CALCULATION_RESULT'; payload: any }
-  | { type: 'SET_LOADING'; payload: boolean };
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_CONTACT_REDIRECT'; payload: WizardState['contactRedirectReason'] };
+
+function shouldSkipExemptions(state: WizardState): boolean {
+  return state.propertyType === 'business';
+}
 
 function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   switch (action.type) {
     case 'SET_STEP':
       return { ...state, currentStep: action.step };
-    case 'NEXT_STEP':
-      return { ...state, currentStep: state.currentStep + 1 };
-    case 'PREV_STEP':
-      return { ...state, currentStep: Math.max(0, state.currentStep - 1) };
+    case 'NEXT_STEP': {
+      let nextStep = state.currentStep + 1;
+      // Skip ExemptionsStep for business properties
+      if (nextStep === EXEMPTIONS_STEP && shouldSkipExemptions(state)) {
+        nextStep = EXEMPTIONS_STEP + 1;
+      }
+      return { ...state, currentStep: nextStep };
+    }
+    case 'PREV_STEP': {
+      let prevStep = Math.max(0, state.currentStep - 1);
+      // Skip ExemptionsStep backwards for business
+      if (prevStep === EXEMPTIONS_STEP && shouldSkipExemptions(state)) {
+        prevStep = EXEMPTIONS_STEP - 1;
+      }
+      return { ...state, currentStep: prevStep };
+    }
     case 'SET_PROPERTY_TYPE':
       return { ...state, propertyType: action.payload };
     case 'SET_CITY':
@@ -147,6 +177,8 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
       return { ...state, calculationResult: action.payload };
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
+    case 'SET_CONTACT_REDIRECT':
+      return { ...state, contactRedirectReason: action.payload };
     default:
       return state;
   }
@@ -159,23 +191,62 @@ export interface StepProps {
   dispatch: Dispatch<WizardAction>;
 }
 
+// ── Validation checks ──
+
+function getContactRedirectReason(state: WizardState): WizardState['contactRedirectReason'] {
+  // Check "עיר אחרת" (other city — not in database)
+  if (state.citySlug === 'other') return 'other_city';
+
+  // Check total area > 1000
+  const totalArea =
+    (state.propertyArea || 0) +
+    (state.coveredBalconyArea || 0) +
+    (state.storageArea || 0) +
+    (state.parkingArea || 0);
+  if (totalArea > 1000) return 'area';
+
+  // Check business with multiple designations
+  if (state.propertyType === 'business' && state.designations.length > 1) {
+    return 'designations';
+  }
+
+  // Check city data availability
+  if (!state.cityData || !state.cityData.types || state.cityData.types.length === 0) {
+    return 'city';
+  }
+
+  return null;
+}
+
 // ── Component ──
 
 const STEP_COMPONENTS = [
-  PropertyTypeStep,    // 0
-  CitySelectStep,      // 1
-  DocumentUploadStep,  // 2
-  DataEntryStep,       // 3
-  ErrorReportStep,     // 4
-  ExemptionsStep,      // 5
-  DisclaimerStep,      // 6
-  ResultsGateStep,     // 7
-  ResultsDisplayStep,  // 8
-  AppealStep,          // 9
+  InitialInfoStep,     // 0 — property type + city + document upload + initial waiver
+  DataEntryStep,       // 1 — property details + error report (merged)
+  ExemptionsStep,      // 2 — exemptions (skipped for business)
+  DisclaimerStep,      // 3 — consent + calculation
+  ResultsGateStep,     // 4 — results gate
+  ResultsDisplayStep,  // 5 — detailed results
+  AppealStep,          // 6 — appeal + waiver
 ];
 
 export default function CalculatorWizard() {
   const [state, dispatch] = useReducer(wizardReducer, initialState);
+
+  // Check for contact redirect conditions after data entry (step 1 → step 2/3)
+  // This runs when entering the exemptions or disclaimer step
+  const redirectReason = (state.currentStep >= EXEMPTIONS_STEP && state.currentStep <= 3)
+    ? getContactRedirectReason(state)
+    : null;
+
+  // Show ContactRedirectStep if redirect needed
+  if (redirectReason || state.contactRedirectReason) {
+    return (
+      <Container maxWidth="md">
+        <ContactRedirectStep reason={redirectReason ?? state.contactRedirectReason!} />
+      </Container>
+    );
+  }
 
   const StepComponent = STEP_COMPONENTS[state.currentStep];
 

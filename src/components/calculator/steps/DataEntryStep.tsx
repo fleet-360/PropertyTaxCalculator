@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   useForm,
   Controller,
@@ -22,6 +22,10 @@ import Divider from "@mui/material/Divider";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Alert from "@mui/material/Alert";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import type { StepProps } from "../CalculatorWizard";
 import { IPropertyType, ISubType, IZoneRate } from "@/lib/models/CityTariff";
 import { findRate } from "@/lib/calculator";
@@ -328,8 +332,8 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
   // Filtered zones: only those belonging to selected subtype
   const filteredZones = useMemo(() => {
     if (!watchedSubType || !watchedType) return [];
-    const selectedType = types.find((t) => t.code === watchedType);
-    const selectedSubtype = selectedType?.subtypes.find(
+    // const selectedType = types.find((t) => t.code === watchedType);
+    const selectedSubtype = filteredSubtypes?.find(
       (s) => s.code === watchedSubType,
     );
     return selectedSubtype?.zones ?? [];
@@ -390,6 +394,11 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
     setValue("classificationCode", "");
   }, [watchedSubType, setValue]);
 
+  // ── Error report state ──
+  const [claimedArea, setClaimedArea] = useState<number>(state.measurementError?.claimed ?? 0);
+  const [suggestedClass, setSuggestedClass] = useState(state.classificationError?.suggested ?? '');
+  const allSubtypes: ISubType[] = cityData?.types.flatMap((t: IPropertyType) => t.subtypes) ?? [];
+
   const onSubmit = (data: FormData) => {
     const fieldKeys = Object.keys(data) as (keyof FormData)[];
     for (const key of fieldKeys) {
@@ -412,6 +421,23 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
       field: "bimonthlyPayment",
       value: bimonthly,
     });
+    // Dispatch error report data
+    if (claimedArea > 0) {
+      dispatch({
+        type: 'SET_MEASUREMENT_ERROR',
+        payload: { claimed: claimedArea, attachment: '' },
+      });
+    } else {
+      dispatch({ type: 'SET_MEASUREMENT_ERROR', payload: null });
+    }
+    if (suggestedClass) {
+      dispatch({
+        type: 'SET_CLASSIFICATION_ERROR',
+        payload: { suggested: suggestedClass },
+      });
+    } else {
+      dispatch({ type: 'SET_CLASSIFICATION_ERROR', payload: null });
+    }
     dispatch({ type: "NEXT_STEP" });
   };
 
@@ -668,7 +694,7 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
         </Grid>
 
         {/* תעריף חי (סיווג + שטחים) */}
-        {liveRate && (
+        {liveRate && state.citySlug !== 'other' && (
           <Grid size={12}>
             <Alert severity="info" sx={{ fontSize: "1.05rem" }}>
               {"תעריף ארנונה: "}
@@ -787,6 +813,56 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
           />
         </Grid>
       </Grid>
+
+      {/* 5. דיווח על שגיאות (אופציונלי) */}
+      <Typography variant="h6" color="text.secondary" sx={{ mt: 3, mb: 0.5 }}>
+        דיווח על שגיאות (אופציונלי)
+      </Typography>
+      <Divider sx={{ mb: 2 }} />
+      <Typography variant="body2" color="text.secondary" mb={2}>
+        אם אתה סבור שיש שגיאה בנתוני הנכס שלך, תוכל לדווח כאן
+      </Typography>
+
+      <Accordion>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography>טעות במדידה</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <TextField
+            label='שטח מתוקן (מ"ר)'
+            type="number"
+            value={claimedArea || ''}
+            onChange={(e) => setClaimedArea(Number(e.target.value))}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          <Button variant="outlined" size="small" disabled>
+            צרף קובץ מדידה (בקרוב)
+          </Button>
+        </AccordionDetails>
+      </Accordion>
+
+      <Accordion>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography>טעות בסיווג</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <TextField
+            label="סיווג מוצע"
+            select
+            value={suggestedClass}
+            onChange={(e) => setSuggestedClass(e.target.value)}
+            fullWidth
+          >
+            <MenuItem value="">בחר</MenuItem>
+            {allSubtypes.map((s: ISubType) => (
+              <MenuItem key={s.code} value={s.code}>
+                {s.label}
+              </MenuItem>
+            ))}
+          </TextField>
+        </AccordionDetails>
+      </Accordion>
 
       <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
         <Button

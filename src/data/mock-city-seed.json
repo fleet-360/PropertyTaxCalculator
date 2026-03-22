@@ -7,14 +7,30 @@
     "isActive": true,
     "ordinanceUrl": "/ordinances/mock-city-2026.pdf",
     "availableZones": [
-      { "code": "א", "label": "אזור א - מרכז העיר" },
-      { "code": "ב", "label": "אזור ב - שכונות ותיקות" },
-      { "code": "ג", "label": "אזור ג - פריפריה" },
-      { "code": "ד", "label": "אזור ד - אזור תעשייה" },
-      { "code": "all", "label": "בכל העיר" }
+      {
+        "code": "א",
+        "label": "אזור א - מרכז העיר"
+      },
+      {
+        "code": "ב",
+        "label": "אזור ב - שכונות ותיקות"
+      },
+      {
+        "code": "ג",
+        "label": "אזור ג - פריפריה"
+      },
+      {
+        "code": "ד",
+        "label": "אזור ד - אזור תעשייה"
+      },
+      {
+        "code": "all",
+        "label": "בכל העיר"
+      }
     ],
     "types": [
       {
+        "category": "private",
         "code": "residential",
         "label": "מגורים",
         "subtypes": [
@@ -23,9 +39,24 @@
             "label": "דירות מגורים רגילות",
             "hasSizeRanges": false,
             "zones": [
-              { "zone": "א", "zoneLabel": "אזור א - מרכז העיר", "rate": 95.00, "propertyCode": "101" },
-              { "zone": "ב", "zoneLabel": "אזור ב - שכונות ותיקות", "rate": 78.50, "propertyCode": "102" },
-              { "zone": "ג", "zoneLabel": "אזור ג - פריפריה", "rate": 55.00, "propertyCode": "103" }
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א - מרכז העיר",
+                "rate": 95,
+                "propertyCode": "101"
+              },
+              {
+                "zone": "ב",
+                "zoneLabel": "אזור ב - שכונות ותיקות",
+                "rate": 78.5,
+                "propertyCode": "102"
+              },
+              {
+                "zone": "ג",
+                "zoneLabel": "אזור ג - פריפריה",
+                "rate": 55,
+                "propertyCode": "103"
+              }
             ]
           },
           {
@@ -33,8 +64,18 @@
             "label": "דירות יוקרה (מעל 150 מ\"ר)",
             "hasSizeRanges": false,
             "zones": [
-              { "zone": "א", "zoneLabel": "אזור א - מרכז העיר", "rate": 130.00, "propertyCode": "111" },
-              { "zone": "ב", "zoneLabel": "אזור ב - שכונות ותיקות", "rate": 110.00, "propertyCode": "112" }
+              {
+                "zone": "א",
+                "zoneLabel": "אזור א - מרכז העיר",
+                "rate": 130,
+                "propertyCode": "111"
+              },
+              {
+                "zone": "ב",
+                "zoneLabel": "אזור ב - שכונות ותיקות",
+                "rate": 110,
+                "propertyCode": "112"
+              }
             ]
           },
           {
@@ -43,12 +84,33 @@
             "hasSizeRanges": true,
             "zones": [
               {
-                "zone": "all", "zoneLabel": "בכל העיר",
+                "zone": "all",
+                "zoneLabel": "בכל העיר",
                 "sizeRanges": [
-                  { "min": 0, "max": 60, "rate": 40.00, "propertyCode": "120" },
-                  { "min": 61, "max": 100, "rate": 65.00, "propertyCode": "121" },
-                  { "min": 101, "max": 150, "rate": 85.00, "propertyCode": "122" },
-                  { "min": 151, "max": -1, "rate": 110.00, "propertyCode": "123" }
+                  {
+                    "min": 0,
+                    "max": 60,
+                    "rate": 40,
+                    "propertyCode": "120"
+                  },
+                  {
+                    "min": 61,
+                    "max": 100,
+                    "rate": 65,
+                    "propertyCode": "121"
+                  },
+                  {
+                    "min": 101,
+                    "max": 150,
+                    "rate": 85,
+                    "propertyCode": "122"
+                  },
+                  {
+                    "min": 151,
+                    "max": -1,
+                    "rate": 110,
+                    "propertyCode": "123"
+                  }
                 ]
               }
             ]
@@ -56,6 +118,7 @@
         ]
       },
       {
+        "category": "business",
         "code": "business",
         "label": "עסקים",
         "subtypes": [
@@ -65,30 +128,93 @@
             "hasSizeRanges": true,
             "zones": [
               {
-                "zone": "א", "zoneLabel": "אזור א - מרכז העיר",
+                "zone": "א",
+                "zoneLabel": "אזור א - מרכז העיר",
                 "sizeRanges": [
-                  { "min": 0, "max": 30, "rate": 400.00, "propertyCode": "301" },
-                  { "min": 31, "max": 100, "rate": 350.00, "propertyCode": "302" },
-                  { "min": 101, "max": 500, "rate": 280.00, "propertyCode": "303" },
-                  { "min": 501, "max": 2000, "rate": 220.00, "propertyCode": "304" },
-                  { "min": 2001, "max": -1, "rate": 180.00, "propertyCode": "305" }
+                  {
+                    "min": 0,
+                    "max": 30,
+                    "rate": 400,
+                    "propertyCode": "301"
+                  },
+                  {
+                    "min": 31,
+                    "max": 100,
+                    "rate": 350,
+                    "propertyCode": "302"
+                  },
+                  {
+                    "min": 101,
+                    "max": 500,
+                    "rate": 280,
+                    "propertyCode": "303"
+                  },
+                  {
+                    "min": 501,
+                    "max": 2000,
+                    "rate": 220,
+                    "propertyCode": "304"
+                  },
+                  {
+                    "min": 2001,
+                    "max": -1,
+                    "rate": 180,
+                    "propertyCode": "305"
+                  }
                 ]
               },
               {
-                "zone": "ב", "zoneLabel": "אזור ב - שכונות ותיקות",
+                "zone": "ב",
+                "zoneLabel": "אזור ב - שכונות ותיקות",
                 "sizeRanges": [
-                  { "min": 0, "max": 30, "rate": 320.00, "propertyCode": "311" },
-                  { "min": 31, "max": 100, "rate": 270.00, "propertyCode": "312" },
-                  { "min": 101, "max": 500, "rate": 210.00, "propertyCode": "313" },
-                  { "min": 501, "max": -1, "rate": 160.00, "propertyCode": "314" }
+                  {
+                    "min": 0,
+                    "max": 30,
+                    "rate": 320,
+                    "propertyCode": "311"
+                  },
+                  {
+                    "min": 31,
+                    "max": 100,
+                    "rate": 270,
+                    "propertyCode": "312"
+                  },
+                  {
+                    "min": 101,
+                    "max": 500,
+                    "rate": 210,
+                    "propertyCode": "313"
+                  },
+                  {
+                    "min": 501,
+                    "max": -1,
+                    "rate": 160,
+                    "propertyCode": "314"
+                  }
                 ]
               },
               {
-                "zone": "ג", "zoneLabel": "אזור ג - פריפריה",
+                "zone": "ג",
+                "zoneLabel": "אזור ג - פריפריה",
                 "sizeRanges": [
-                  { "min": 0, "max": 50, "rate": 250.00, "propertyCode": "321" },
-                  { "min": 51, "max": 200, "rate": 190.00, "propertyCode": "322" },
-                  { "min": 201, "max": -1, "rate": 140.00, "propertyCode": "323" }
+                  {
+                    "min": 0,
+                    "max": 50,
+                    "rate": 250,
+                    "propertyCode": "321"
+                  },
+                  {
+                    "min": 51,
+                    "max": 200,
+                    "rate": 190,
+                    "propertyCode": "322"
+                  },
+                  {
+                    "min": 201,
+                    "max": -1,
+                    "rate": 140,
+                    "propertyCode": "323"
+                  }
                 ]
               }
             ]
@@ -99,19 +225,51 @@
             "hasSizeRanges": true,
             "zones": [
               {
-                "zone": "א", "zoneLabel": "אזור א - מרכז העיר",
+                "zone": "א",
+                "zoneLabel": "אזור א - מרכז העיר",
                 "sizeRanges": [
-                  { "min": 0, "max": 100, "rate": 380.00, "propertyCode": "401" },
-                  { "min": 101, "max": 500, "rate": 320.00, "propertyCode": "402" },
-                  { "min": 501, "max": 5000, "rate": 260.00, "propertyCode": "403" },
-                  { "min": 5001, "max": -1, "rate": 200.00, "propertyCode": "404" }
+                  {
+                    "min": 0,
+                    "max": 100,
+                    "rate": 380,
+                    "propertyCode": "401"
+                  },
+                  {
+                    "min": 101,
+                    "max": 500,
+                    "rate": 320,
+                    "propertyCode": "402"
+                  },
+                  {
+                    "min": 501,
+                    "max": 5000,
+                    "rate": 260,
+                    "propertyCode": "403"
+                  },
+                  {
+                    "min": 5001,
+                    "max": -1,
+                    "rate": 200,
+                    "propertyCode": "404"
+                  }
                 ]
               },
               {
-                "zone": "ב", "zoneLabel": "אזור ב - שכונות ותיקות",
+                "zone": "ב",
+                "zoneLabel": "אזור ב - שכונות ותיקות",
                 "sizeRanges": [
-                  { "min": 0, "max": 200, "rate": 280.00, "propertyCode": "411" },
-                  { "min": 201, "max": -1, "rate": 220.00, "propertyCode": "412" }
+                  {
+                    "min": 0,
+                    "max": 200,
+                    "rate": 280,
+                    "propertyCode": "411"
+                  },
+                  {
+                    "min": 201,
+                    "max": -1,
+                    "rate": 220,
+                    "propertyCode": "412"
+                  }
                 ]
               }
             ]
@@ -121,12 +279,18 @@
             "label": "סופרמרקטים וקניונים",
             "hasSizeRanges": false,
             "zones": [
-              { "zone": "all", "zoneLabel": "בכל העיר", "rate": 450.00, "propertyCode": "501" }
+              {
+                "zone": "all",
+                "zoneLabel": "בכל העיר",
+                "rate": 450,
+                "propertyCode": "501"
+              }
             ]
           }
         ]
       },
       {
+        "category": "business",
         "code": "industry",
         "label": "תעשייה ומלאכה",
         "subtypes": [
@@ -136,12 +300,33 @@
             "hasSizeRanges": true,
             "zones": [
               {
-                "zone": "ד", "zoneLabel": "אזור ד - אזור תעשייה",
+                "zone": "ד",
+                "zoneLabel": "אזור ד - אזור תעשייה",
                 "sizeRanges": [
-                  { "min": 0, "max": 500, "rate": 180.00, "propertyCode": "601" },
-                  { "min": 501, "max": 3000, "rate": 150.00, "propertyCode": "602" },
-                  { "min": 3001, "max": 10000, "rate": 120.00, "propertyCode": "603" },
-                  { "min": 10001, "max": -1, "rate": 90.00, "propertyCode": "604" }
+                  {
+                    "min": 0,
+                    "max": 500,
+                    "rate": 180,
+                    "propertyCode": "601"
+                  },
+                  {
+                    "min": 501,
+                    "max": 3000,
+                    "rate": 150,
+                    "propertyCode": "602"
+                  },
+                  {
+                    "min": 3001,
+                    "max": 10000,
+                    "rate": 120,
+                    "propertyCode": "603"
+                  },
+                  {
+                    "min": 10001,
+                    "max": -1,
+                    "rate": 90,
+                    "propertyCode": "604"
+                  }
                 ]
               }
             ]
@@ -152,11 +337,27 @@
             "hasSizeRanges": true,
             "zones": [
               {
-                "zone": "ד", "zoneLabel": "אזור ד - אזור תעשייה",
+                "zone": "ד",
+                "zoneLabel": "אזור ד - אזור תעשייה",
                 "sizeRanges": [
-                  { "min": 0, "max": 1000, "rate": 160.00, "propertyCode": "611" },
-                  { "min": 1001, "max": 5000, "rate": 130.00, "propertyCode": "612" },
-                  { "min": 5001, "max": -1, "rate": 100.00, "propertyCode": "613" }
+                  {
+                    "min": 0,
+                    "max": 1000,
+                    "rate": 160,
+                    "propertyCode": "611"
+                  },
+                  {
+                    "min": 1001,
+                    "max": 5000,
+                    "rate": 130,
+                    "propertyCode": "612"
+                  },
+                  {
+                    "min": 5001,
+                    "max": -1,
+                    "rate": 100,
+                    "propertyCode": "613"
+                  }
                 ]
               }
             ]
@@ -166,7 +367,12 @@
             "label": "אחסנה ומחסנים",
             "hasSizeRanges": false,
             "zones": [
-              { "zone": "ד", "zoneLabel": "אזור ד - אזור תעשייה", "rate": 80.00, "propertyCode": "701" }
+              {
+                "zone": "ד",
+                "zoneLabel": "אזור ד - אזור תעשייה",
+                "rate": 80,
+                "propertyCode": "701"
+              }
             ]
           },
           {
@@ -174,7 +380,12 @@
             "label": "קרקע",
             "hasSizeRanges": false,
             "zones": [
-              { "zone": "all", "zoneLabel": "בכל העיר", "rate": 22.00, "propertyCode": "801" }
+              {
+                "zone": "all",
+                "zoneLabel": "בכל העיר",
+                "rate": 22,
+                "propertyCode": "801"
+              }
             ]
           }
         ]
@@ -189,25 +400,38 @@
             "code": "senior_25",
             "description": "אזרח ותיק שאינו מקבל גמלת הבטחת הכנסה",
             "discountPercent": 25,
-            "restrictions": { "maxAreaSqm": 100 },
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
             "requiresDocuments": true,
-            "documentTypes": ["תעודת זהות"]
+            "documentTypes": [
+              "תעודת זהות"
+            ]
           },
           {
             "code": "senior_30",
             "description": "אזרח ותיק המקבל גמלת הבטחת הכנסה",
             "discountPercent": 30,
-            "restrictions": { "maxAreaSqm": 100 },
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
             "requiresDocuments": true,
-            "documentTypes": ["תעודת זהות", "אישור ביטוח לאומי"]
+            "documentTypes": [
+              "תעודת זהות",
+              "אישור ביטוח לאומי"
+            ]
           },
           {
             "code": "senior_100",
             "description": "אזרח ותיק המקבל גמלת סיעוד מלאה",
             "discountPercent": 100,
-            "restrictions": { "maxAreaSqm": 100 },
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
             "requiresDocuments": true,
-            "documentTypes": ["אישור ביטוח לאומי"]
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
           }
         ]
       },
@@ -219,25 +443,37 @@
             "code": "disabled_40",
             "description": "נכה בדרגת נכות 75% ומעלה",
             "discountPercent": 40,
-            "restrictions": { "maxAreaSqm": 100 },
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
             "requiresDocuments": true,
-            "documentTypes": ["אישור ביטוח לאומי"]
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
           },
           {
             "code": "disabled_80",
             "description": "נכה המקבל קצבת נכות מלאה + השלמת הכנסה",
             "discountPercent": 80,
-            "restrictions": { "maxAreaSqm": 130 },
+            "restrictions": {
+              "maxAreaSqm": 130
+            },
             "requiresDocuments": true,
-            "documentTypes": ["אישור ביטוח לאומי"]
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
           },
           {
             "code": "disabled_100",
             "description": "נכה הזכאי לקצבה מיוחדת",
             "discountPercent": 100,
-            "restrictions": { "maxAreaSqm": 100 },
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
             "requiresDocuments": true,
-            "documentTypes": ["אישור ביטוח לאומי"]
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
           }
         ]
       },
@@ -249,49 +485,85 @@
             "code": "income_80_small",
             "description": "הכנסה נמוכה - עד 4 נפשות",
             "discountPercent": 80,
-            "restrictions": { "maxAreaSqm": 70, "minHouseholdSize": 1 },
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
             "requiresDocuments": true,
-            "documentTypes": ["אישור הכנסות", "תצהיר"]
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
           },
           {
             "code": "income_80_large",
             "description": "הכנסה נמוכה - 5 נפשות ומעלה",
             "discountPercent": 80,
-            "restrictions": { "maxAreaSqm": 90, "minHouseholdSize": 5 },
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
             "requiresDocuments": true,
-            "documentTypes": ["אישור הכנסות", "תצהיר"]
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
           },
           {
             "code": "income_60_small",
             "description": "הכנסה בינונית - עד 4 נפשות",
             "discountPercent": 60,
-            "restrictions": { "maxAreaSqm": 70, "minHouseholdSize": 1 },
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
             "requiresDocuments": true,
-            "documentTypes": ["אישור הכנסות", "תצהיר"]
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
           },
           {
             "code": "income_60_large",
             "description": "הכנסה בינונית - 5 נפשות ומעלה",
             "discountPercent": 60,
-            "restrictions": { "maxAreaSqm": 90, "minHouseholdSize": 5 },
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
             "requiresDocuments": true,
-            "documentTypes": ["אישור הכנסות", "תצהיר"]
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
           },
           {
             "code": "income_40_small",
             "description": "הכנסה בינונית-גבוהה - עד 4 נפשות",
             "discountPercent": 40,
-            "restrictions": { "maxAreaSqm": 70, "minHouseholdSize": 1 },
+            "restrictions": {
+              "maxAreaSqm": 70,
+              "minHouseholdSize": 1
+            },
             "requiresDocuments": true,
-            "documentTypes": ["אישור הכנסות", "תצהיר"]
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
           },
           {
             "code": "income_40_large",
             "description": "הכנסה בינונית-גבוהה - 5 נפשות ומעלה",
             "discountPercent": 40,
-            "restrictions": { "maxAreaSqm": 90, "minHouseholdSize": 5 },
+            "restrictions": {
+              "maxAreaSqm": 90,
+              "minHouseholdSize": 5
+            },
             "requiresDocuments": true,
-            "documentTypes": ["אישור הכנסות", "תצהיר"]
+            "documentTypes": [
+              "אישור הכנסות",
+              "תצהיר"
+            ]
           }
         ]
       },
@@ -303,17 +575,25 @@
             "code": "benefits_66",
             "description": "מקבל תגמולים לפי חוק נכי רדיפות הנאצים",
             "discountPercent": 66,
-            "restrictions": { "maxAreaSqm": 100 },
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
             "requiresDocuments": true,
-            "documentTypes": ["אישור משרד האוצר"]
+            "documentTypes": [
+              "אישור משרד האוצר"
+            ]
           },
           {
             "code": "benefits_25",
             "description": "מקבל תגמולים לפי חוקי השיקום",
             "discountPercent": 25,
-            "restrictions": { "maxAreaSqm": 100 },
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
             "requiresDocuments": true,
-            "documentTypes": ["אישור משרד הביטחון"]
+            "documentTypes": [
+              "אישור משרד הביטחון"
+            ]
           }
         ]
       },
@@ -327,7 +607,9 @@
             "discountPercent": 20,
             "restrictions": {},
             "requiresDocuments": true,
-            "documentTypes": ["אישור ביטוח לאומי"]
+            "documentTypes": [
+              "אישור ביטוח לאומי"
+            ]
           }
         ]
       },
@@ -339,9 +621,13 @@
             "code": "immigrant_90",
             "description": "עולה חדש - 12 חודשים ראשונים",
             "discountPercent": 90,
-            "restrictions": { "maxAreaSqm": 100 },
+            "restrictions": {
+              "maxAreaSqm": 100
+            },
             "requiresDocuments": true,
-            "documentTypes": ["תעודת עולה"]
+            "documentTypes": [
+              "תעודת עולה"
+            ]
           }
         ]
       },
@@ -355,7 +641,9 @@
             "discountPercent": 100,
             "restrictions": {},
             "requiresDocuments": true,
-            "documentTypes": ["תצהיר"]
+            "documentTypes": [
+              "תצהיר"
+            ]
           }
         ]
       },
@@ -367,17 +655,29 @@
             "code": "large_family_4",
             "description": "משפחה עם 4 ילדים עד גיל 18",
             "discountPercent": 20,
-            "restrictions": { "minChildren": 4, "maxAreaSqm": 120 },
+            "restrictions": {
+              "minChildren": 4,
+              "maxAreaSqm": 120
+            },
             "requiresDocuments": true,
-            "documentTypes": ["תעודות זהות", "אישורי לידה"]
+            "documentTypes": [
+              "תעודות זהות",
+              "אישורי לידה"
+            ]
           },
           {
             "code": "large_family_6",
             "description": "משפחה עם 6 ילדים ומעלה עד גיל 18",
             "discountPercent": 30,
-            "restrictions": { "minChildren": 6, "maxAreaSqm": 140 },
+            "restrictions": {
+              "minChildren": 6,
+              "maxAreaSqm": 140
+            },
             "requiresDocuments": true,
-            "documentTypes": ["תעודות זהות", "אישורי לידה"]
+            "documentTypes": [
+              "תעודות זהות",
+              "אישורי לידה"
+            ]
           }
         ]
       }
