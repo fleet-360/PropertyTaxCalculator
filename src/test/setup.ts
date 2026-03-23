@@ -6,7 +6,7 @@ if (!process.env.MONGODB_URI) {
 
 // Optional: extend matchers for component tests
 try {
-  await import('@testing-library/jest-dom');
+  // await import('@testing-library/jest-dom');
 } catch {
   // Not installed; skip
 }
