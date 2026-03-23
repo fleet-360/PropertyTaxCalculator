@@ -5,14 +5,14 @@ const theme = createTheme({
   direction: 'rtl',
   palette: {
     primary: {
-      main: '#1976d2',
-      light: '#42a5f5',
-      dark: '#1565c0',
+      main: '#1a4fdb',
+      light: '#4a7aff',
+      dark: '#1a3380',
     },
     secondary: {
-      main: '#f57c00',
-      light: '#ffb74d',
-      dark: '#e65100',
+      main: '#00c7a3',
+      light: '#33d4b5',
+      dark: '#009e82',
     },
     background: {
       default: '#fafafa',
@@ -24,12 +24,15 @@ const theme = createTheme({
     error: {
       main: '#d32f2f',
     },
+    warning: {
+      main: '#f59e0b',
+    },
   },
   typography: {
-    fontFamily: '"Heebo", "Roboto", "Arial", sans-serif',
+    fontFamily: '"Inter", "Heebo", "Roboto", "Arial", sans-serif',
     h1: { fontWeight: 700, fontSize: '2.5rem' },
-    h2: { fontWeight: 600, fontSize: '2rem' },
-    h3: { fontWeight: 600, fontSize: '1.75rem' },
+    h2: { fontWeight: 700, fontSize: '2rem' },
+    h3: { fontWeight: 700, fontSize: '1.75rem' },
     h4: { fontWeight: 600, fontSize: '1.5rem' },
     h5: { fontWeight: 500, fontSize: '1.25rem' },
     h6: { fontWeight: 500, fontSize: '1rem' },

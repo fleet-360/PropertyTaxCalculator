@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Heebo } from 'next/font/google';
+import { Heebo, Inter } from 'next/font/google';
 import ThemeRegistry from '@/theme/ThemeRegistry';
 import '@/styles/globals.css';
 
@@ -7,6 +7,12 @@ const heebo = Heebo({
   subsets: ['latin', 'hebrew'],
   display: 'swap',
   variable: '--font-heebo',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
 });
 
 export const metadata: Metadata = {
@@ -20,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="he" dir="rtl" className={heebo.variable}>
+    <html lang="he" dir="rtl" className={`${heebo.variable} ${inter.variable}`}>
       <body suppressHydrationWarning>
         <ThemeRegistry>
           {children}

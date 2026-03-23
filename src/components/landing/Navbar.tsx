@@ -1,85 +1,128 @@
-'use client';
-import { useState, useEffect } from 'react';
+"use client";
+import { useState } from "react";
 import {
-  AppBar, Toolbar, Typography, Button, Container, Box, IconButton, Drawer, List, ListItem, ListItemButton, ListItemText,
-} from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import CalculateIcon from '@mui/icons-material/Calculate';
-import Link from 'next/link';
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Container,
+  Box,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import Link from "next/link";
 
 const navItems = [
-  { label: 'ראשי', href: '#hero' },
-  { label: 'איך זה עובד', href: '#calculator-cta' },
-  { label: 'המלצות', href: '#testimonials' },
-  { label: 'מאמרים', href: '/blog' },
+  { label: "בית", href: "#hero" },
+  { label: "מחשבון", href: "#calculator-section" },
+  { label: "המלצות", href: "#testimonials" },
+  { label: "מאמרים", href: "/blog" },
 ];
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   return (
     <>
       <AppBar
         position="fixed"
-        elevation={scrolled ? 2 : 0}
+        elevation={0}
         sx={{
-          bgcolor: scrolled ? 'rgba(255,255,255,0.95)' : 'transparent',
-          backdropFilter: scrolled ? 'blur(10px)' : 'none',
-          transition: 'all 0.3s ease',
+          bgcolor: "rgba(255,255,255,0.98)",
+          boxShadow: "0px 2px 16px rgba(26,51,128,0.08)",
+          height: 84,
+          justifyContent: "center",
         }}
       >
-        <Container maxWidth="lg">
-          <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
-            <Typography
-              variant="h6"
+        <Container maxWidth="xl" sx={{px:"44px"}}>
+          <Toolbar disableGutters sx={{gap:"43px"}}>
+            {/* Right side — Logo */}
+            <Box
               component={Link}
               href="/"
               sx={{
-                textDecoration: 'none',
-                color: scrolled ? 'primary.main' : '#fff',
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                textDecoration: "none",
               }}
             >
-              <CalculateIcon />
-              מחשבון ארנונה
-            </Typography>
 
-            {/* Desktop nav */}
-            <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, alignItems: 'center' }}>
+              {/* TODO: Replace with actual logo image */}
+              <Box
+                sx={{
+                  width: 75,
+                  height: 68,
+                  bgcolor: "#e8eef6",
+                  borderRadius: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "28px",
+                }}
+              >
+                🏠
+              </Box>
+            </Box>
+            {/* Center — Nav items (desktop) */}
+            <Box
+              sx={{
+                display: { xs: "none", md: "flex" },
+                gap: 5,
+              }}
+            >
               {navItems.map((item) => (
-                <Button
+                <Typography
                   key={item.label}
-                  component={item.href.startsWith('/') ? Link : 'a'}
+                  component={item.href.startsWith("/") ? Link : "a"}
                   href={item.href}
-                  sx={{ color: scrolled ? 'text.primary' : '#fff' }}
+                  sx={{
+                    color: "#4a4a6a",
+                    fontSize: "16px",
+                    fontWeight: 500,
+                    textDecoration: "none",
+                    cursor: "pointer",
+                    transition: "color 0.2s",
+                    "&:hover": { color: "#1a4fdb" },
+                  }}
                 >
                   {item.label}
-                </Button>
+                </Typography>
               ))}
+            </Box>
+            {/* Left side — CTA button (in RTL this appears on visual left) */}
+            <Box
+              sx={{ display: { xs: "none", md: "flex" }, alignItems: "center",ml:"auto" }}
+            >
               <Button
                 component={Link}
                 href="/calculator"
                 variant="contained"
-                color="primary"
-                sx={{ mr: 1 }}
+                sx={{
+                  bgcolor: "#1a4fdb",
+                  color: "#fff",
+                  borderRadius: "21px",
+                  px: 3.5,
+                  py: 1.2,
+                  fontSize: "15px",
+                  fontWeight: 700,
+                  minWidth: 130,
+                  height: 42,
+                  "&:hover": { bgcolor: "#1640b5" },
+                }}
               >
-                למחשבון
+                חשב עכשיו
               </Button>
             </Box>
 
             {/* Mobile menu button */}
             <IconButton
-              sx={{ display: { md: 'none' }, color: scrolled ? 'text.primary' : '#fff' }}
+              sx={{ display: { md: "none" }, color: "#4a4a6a" }}
               onClick={() => setMobileOpen(true)}
             >
               <MenuIcon />
@@ -88,29 +131,70 @@ export default function Navbar() {
         </Container>
       </AppBar>
 
+      {/* Spacer for fixed navbar */}
+      <Box sx={{ height: 84 }} />
+
       {/* Mobile drawer */}
       <Drawer
         anchor="right"
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
       >
-        <Box sx={{ width: 250, pt: 2 }}>
+        <Box sx={{ width: 280, pt: 2 }}>
+          {/* Logo in drawer */}
+          <Box
+            sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, mb: 2 }}
+          >
+            <Box
+              sx={{
+                width: 50,
+                height: 45,
+                bgcolor: "#e8eef6",
+                borderRadius: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "20px",
+              }}
+            >
+              🏠
+            </Box>
+            <Typography sx={{ fontWeight: 700, fontSize: "18px" }}>
+              ארנונה חכמה
+            </Typography>
+          </Box>
           <List>
             {navItems.map((item) => (
               <ListItem key={item.label} disablePadding>
                 <ListItemButton
-                  component={item.href.startsWith('/') ? Link : 'a'}
+                  component={item.href.startsWith("/") ? Link : "a"}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
                 >
-                  <ListItemText primary={item.label} />
+                  <ListItemText
+                    primary={item.label}
+                    sx={{ textAlign: "right" }}
+                  />
                 </ListItemButton>
               </ListItem>
             ))}
-            <ListItem disablePadding>
-              <ListItemButton component={Link} href="/calculator" onClick={() => setMobileOpen(false)}>
-                <ListItemText primary="למחשבון" sx={{ color: 'primary.main', fontWeight: 700 }} />
-              </ListItemButton>
+            <ListItem disablePadding sx={{ px: 2, mt: 2 }}>
+              <Button
+                component={Link}
+                href="/calculator"
+                variant="contained"
+                fullWidth
+                onClick={() => setMobileOpen(false)}
+                sx={{
+                  bgcolor: "#1a4fdb",
+                  borderRadius: "21px",
+                  py: 1.2,
+                  fontWeight: 700,
+                  "&:hover": { bgcolor: "#1640b5" },
+                }}
+              >
+                חשב עכשיו
+              </Button>
             </ListItem>
           </List>
         </Box>
