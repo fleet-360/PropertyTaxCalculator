@@ -198,7 +198,6 @@ export default function Navbar() {
 
       {/* Mobile drawer */}
       <Drawer
-        anchor="right"
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
       >
@@ -235,7 +234,6 @@ export default function Navbar() {
                 >
                   <ListItemText
                     primary={item.label}
-                    sx={{ textAlign: "right" }}
                   />
                 </ListItemButton>
               </ListItem>

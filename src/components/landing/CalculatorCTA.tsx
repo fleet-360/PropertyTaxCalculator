@@ -13,7 +13,11 @@ export default function CalculatorSection() {
   return (
     <Box
       id="calculator-section"
-      sx={{ py: { xs: 6, md: 10 }, bgcolor: "#fff" ,minHeight: {xs:"auto",md:"100vh"}}}
+      sx={{
+        py: { xs: 6, md: 10 },
+        bgcolor: "#fff",
+        minHeight: { xs: "auto", md: "100vh" },
+      }}
     >
       <Container maxWidth="lg">
         {/* Header */}
@@ -27,17 +31,23 @@ export default function CalculatorSection() {
             <Typography
               sx={{
                 fontWeight: 700,
-                fontSize: { xs: "28px", md: "44px" },
+                fontSize: { xs: "24px", sm: "28px", md: "44px" },
                 color: "#000",
                 mb: 1.5,
+                px: { xs: 1, sm: 2, md: 0 },
+                lineHeight: { xs: 1.25, md: 1.2 },
               }}
             >
               מחשבון הארנונה שלך
             </Typography>
             <Typography
               sx={{
-                fontSize: { xs: "14px", md: "18px" },
+                fontSize: { xs: "14px", sm: "16px", md: "18px" },
                 color: "#000",
+                lineHeight: 1.5,
+                px: { xs: 1, sm: 2, md: 0 },
+                maxWidth: 640,
+                mx: "auto",
               }}
             >
               הזן את פרטי הנכס שלך וקבל חישוב מדויק תוך שניות
@@ -49,21 +59,38 @@ export default function CalculatorSection() {
         <Box
           sx={{
             display: "flex",
-            gap: { xs: 4, md: 7.5 },
+            gap: { xs: 3, sm: 4, md: 7.5 },
             flexDirection: { xs: "column", md: "row" },
-            alignItems:  { xs: "center", md: "flex-start" },
+            alignItems: { xs: "stretch", md: "flex-start" },
             justifyContent: "center",
+            width: "100%",
           }}
         >
           {/* Right side — Info bubble + character */}
-          <motion.div
-            style={{ flex: `0 1 554px` }}
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.35 }}
+          <Box
+            sx={{
+              width: "100%",
+              maxWidth: { md: 554 },
+              flex: { md: "0 1 554px" },
+              minWidth: 0,
+            }}
           >
-            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0 }}>
+            <motion.div
+              style={{ width: "100%" }}
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.35 }}
+            >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 0,
+                width: "100%",
+                justifyContent: { xs: "center", md: "flex-start" },
+              }}
+            >
 
                             {/* Character illustration placeholder */}
                             <Box
@@ -105,15 +132,24 @@ export default function CalculatorSection() {
                 </Box>
               </Box>  
               {/* Speech bubble */}
-              <Box sx={{ position: "relative" }}>
+              <Box
+                sx={{
+                  position: "relative",
+                  width: { xs: "100%", md: "auto" },
+                  maxWidth: { xs: "100%", md: 340 },
+                  minWidth: 0,
+                }}
+              >
                 <Box
                   sx={{
                     bgcolor: "rgba(255,255,255,0.96)",
                     borderRadius: "20px",
                     boxShadow: "0px 12px 30px rgba(0,0,0,0.2)",
-                    p: 2.5,
-                    width: { xs: "100%", md: 340 },
+                    p: { xs: 2, sm: 2.5 },
+                    width: "100%",
                     textAlign: "right",
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
                   }}
                 >
                   <CalculatorMiaSpeechBubbleTyping />
@@ -137,28 +173,41 @@ export default function CalculatorSection() {
 
 
             </Box>
-          </motion.div>
+            </motion.div>
+          </Box>
           {/* Left side — Embedded Calculator */}
-          <motion.div
-            style={{ flex: "0 1 500px" }}
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+          <Box
+            sx={{
+              width: "100%",
+              maxWidth: { md: 500 },
+              flex: { md: "0 1 500px" },
+              minWidth: 0,
+            }}
           >
-            <Box
-              sx={{
-                bgcolor: "#f1f5f9",
-                border: "1px solid #d2d2d2",
-                borderRadius: "20px",
-                p: { xs: 2, md: 3 },
-                m:"auto",
-                minHeight: 500,
-              }}
+            <motion.div
+              style={{ width: "100%" }}
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <CalculatorWizard />
-            </Box>
-          </motion.div>
+              <Box
+                sx={{
+                  bgcolor: "#f1f5f9",
+                  border: "1px solid #d2d2d2",
+                  borderRadius: "20px",
+                  p: { xs: 1.5, sm: 2, md: 3 },
+                  mx: "auto",
+                  width: "100%",
+                  minHeight: { xs: 420, sm: 460, md: 500 },
+                  maxWidth: "100%",
+                  boxSizing: "border-box",
+                }}
+              >
+                <CalculatorWizard />
+              </Box>
+            </motion.div>
+          </Box>
         </Box>
       </Container>
     </Box>

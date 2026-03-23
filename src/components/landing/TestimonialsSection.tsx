@@ -41,20 +41,26 @@ export default function TestimonialsSection() {
           <Typography
             sx={{
               fontWeight: 700,
-              fontSize: { xs: '28px', md: '38px' },
+              fontSize: { xs: '24px', sm: '28px', md: '38px' },
               color: '#080808',
               textAlign: 'center',
               mb: 1,
+              px: { xs: 1, sm: 0 },
+              lineHeight: { xs: 1.25, md: 1.2 },
             }}
           >
             מה אומרים הלקוחות שלנו?
           </Typography>
           <Typography
             sx={{
-              fontSize: '16px',
+              fontSize: { xs: '14px', sm: '15px', md: '16px' },
               color: '#000',
               textAlign: 'center',
               mb: { xs: 4, md: 6 },
+              lineHeight: 1.5,
+              px: { xs: 1, sm: 2, md: 0 },
+              maxWidth: 560,
+              mx: 'auto',
             }}
           >
             אלפי משפחות כבר חסכו כסף עם מחשבון הארנונה שלנו
@@ -63,18 +69,31 @@ export default function TestimonialsSection() {
 
         {/* Cards */}
         <Box
-          sx={{
-            display: 'flex',
-            gap: { xs: 3, md: '46px' },
-            flexDirection: { xs: 'column', md: 'row' },
+          sx={(theme) => ({
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, minmax(0, 1fr))',
+              md: 'repeat(3, minmax(0, 1fr))',
+            },
+            gap: { xs: 2.5, sm: 3, md: '46px' },
             justifyContent: 'center',
-            alignItems: 'center',
-          }}
+            alignItems: 'stretch',
+            width: '100%',
+            [theme.breakpoints.between('sm', 'md')]: {
+              '& > *:nth-child(3)': {
+                gridColumn: '1 / -1',
+                maxWidth: 382,
+                justifySelf: 'center',
+                width: '100%',
+              },
+            },
+          })}
         >
           {testimonials.map((t, i) => (
             <motion.div
               key={i}
-              style={{ flex: '0 1 382px',width: '100%' }}
+              style={{ width: '100%', minWidth: 0 }}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -82,9 +101,13 @@ export default function TestimonialsSection() {
             >
               <Box
                 sx={{
-                  width: { xs: '100%', md: 382 },
-                  height: { xs: 420, md: 487 },
-                  borderRadius: '22px',
+                  width: '100%',
+                  maxWidth: { xs: '100%', md: 382 },
+                  mx: { md: 'auto' },
+                  aspectRatio: { xs: '10/13', sm: '382/487', md: '382/487' },
+                  minHeight: { xs: 280, sm: 0 },
+                  maxHeight: { xs: 520, md: 'none' },
+                  borderRadius: { xs: '18px', md: '22px' },
                   overflow: 'hidden',
                   position: 'relative',
                   cursor: 'pointer',
@@ -105,7 +128,14 @@ export default function TestimonialsSection() {
                     justifyContent: 'center',
                   }}
                 >
-                  <Box sx={{ fontSize: '80px', opacity: 0.3 }}>📸</Box>
+                  <Box
+                    sx={{
+                      fontSize: { xs: '56px', sm: '72px', md: '80px' },
+                      opacity: 0.3,
+                    }}
+                  >
+                    📸
+                  </Box>
                 </Box>
 
                 {/* Gradient overlay */}
@@ -125,8 +155,8 @@ export default function TestimonialsSection() {
                     top: '40%',
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
-                    width: 80,
-                    height: 80,
+                    width: { xs: 64, sm: 72, md: 80 },
+                    height: { xs: 64, sm: 72, md: 80 },
                     borderRadius: '50%',
                     bgcolor: 'rgba(255,255,255,0.9)',
                     display: 'flex',
@@ -136,7 +166,13 @@ export default function TestimonialsSection() {
                     boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
                   }}
                 >
-                  <PlayArrowIcon sx={{ color: '#1a4fdb', fontSize: 40, ml: 0.5 }} />
+                  <PlayArrowIcon
+                    sx={{
+                      color: '#1a4fdb',
+                      fontSize: { xs: 32, md: 40 },
+                      ml: 0.5,
+                    }}
+                  />
                 </Box>
 
                 {/* Bottom content */}
@@ -146,37 +182,49 @@ export default function TestimonialsSection() {
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    p: 2.5,
+                    p: { xs: 2, sm: 2.25, md: 2.5 },
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'flex-end',
-                    gap: 1,
+                    gap: { xs: 0.75, md: 1 },
                   }}
                 >
                   {/* Quote */}
                   <Typography
                     sx={{
-                      fontSize: '16px',
+                      fontSize: { xs: '14px', sm: '15px', md: '16px' },
                       color: 'rgba(255,255,255,0.8)',
                       textAlign: 'right',
-                      lineHeight: '22px',
-                      maxWidth: 257,
+                      lineHeight: { xs: 1.45, md: '22px' },
+                      maxWidth: { xs: '100%', md: 257 },
+                      width: '100%',
+                      wordBreak: 'break-word',
                     }}
                   >
                     {t.text}
                   </Typography>
 
                   {/* Stars */}
-                  <Typography sx={{ color: '#f59e0b', fontSize: '16px' }}>
+                  <Typography
+                    sx={{ color: '#f59e0b', fontSize: { xs: '14px', md: '16px' } }}
+                  >
                     ★★★★★
                   </Typography>
 
                   {/* Name + Avatar */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mt: 0.5 }}>
-                    <Box sx={{ textAlign: 'right' }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: { xs: 1, md: 1.25 },
+                      mt: 0.5,
+                      maxWidth: '100%',
+                    }}
+                  >
+                    <Box sx={{ textAlign: 'right', minWidth: 0 }}>
                       <Typography
                         sx={{
-                          fontSize: '16px',
+                          fontSize: { xs: '14px', md: '16px' },
                           fontWeight: 700,
                           color: '#fff',
                         }}
@@ -185,7 +233,7 @@ export default function TestimonialsSection() {
                       </Typography>
                       <Typography
                         sx={{
-                          fontSize: '13px',
+                          fontSize: { xs: '12px', md: '13px' },
                           color: '#00c6a2',
                         }}
                       >
@@ -195,9 +243,10 @@ export default function TestimonialsSection() {
                     {/* Avatar with gradient */}
                     <Box
                       sx={{
-                        width: 44,
-                        height: 44,
+                        width: { xs: 40, md: 44 },
+                        height: { xs: 40, md: 44 },
                         borderRadius: '22px',
+                        flexShrink: 0,
                         background: 'linear-gradient(to right, #1a4fdb, #00c7a3)',
                         display: 'flex',
                         alignItems: 'center',
@@ -206,7 +255,7 @@ export default function TestimonialsSection() {
                     >
                       <Typography
                         sx={{
-                          fontSize: '20px',
+                          fontSize: { xs: '18px', md: '20px' },
                           fontWeight: 700,
                           color: '#fff',
                         }}
@@ -221,8 +270,16 @@ export default function TestimonialsSection() {
           ))}
         </Box>
 
-        {/* Carousel dots */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.75, mt: 4 }}>
+        {/* Carousel dots (decorative; section uses grid on larger screens) */}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 0.75,
+            mt: { xs: 3, md: 4 },
+            flexWrap: 'wrap',
+          }}
+        >
           <Box sx={{ width: 24, height: 8, borderRadius: 4, bgcolor: '#1a4fdb' }} />
           <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#d0d0d0' }} />
           <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#d0d0d0' }} />
