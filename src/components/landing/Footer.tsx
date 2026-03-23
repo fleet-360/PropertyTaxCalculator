@@ -21,7 +21,7 @@ const articles = [
 
 export default function Footer() {
   return (
-    <Box component="footer" sx={{ bgcolor: '#fff', position: 'relative' }}>
+    <Box component="footer" sx={{ bgcolor: '#fff', position: 'relative' }} >
       {/* Top gradient line */}
       <Box
         sx={{
@@ -35,7 +35,7 @@ export default function Footer() {
         <Box
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', md: 'row' },
+            flexDirection: { xs: 'column', md: 'row-reverse' },
             gap: { xs: 4, md: 0 },
             justifyContent: 'space-between',
           }}
@@ -76,7 +76,6 @@ export default function Footer() {
                     fontSize: '14px',
                     color: '#060606',
                     textDecoration: 'none',
-                    textAlign: 'right',
                     '&:hover': { color: '#1a4fdb' },
                   }}
                 >
@@ -101,7 +100,6 @@ export default function Footer() {
                     fontSize: '14px',
                     color: '#060606',
                     textDecoration: 'none',
-                    textAlign: 'right',
                     '&:hover': { color: '#1a4fdb' },
                   }}
                 >
@@ -112,11 +110,8 @@ export default function Footer() {
           </Box>
 
           {/* Logo + description */}
-          <Box sx={{ flex: '0 1 280px', textAlign: 'right' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, justifyContent: 'flex-end', mb: 2.5 }}>
-              <Typography sx={{ fontWeight: 700, fontSize: '22px', color: '#0c0c0c' }}>
-                ארנונה חכמה
-              </Typography>
+          <Box sx={{ flex: '0 1 280px' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5,  mb: 2.5 }}>
               {/* TODO: Replace with actual logo image */}
               <Box
                 sx={{
@@ -132,13 +127,16 @@ export default function Footer() {
               >
                 🏠
               </Box>
+              <Typography sx={{ fontWeight: 700, fontSize: '22px', color: '#0c0c0c' }}>
+                ארנונה חכמה
+              </Typography>
+              
             </Box>
             <Typography
               sx={{
                 fontSize: '14px',
                 color: '#161717',
                 lineHeight: '22px',
-                textAlign: 'right',
                 mb: 2.5,
               }}
             >

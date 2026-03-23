@@ -2,6 +2,7 @@
 import { Box, Container, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
+import { CalculatorMiaSpeechBubbleTyping } from "@/components/common/TypingText";
 
 const CalculatorWizard = dynamic(
   () => import("@/components/calculator/CalculatorWizard"),
@@ -12,7 +13,7 @@ export default function CalculatorSection() {
   return (
     <Box
       id="calculator-section"
-      sx={{ py: { xs: 6, md: 10 }, bgcolor: "#f8fafc" }}
+      sx={{ py: { xs: 6, md: 10 }, bgcolor: "#fff" ,minHeight: {xs:"auto",md:"100vh"}}}
     >
       <Container maxWidth="lg">
         {/* Header */}
@@ -50,13 +51,13 @@ export default function CalculatorSection() {
             display: "flex",
             gap: { xs: 4, md: 7.5 },
             flexDirection: { xs: "column", md: "row" },
-            alignItems: "flex-start",
+            alignItems:  { xs: "center", md: "flex-start" },
             justifyContent: "center",
           }}
         >
           {/* Right side — Info bubble + character */}
           <motion.div
-            style={{ flex: "0 1 554px" }}
+            style={{ flex: `0 1 554px` }}
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -112,63 +113,10 @@ export default function CalculatorSection() {
                     boxShadow: "0px 12px 30px rgba(0,0,0,0.2)",
                     p: 2.5,
                     width: { xs: "100%", md: 340 },
+                    textAlign: "right",
                   }}
                 >
-                  {/* Title */}
-                  <Typography
-                    sx={{
-                      fontWeight: 700,
-                      fontSize: "13px",
-                      color: "#1a3380",
-                      textAlign: "right",
-                      mb: 1.5,
-                    }}
-                  >
-                    👋 שלום! אני מיה, יועצת הארנונה שלך
-                  </Typography>
-
-                  {/* Divider */}
-                  <Box sx={{ height: 1, bgcolor: "#e5ebf7", mb: 1.5 }} />
-
-                  {/* Description */}
-                  <Typography
-                    sx={{
-                      fontSize: "12px",
-                      color: "#4d668c",
-                      textAlign: "right",
-                      lineHeight: 1.6,
-                      mb: 1.5,
-                    }}
-                  >
-                    המחשבון שלנו מנתח את נתוני הנכס שלך ומשווה אותם לתעריפי
-                    הרשות המקומית.
-                    <br />
-                    <br />
-                    תוך שניות תקבל הערכה מדויקת + המלצות לחיסכון!
-                  </Typography>
-
-                  {/* Steps */}
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}
-                  >
-                    {[
-                      "1️⃣ הזן עיר ופרטי נכס",
-                      "2️⃣ העלה טופס (אופציונלי)",
-                      "3️⃣ קבל חישוב מיידי",
-                    ].map((step, i) => (
-                      <Typography
-                        key={i}
-                        sx={{
-                          fontSize: "12px",
-                          fontWeight: 500,
-                          color: "#2659cc",
-                          textAlign: "right",
-                        }}
-                      >
-                        {step}
-                      </Typography>
-                    ))}
-                  </Box>
+                  <CalculatorMiaSpeechBubbleTyping />
                 </Box>
 
                 {/* Triangle pointer */}
@@ -204,6 +152,7 @@ export default function CalculatorSection() {
                 border: "1px solid #d2d2d2",
                 borderRadius: "20px",
                 p: { xs: 2, md: 3 },
+                m:"auto",
                 minHeight: 500,
               }}
             >

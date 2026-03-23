@@ -24,7 +24,7 @@
       "name": "Next.js: debug full stack",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run dev",
+      "command": "npm run dev --host ",
       "cwd": "${workspaceFolder}",
       "serverReadyAction": {
         "pattern": "Local:\\s+(https?://[^\\s]+)",

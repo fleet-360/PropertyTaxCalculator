@@ -29,7 +29,7 @@ const testimonials = [
 
 export default function TestimonialsSection() {
   return (
-    <Box id="testimonials" sx={{ py: { xs: 6, md: 8 }, bgcolor: '#fff' }}>
+    <Box id="testimonials" sx={{ py: { xs: 6, md: 8 }, bgcolor: '#f8fafc' }}>
       <Container maxWidth="lg">
         {/* Header */}
         <motion.div
@@ -74,7 +74,7 @@ export default function TestimonialsSection() {
           {testimonials.map((t, i) => (
             <motion.div
               key={i}
-              style={{ flex: '0 1 382px' }}
+              style={{ flex: '0 1 382px',width: '100%' }}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}

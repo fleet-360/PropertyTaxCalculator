@@ -198,7 +198,7 @@ export default function HeroSection() {
           height: "160%",
           transform: "translate(-50%, -50%) rotate(21.81deg)",
           opacity: 0.2,
-          display: { xs: "none", md: "flex" },
+          display: "flex",
           flexDirection: "column",
           gap: `${MARQUEE_ROW_GAP}`,
           overflow: "hidden",

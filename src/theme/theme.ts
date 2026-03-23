@@ -41,6 +41,15 @@ const theme = createTheme({
     borderRadius: 8,
   },
   components: {
+
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          fontFamily: '"Inter", "Heebo", "Roboto", "Arial", sans-serif',
+        },
+        
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {

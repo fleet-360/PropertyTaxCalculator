@@ -152,8 +152,8 @@ export default function Navbar() {
               sx={{ display: { xs: "none", md: "flex" }, alignItems: "center",ml:"auto" }}
             >
               <Button
-                component={Link}
-                href="/calculator"
+                component="a"
+                href="#calculator-section"
                 variant="contained"
                 sx={{
                   bgcolor: "#1a4fdb",

@@ -2,8 +2,8 @@
 
 import { useReducer, Dispatch } from 'react';
 import Container from '@mui/material/Container';
-import WizardStepper from './WizardStepper';
 import InitialInfoStep from './steps/InitialInfoStep';
+import InitialWaiverStep from './steps/InitialWaiverStep';
 import DataEntryStep from './steps/DataEntryStep';
 import ExemptionsStep from './steps/ExemptionsStep';
 import DisclaimerStep from './steps/DisclaimerStep';
@@ -105,15 +105,16 @@ const initialState: WizardState = {
 
 // ── Step definitions ──
 // Logical steps in the wizard flow:
-// 0: InitialInfoStep    — property type + city + document upload + initial waiver
-// 1: DataEntryStep      — property details + error report (merged)
-// 2: ExemptionsStep     — discounts (SKIPPED for business)
-// 3: DisclaimerStep     — consent + triggers calculation
-// 4: ResultsGateStep    — shows outcome
-// 5: ResultsDisplayStep — detailed results
-// 6: AppealStep         — appeal + waiver
+// 0: InitialInfoStep      — property type + city + document upload
+// 1: InitialWaiverStep    — initial waiver / consent
+// 2: DataEntryStep        — property details + error report (merged)
+// 3: ExemptionsStep       — discounts (SKIPPED for business)
+// 4: DisclaimerStep       — consent + triggers calculation
+// 5: ResultsGateStep      — shows outcome
+// 6: ResultsDisplayStep   — detailed results
+// 7: AppealStep           — appeal + waiver
 
-const EXEMPTIONS_STEP = 2;
+const EXEMPTIONS_STEP = 3;
 
 // ── Actions ──
 
@@ -221,13 +222,14 @@ function getContactRedirectReason(state: WizardState): WizardState['contactRedir
 // ── Component ──
 
 const STEP_COMPONENTS = [
-  InitialInfoStep,     // 0 — property type + city + document upload + initial waiver
-  DataEntryStep,       // 1 — property details + error report (merged)
-  ExemptionsStep,      // 2 — exemptions (skipped for business)
-  DisclaimerStep,      // 3 — consent + calculation
-  ResultsGateStep,     // 4 — results gate
-  ResultsDisplayStep,  // 5 — detailed results
-  AppealStep,          // 6 — appeal + waiver
+  InitialInfoStep,     // 0 — property type + city + document upload
+  InitialWaiverStep,   // 1 — initial waiver
+  DataEntryStep,       // 2 — property details + error report (merged)
+  ExemptionsStep,      // 3 — exemptions (skipped for business)
+  DisclaimerStep,      // 4 — consent + calculation
+  ResultsGateStep,     // 5 — results gate
+  ResultsDisplayStep,  // 6 — detailed results
+  AppealStep,          // 7 — appeal + waiver
 ];
 
 export default function CalculatorWizard() {
@@ -235,7 +237,7 @@ export default function CalculatorWizard() {
 
   // Check for contact redirect conditions after data entry (step 1 → step 2/3)
   // This runs when entering the exemptions or disclaimer step
-  const redirectReason = (state.currentStep >= EXEMPTIONS_STEP && state.currentStep <= 3)
+  const redirectReason = (state.currentStep >= EXEMPTIONS_STEP && state.currentStep <= 4)
     ? getContactRedirectReason(state)
     : null;
 
@@ -252,7 +254,6 @@ export default function CalculatorWizard() {
 
   return (
     <Container maxWidth="md">
-      <WizardStepper currentStep={state.currentStep} />
       {StepComponent && <StepComponent key={state.currentStep} state={state} dispatch={dispatch} />}
     </Container>
   );

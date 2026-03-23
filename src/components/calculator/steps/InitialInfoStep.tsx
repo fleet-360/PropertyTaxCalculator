@@ -7,18 +7,10 @@ import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import Paper from '@mui/material/Paper';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import HomeIcon from '@mui/icons-material/Home';
-import BusinessIcon from '@mui/icons-material/Business';
+import CheckIcon from '@mui/icons-material/Check';
 import type { StepProps } from '../CalculatorWizard';
 import TaxBillUpload from '../TaxBillUpload';
 import { findByPropertyCode } from '@/lib/calculator';
-
-const INITIAL_WAIVER_TEXT = `הנני מצהיר/ה ומאשר/ת כי מחשבון הארנונה אינו מהווה ייעוץ משפטי ו/או תחליף לייעוץ משפטי, וכי תוצאות החישוב מבוססות על הנתונים שאזין במחשבון ולצורך התמצאות בלבד.`;
 
 interface CityOption {
   _id: string;
@@ -31,9 +23,6 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
   const [cities, setCities] = useState<CityOption[]>([]);
   const [loadingCities, setLoadingCities] = useState(true);
   const [selectedCity, setSelectedCity] = useState<CityOption | null>(null);
-
-  // ── Initial waiver ──
-  const [initialWaiverAccepted, setInitialWaiverAccepted] = useState(false);
 
   // ── Deferred file upload ──
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -48,10 +37,8 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
   }, []);
 
   // ── Property type selection ──
-  const handleSelectType = (_: React.MouseEvent<HTMLElement>, value: string | null) => {
-    if (value === 'private' || value === 'business') {
-      dispatch({ type: 'SET_PROPERTY_TYPE', payload: value });
-    }
+  const handleSelectType = (value: 'private' | 'business') => {
+    dispatch({ type: 'SET_PROPERTY_TYPE', payload: value });
   };
 
   // ── City selection ──
@@ -77,7 +64,7 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
     setPendingFile(file);
   }, []);
 
-  // ── Handle "הבא" click — extract if file pending, then advance ──
+  // ── Handle "המשך לשלב הבא" click — extract if file pending, then advance ──
   const handleNext = useCallback(async () => {
     if (pendingFile) {
       setIsExtracting(true);
@@ -135,42 +122,78 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
     dispatch({ type: 'NEXT_STEP' });
   }, [pendingFile, dispatch, state.cityData]);
 
-  const canProceed = state.propertyType && selectedCity && !state.isLoading && initialWaiverAccepted && !isExtracting;
+  const canProceed = state.propertyType && selectedCity && !state.isLoading && !isExtracting;
 
   return (
     <Box>
-      {/* ── 1. Property Type ── */}
-      <Typography variant="h5" textAlign="center" mb={3}>
-        בחר סוג נכס
+      {/* ── Title ── */}
+      <Typography
+        sx={{
+          fontWeight: 700,
+          fontSize: '18px',
+          color: '#0c0c0c',
+          textAlign: 'center',
+          mb: 0.5,
+        }}
+      >
+        מחשבון חכם
       </Typography>
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
-        <ToggleButtonGroup
-          value={state.propertyType}
-          exclusive
-          onChange={handleSelectType}
-          size="large"
-          sx={{
-            '& .MuiToggleButton-root': {
-              px: 4,
-              py: 1.5,
-              gap: 1,
-            },
-          }}
-        >
-          <ToggleButton value="private">
-            <HomeIcon />
-            נכס פרטי
-          </ToggleButton>
-          <ToggleButton value="business">
-            <BusinessIcon />
-            נכס עסקי
-          </ToggleButton>
-        </ToggleButtonGroup>
+      <Typography
+        sx={{
+          fontWeight: 700,
+          fontSize: '15px',
+          color: '#0c0c0c',
+          textAlign: 'center',
+          mb: 3,
+        }}
+      >
+        הזנת נתוני נכס
+      </Typography>
+
+      {/* ── 1. Property Type ── */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mb: 4 }}>
+        {(['private', 'business'] as const).map((type) => {
+          const isSelected = state.propertyType === type;
+          const label = type === 'private' ? 'נכס פרטי' : 'נכס עסקי';
+          return (
+            <Button
+              key={type}
+              onClick={() => handleSelectType(type)}
+              variant="contained"
+              disableElevation
+              startIcon={isSelected ? <CheckIcon sx={{ fontSize: '18px !important' }} /> : undefined}
+              sx={{
+                borderRadius: '24px',
+                px: 3,
+                py: 1,
+                fontSize: '14px',
+                fontWeight: 600,
+                textTransform: 'none',
+                bgcolor: isSelected ? '#1a4fdb' : '#f0f2f5',
+                color: isSelected ? '#fff' : '#333',
+                border: 'none',
+                '&:hover': {
+                  bgcolor: isSelected ? '#1540b8' : '#e4e6ea',
+                },
+              }}
+            >
+              {label}
+            </Button>
+          );
+        })}
       </Box>
 
       {/* ── 2. City Select ── */}
-      <Typography variant="h6" textAlign="center" mb={2}>
-        בחר עיר
+      <Typography
+        sx={{
+          fontSize: '14px',
+          color: '#333',
+          fontWeight: 600,
+          mb: 1,
+          textAlign: 'right',
+        }}
+      >
+        עיר/ מועצה מקומית
       </Typography>
       <Autocomplete
         options={cities}
@@ -181,7 +204,7 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
         renderInput={(params) => (
           <TextField
             {...params}
-            label="חפש עיר"
+            placeholder="בחירו עיר מהרשימה"
             InputProps={{
               ...params.InputProps,
               endAdornment: (
@@ -191,17 +214,30 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
                 </>
               ),
             }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '10px',
+                '& fieldset': {
+                  borderColor: '#d2d2d2',
+                },
+              },
+            }}
           />
         )}
         sx={{ mb: 4 }}
       />
 
       {/* ── 3. Document Upload (deferred — extraction on "הבא") ── */}
-      <Typography variant="h6" textAlign="center" mb={1}>
-        סריקת שובר ארנונה
-      </Typography>
-      <Typography variant="body2" color="text.secondary" textAlign="center" mb={2}>
-        ניתן להעלות צילום של שובר הארנונה למילוי אוטומטי של הפרטים, או לדלג ולמלא ידנית.
+      <Typography
+        sx={{
+          fontSize: '14px',
+          color: '#333',
+          fontWeight: 600,
+          mb: 1,
+          textAlign: 'right',
+        }}
+      >
+        העלאת שובר ארנונה
       </Typography>
       <TaxBillUpload
         dispatch={dispatch}
@@ -209,37 +245,38 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
         onFileReady={handleFileReady}
       />
 
-      {/* ── 4. Initial Waiver ── */}
-      <Paper variant="outlined" sx={{ p: 2, mt: 2, mb: 2, maxHeight: 120, overflowY: 'auto', lineHeight: 1.8 }}>
-        <Typography variant="body2">{INITIAL_WAIVER_TEXT}</Typography>
-      </Paper>
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={initialWaiverAccepted}
-            onChange={(e) => setInitialWaiverAccepted(e.target.checked)}
-          />
-        }
-        label="קראתי ואני מסכים/ה"
-      />
-
       {/* ── Navigation ── */}
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
-        <Button
-          variant="contained"
-          disabled={!canProceed}
-          onClick={handleNext}
-        >
-          {isExtracting ? (
-            <>
-              <CircularProgress size={20} sx={{ mr: 1 }} color="inherit" />
-              מחלץ נתונים...
-            </>
-          ) : (
-            'הבא'
-          )}
-        </Button>
-      </Box>
+      <Button
+        variant="contained"
+        disabled={!canProceed}
+        onClick={handleNext}
+        fullWidth
+        sx={{
+          bgcolor: '#1a4fdb',
+          color: '#fff',
+          borderRadius: '12px',
+          py: 1.5,
+          fontSize: '16px',
+          fontWeight: 700,
+          textTransform: 'none',
+          '&:hover': {
+            bgcolor: '#1540b8',
+          },
+          '&.Mui-disabled': {
+            bgcolor: '#b0c4f5',
+            color: '#fff',
+          },
+        }}
+      >
+        {isExtracting ? (
+          <>
+            <CircularProgress size={20} sx={{ mr: 1 }} color="inherit" />
+            מחלץ נתונים...
+          </>
+        ) : (
+          'המשך לשלב הבא'
+        )}
+      </Button>
     </Box>
   );
 }
