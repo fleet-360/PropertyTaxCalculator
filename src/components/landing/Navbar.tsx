@@ -14,8 +14,13 @@ import {
   ListItemButton,
   ListItemText,
 } from "@mui/material";
+import useScrollTrigger from "@mui/material/useScrollTrigger";
 import MenuIcon from "@mui/icons-material/Menu";
 import Link from "next/link";
+
+const NAV_HEIGHT = 84;
+const FLOAT_TOP = { xs: 12, sm: 16 };
+const FLOAT_INSET = { xs: 1.5, sm: 2, md: 3 };
 
 const navItems = [
   { label: "בית", href: "#hero" },
@@ -26,19 +31,66 @@ const navItems = [
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const stuck = useScrollTrigger({
+    disableHysteresis: true,
+    threshold: 48,
+  });
+
+  const topValue = stuck ? 0 : FLOAT_TOP;
 
   return (
     <>
-      <AppBar
-        position="fixed"
-        elevation={0}
+      <Box
         sx={{
-          bgcolor: "rgba(255,255,255,0.98)",
-          boxShadow: "0px 2px 16px rgba(26,51,128,0.08)",
-          height: 84,
-          justifyContent: "center",
+          position: "fixed",
+          top: topValue,
+          left: 0,
+          right: 0,
+          zIndex: (theme) => theme.zIndex.appBar,
+          px: stuck ? 0 : FLOAT_INSET,
+          transition: (theme) =>
+            theme.transitions.create(["top", "padding"], {
+              duration: theme.transitions.duration.shorter,
+              easing: theme.transitions.easing.easeInOut,
+            }),
         }}
       >
+        <AppBar
+          position="static"
+          elevation={0}
+          sx={{
+            bgcolor: "rgba(255,255,255,0.98)",
+            backdropFilter: "blur(12px)",
+            height: NAV_HEIGHT,
+            justifyContent: "center",
+            borderRadius: stuck ? 0 : 3,
+            overflow: "hidden",
+            boxShadow: stuck
+              ? "0px 2px 16px rgba(26,51,128,0.08)"
+              : "0px 8px 32px rgba(26,51,128,0.12), 0px 2px 8px rgba(26,51,128,0.06)",
+            transition: (theme) =>
+              theme.transitions.create(
+                ["border-radius", "box-shadow", "transform"],
+                {
+                  duration: theme.transitions.duration.short,
+                  easing: theme.transitions.easing.easeInOut,
+                }
+              ),
+            animation: "navbarEnter 0.7s cubic-bezier(0.22, 1, 0.36, 1) both",
+            "@keyframes navbarEnter": {
+              "0%": {
+                opacity: 0,
+                transform: "scaleX(0.55) scaleY(0.9)",
+                transformOrigin: "50% 0%",
+              },
+              "100%": {
+                opacity: 1,
+                transform: "scaleX(1) scaleY(1)",
+                transformOrigin: "50% 0%",
+              },
+            },
+          }}
+        >
         <Container maxWidth="xl" sx={{px:"44px"}}>
           <Toolbar disableGutters sx={{gap:"43px"}}>
             {/* Right side — Logo */}
@@ -129,10 +181,20 @@ export default function Navbar() {
             </IconButton>
           </Toolbar>
         </Container>
-      </AppBar>
+        </AppBar>
+      </Box>
 
-      {/* Spacer for fixed navbar */}
-      <Box sx={{ height: 84 }} />
+      {/* Spacer: account for floating offset + bar height */}
+      {/* <Box
+        sx={{
+          height: stuck ? NAV_HEIGHT : { xs: NAV_HEIGHT + 12, sm: NAV_HEIGHT + 16 },
+          transition: (theme) =>
+            theme.transitions.create("height", {
+              duration: theme.transitions.duration.shorter,
+              easing: theme.transitions.easing.easeInOut,
+            }),
+        }}
+      /> */}
 
       {/* Mobile drawer */}
       <Drawer

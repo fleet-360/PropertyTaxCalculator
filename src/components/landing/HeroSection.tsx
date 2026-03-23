@@ -118,7 +118,7 @@ function MarqueeRow({
   reduceMotion: boolean;
 }) {
   /** One shuffled order per row; duplicated in the DOM for a seamless loop. */
-  const cities = useMemo(() => shuffleArray(municipalityEmblems), []);
+  const cities = municipalityEmblems;
   const loop = [...cities, ...cities];
 
   return (

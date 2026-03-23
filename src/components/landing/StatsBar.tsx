@@ -1,13 +1,92 @@
 'use client';
-import { Box, Container, Typography } from '@mui/material';
-import { motion } from 'framer-motion';
 
-const stats = [
-  { value: '100+', label: 'רשויות מקומיות' },
-  { value: '50,000+', label: 'לקוחות מרוצים' },
-  { value: '₪2,400', label: 'חיסכון ממוצע' },
-  { value: '98%', label: 'דיוק בחישוב' },
+import { Box, Container, Typography } from '@mui/material';
+import {
+  motion,
+  animate,
+  useMotionValue,
+  useMotionValueEvent,
+  useInView,
+  useReducedMotion,
+} from 'framer-motion';
+import { useRef, useEffect, useState } from 'react';
+
+type StatConfig = {
+  target: number;
+  label: string;
+  prefix?: string;
+  suffix?: string;
+  comma?: boolean;
+};
+
+const stats: StatConfig[] = [
+  { target: 100, suffix: '+', label: 'רשויות מקומיות' },
+  { target: 50000, suffix: '+', comma: true, label: 'לקוחות מרוצים' },
+  { target: 2400, prefix: '₪', comma: true, label: 'חיסכון ממוצע' },
+  { target: 98, suffix: '%', label: 'דיוק בחישוב' },
 ];
+
+function formatStatValue(n: number, comma: boolean): string {
+  const rounded = Math.round(n);
+  return comma ? rounded.toLocaleString('en-US') : String(rounded);
+}
+
+function RollingStat({ stat, index }: { stat: StatConfig; index: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-10%' });
+  const reduceMotion = useReducedMotion();
+  const count = useMotionValue(0);
+  const [display, setDisplay] = useState(0);
+
+  useMotionValueEvent(count, 'change', (latest) => {
+    setDisplay(Math.round(latest));
+  });
+
+  useEffect(() => {
+    if (!isInView) return;
+
+    if (reduceMotion) {
+      count.set(stat.target);
+      setDisplay(stat.target);
+      return;
+    }
+
+    count.set(0);
+    setDisplay(0);
+    const controls = animate(count, stat.target, {
+      duration: 2,
+      ease: [0.22, 1, 0.36, 1],
+      delay: index * 0.1,
+    });
+    return () => controls.stop();
+  }, [isInView, stat.target, reduceMotion, index, count]);
+
+  const valueText = `${stat.prefix ?? ''}${formatStatValue(display, stat.comma ?? false)}${stat.suffix ?? ''}`;
+
+  return (
+    <Box ref={ref} sx={{ textAlign: 'center' }}>
+      <Typography
+        sx={{
+          color: '#1a4fdb',
+          fontSize: '30px',
+          fontWeight: 700,
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
+        {valueText}
+      </Typography>
+      <Typography
+        sx={{
+          color: '#020202',
+          fontSize: '13px',
+          fontWeight: 400,
+        }}
+      >
+        {stat.label}
+      </Typography>
+    </Box>
+  );
+}
 
 export default function StatsBar() {
   return (
@@ -29,26 +108,7 @@ export default function StatsBar() {
             }}
           >
             {stats.map((stat, i) => (
-              <Box key={i} sx={{ textAlign: 'center' }}>
-                <Typography
-                  sx={{
-                    color: '#1a4fdb',
-                    fontSize: '30px',
-                    fontWeight: 700,
-                  }}
-                >
-                  {stat.value}
-                </Typography>
-                <Typography
-                  sx={{
-                    color: '#020202',
-                    fontSize: '13px',
-                    fontWeight: 400,
-                  }}
-                >
-                  {stat.label}
-                </Typography>
-              </Box>
+              <RollingStat key={stat.label} stat={stat} index={i} />
             ))}
           </Box>
         </motion.div>
