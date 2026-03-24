@@ -1,7 +1,9 @@
 'use client';
 
 import { useReducer, Dispatch } from 'react';
+import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
+import DocumentPreviewPopover from '@/components/common/DocumentPreviewPopover';
 import InitialInfoStep from './steps/InitialInfoStep';
 import InitialWaiverStep from './steps/InitialWaiverStep';
 import DataEntryStep from './steps/DataEntryStep';
@@ -261,8 +263,28 @@ export default function CalculatorWizard() {
 
   const StepComponent = STEP_COMPONENTS[state.currentStep];
 
+  const ordinanceUrl = state.cityData?.ordinanceUrl as string | undefined;
+  const showOrdinanceLink =
+    Boolean(state.citySlug) && state.citySlug !== 'other' && Boolean(ordinanceUrl);
+
+  const ordinanceTitle =
+    state.cityData?.cityName != null && String(state.cityData.cityName).trim() !== ''
+      ? `צו הארנונה — ${state.cityData.cityName}`
+      : 'צו הארנונה';
+
   return (
-    <Container maxWidth="md">
+    <Container maxWidth="md" sx={{ position: 'relative' }}>
+      {showOrdinanceLink && ordinanceUrl && (
+        <Box sx={{ textAlign: 'center', mb: 2, position: 'absolute', top: 0, left: 0 }}>
+          <DocumentPreviewPopover
+            documentUrl={ordinanceUrl}
+            title={ordinanceTitle}
+            triggerLabel="צפייה בצו הארנונה"
+            triggerAriaLabel="פתיחת תצוגה מקדימה של צו הארנונה"
+            downloadLabel="הורדת צו הארנונה (PDF)"
+          />
+        </Box>
+      )}
       {StepComponent && <StepComponent key={state.currentStep} state={state} dispatch={dispatch} />}
     </Container>
   );

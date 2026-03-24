@@ -22,6 +22,9 @@ export interface ISubType {
   code: string;
   label: string;
   hasSizeRanges: boolean;
+  /** When true, size ranges use progressive (bracket/cumulative) pricing;
+   *  when false, a single flat rate applies to the entire area based on which range it falls into. */
+  isProgressiveRate: boolean;
   zones: IZoneRate[];
 }
 
@@ -107,6 +110,7 @@ const SubTypeSchema = new Schema<ISubType>(
     code: { type: String, required: true },
     label: { type: String, required: true },
     hasSizeRanges: { type: Boolean, default: false },
+    isProgressiveRate: { type: Boolean, default: false },
     zones: { type: [ZoneRateSchema], default: [] },
   },
   { _id: false }
@@ -214,6 +218,6 @@ CityTariffSchema.index({ isActive: 1 });
 
 // ── Model export (handle hot-reload in Next.js dev) ───────────────────
 const CityTariff: Model<ICityTariff> =
-  mongoose.models.CityTariff || mongoose.model<ICityTariff>('CityTariff', CityTariffSchema);
+  (mongoose.models.CityTariff as Model<ICityTariff>) || mongoose.model<ICityTariff>('CityTariff', CityTariffSchema);
 
 export default CityTariff;

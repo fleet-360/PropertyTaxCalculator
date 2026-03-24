@@ -82,6 +82,7 @@
             "code": "size_based",
             "label": "דירות לפי גודל",
             "hasSizeRanges": true,
+            "isProgressiveRate": true,
             "zones": [
               {
                 "zone": "all",

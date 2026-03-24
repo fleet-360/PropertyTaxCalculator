@@ -12,7 +12,6 @@ import {
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import Button from "@mui/material/Button";
@@ -68,63 +67,80 @@ interface FormData {
   designations: { type: string; subtype: string; zone: string; area: number }[];
 }
 
-const baseSchema = z.object({
-  fullName: z.string().min(1, "שדה חובה"),
-  idNumber: z.string().regex(/^\d+$/, "יש להזין ספרות בלבד"),
-  email: z.string().email("כתובת מייל לא תקינה").or(z.literal("")),
-  phone: z.string(),
-  propertyPurpose: z.string(),
-  propertyNumber: z.string(),
-  propertyId: z.string(),
-  propertyArea: z.coerce.number().positive("שטח חייב להיות גדול מ-0"),
-  coveredBalconyArea: z.coerce.number().min(0).default(0),
-  storageArea: z.coerce.number().min(0).default(0),
-  parkingArea: z.coerce.number().min(0).default(0),
-  address: z.string(),
-  block: z.string(),
-  parcel: z.string(),
-  classificationCode: z.string(),
+const designationRowSchema = z.object({
+  type: z.string(),
+  subtype: z.string(),
   zone: z.string(),
-  subType: z.string(),
-  reportedPayment: z.coerce.number().positive("סכום חייב להיות גדול מ-0"),
-  paymentPeriod: z.string().default("bimonthly"),
-  designations: z
-    .array(
-      z.object({
-        type: z.string(),
-        subtype: z.string(),
-        zone: z.string(),
-        area: z.coerce.number().min(0),
-      }),
-    )
-    .default([]),
+  area: z.coerce.number().min(0),
 });
 
-// ── Helper: resolve property code from tariff tree ────────────────
-function resolvePropertyCode(
-  types: IPropertyType[],
-  typeCode: string,
-  subtypeCode: string,
-  zoneCode: string,
-  area?: number,
-): string {
-  const type = types.find((t) => t.code === typeCode);
-  const subtype = type?.subtypes.find((s) => s.code === subtypeCode);
-  const zone = subtype?.zones.find((z) => z.zone === zoneCode);
-  if (!zone) return "";
-
-  if (zone.propertyCode) return zone.propertyCode;
-
-  if (zone.sizeRanges && area && area > 0) {
-    const match = zone.sizeRanges.find(
-      (sr) => area >= sr.min && (sr.max === -1 || area <= sr.max),
-    );
-    if (match?.propertyCode) return match.propertyCode;
-  }
-  return "";
+function createDataEntrySchema(isBusiness: boolean) {
+  return z
+    .object({
+      fullName: z.string().min(1, "שדה חובה"),
+      idNumber: z.string().regex(/^\d+$/, "יש להזין ספרות בלבד"),
+      email: z.string().email("כתובת מייל לא תקינה").or(z.literal("")),
+      phone: z.string(),
+      propertyPurpose: z.string(),
+      propertyNumber: z.string(),
+      propertyId: z.string(),
+      propertyArea: isBusiness
+        ? z.coerce.number().min(0)
+        : z.coerce.number().positive("שטח חייב להיות גדול מ-0"),
+      coveredBalconyArea: z.coerce.number().min(0).default(0),
+      storageArea: z.coerce.number().min(0).default(0),
+      parkingArea: z.coerce.number().min(0).default(0),
+      address: z.string(),
+      block: z.string(),
+      parcel: z.string(),
+      classificationCode: z.string(),
+      zone: z.string(),
+      subType: z.string(),
+      reportedPayment: z.coerce.number().positive("סכום חייב להיות גדול מ-0"),
+      paymentPeriod: z.string().default("bimonthly"),
+      designations: z.array(designationRowSchema).default([]),
+    })
+    .superRefine((data, ctx) => {
+      if (!isBusiness) return;
+      const rows = data.designations;
+      if (rows.length !== 1) return;
+      const r = rows[0];
+      if (!r.type?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "שדה חובה",
+          path: ["designations", 0, "type"],
+        });
+      }
+      if (!r.subtype?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "שדה חובה",
+          path: ["designations", 0, "subtype"],
+        });
+      }
+      if (!r.zone?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "שדה חובה",
+          path: ["designations", 0, "zone"],
+        });
+      }
+      if (!(r.area > 0)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "שטח חייב להיות גדול מ-0",
+          path: ["designations", 0, "area"],
+        });
+      }
+    });
 }
 
 // ── DesignationRow: per-row cascading for business designations ───
+type DesignationRowErrors = Partial<
+  Record<"type" | "subtype" | "zone" | "area", { message?: string } | undefined>
+>;
+
 function DesignationRow({
   idx,
   control,
@@ -132,6 +148,7 @@ function DesignationRow({
   types,
   removable,
   onRemove,
+  rowErrors,
 }: {
   idx: number;
   control: Control<FormData>;
@@ -139,6 +156,7 @@ function DesignationRow({
   types: IPropertyType[];
   removable: boolean;
   onRemove: () => void;
+  rowErrors?: DesignationRowErrors;
 }) {
   const rowType = useWatch({
     control,
@@ -179,13 +197,30 @@ function DesignationRow({
   }, [rowSubtype, idx, setValue]);
 
   return (
-    <Grid container spacing={2} sx={{ mb: 1 }}>
-      <Grid size={{ xs: 12, sm: 3 }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "flex-start",
+        gap: 1.5,
+        mb: 1.5,
+        minWidth: 0,
+      }}
+    >
+      <Box sx={{ flex: "1 1 130px", minWidth: 0 }}>
         <Controller
           name={`designations.${idx}.type`}
           control={control}
           render={({ field: f }) => (
-            <TextField {...f} label="סוג" select fullWidth size="small">
+            <TextField
+              {...f}
+              label="סוג"
+              select
+              fullWidth
+              size="small"
+              error={!!rowErrors?.type}
+              helperText={rowErrors?.type?.message}
+            >
               <MenuItem value="">בחר</MenuItem>
               {types.map((t: IPropertyType) => (
                 <MenuItem key={t.code} value={t.code}>
@@ -195,13 +230,21 @@ function DesignationRow({
             </TextField>
           )}
         />
-      </Grid>
-      <Grid size={{ xs: 12, sm: 3 }}>
+      </Box>
+      <Box sx={{ flex: "1 1 130px", minWidth: 0 }}>
         <Controller
           name={`designations.${idx}.subtype`}
           control={control}
           render={({ field: f }) => (
-            <TextField {...f} label="תת-סוג" select fullWidth size="small">
+            <TextField
+              {...f}
+              label="תת-סוג"
+              select
+              fullWidth
+              size="small"
+              error={!!rowErrors?.subtype}
+              helperText={rowErrors?.subtype?.message}
+            >
               <MenuItem value="">בחר</MenuItem>
               {rowFilteredSubtypes.map((s: ISubType) => (
                 <MenuItem key={s.code} value={s.code}>
@@ -211,13 +254,21 @@ function DesignationRow({
             </TextField>
           )}
         />
-      </Grid>
-      <Grid size={{ xs: 12, sm: 3 }}>
+      </Box>
+      <Box sx={{ flex: "1 1 130px", minWidth: 0 }}>
         <Controller
           name={`designations.${idx}.zone`}
           control={control}
           render={({ field: f }) => (
-            <TextField {...f} label="אזור" select fullWidth size="small">
+            <TextField
+              {...f}
+              label="אזור"
+              select
+              fullWidth
+              size="small"
+              error={!!rowErrors?.zone}
+              helperText={rowErrors?.zone?.message}
+            >
               <MenuItem value="">בחר</MenuItem>
               {rowFilteredZones.map((z: IZoneRate) => (
                 <MenuItem key={z.zone} value={z.zone}>
@@ -227,8 +278,8 @@ function DesignationRow({
             </TextField>
           )}
         />
-      </Grid>
-      <Grid size={{ xs: 10, sm: 2 }}>
+      </Box>
+      <Box sx={{ flex: "0 1 118px", minWidth: 0 }}>
         <Controller
           name={`designations.${idx}.area`}
           control={control}
@@ -239,21 +290,28 @@ function DesignationRow({
               type="number"
               fullWidth
               size="small"
+              error={!!rowErrors?.area}
+              helperText={rowErrors?.area?.message}
             />
           )}
         />
-      </Grid>
-      <Grid
-        size={{ xs: 2, sm: 1 }}
-        sx={{ display: "flex", alignItems: "center" }}
+      </Box>
+      <Box
+        sx={{
+          flex: "0 0 auto",
+          display: "flex",
+          alignItems: "center",
+          alignSelf: "stretch",
+          pt: 0.5,
+        }}
       >
         {removable && (
-          <IconButton onClick={onRemove} size="small" color="error">
+          <IconButton onClick={onRemove} size="small" color="error" aria-label="מחק ייעוד">
             <DeleteIcon />
           </IconButton>
         )}
-      </Grid>
-    </Grid>
+      </Box>
+    </Box>
   );
 }
 
@@ -268,6 +326,11 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
       (t: IPropertyType) => t.category === state.propertyType,
     ) ?? [];
 
+  const schema = useMemo(
+    () => createDataEntrySchema(isBusiness),
+    [isBusiness],
+  );
+
   const {
     control,
     handleSubmit,
@@ -275,7 +338,7 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
     setValue,
     formState: { errors },
   } = useForm<FormData>({
-    resolver: zodResolver(baseSchema) as any,
+    resolver: zodResolver(schema) as any,
     defaultValues: {
       fullName: state.fullName,
       idNumber: state.idNumber,
@@ -304,6 +367,8 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
     control,
     name: "designations",
   });
+
+  const watchedDesignations = useWatch({ control, name: "designations" });
 
   // Watch cascading fields
   const watchedType = watch("propertyPurpose");
@@ -341,8 +406,32 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
 
   // ── Live rate computation ────────────────────────────────────────
   const liveRate = useMemo(() => {
-    if (!cityData || !watchedType || !watchedSubType || !watchedZone)
-      return null;
+    if (!cityData) return null;
+
+    if (
+      isBusiness &&
+      watchedDesignations?.length === 1 &&
+      watchedDesignations[0]
+    ) {
+      const r = watchedDesignations[0];
+      if (!r.type || !r.subtype || !r.zone) return null;
+      const totalArea = Number(r.area) || 0;
+      if (totalArea <= 0) return null;
+      try {
+        const { rate, propertyCode } = findRate(
+          cityData,
+          r.type,
+          r.subtype,
+          r.zone,
+          totalArea,
+        );
+        return { rate, propertyCode, totalArea };
+      } catch {
+        return null;
+      }
+    }
+
+    if (!watchedType || !watchedSubType || !watchedZone) return null;
     const totalArea =
       (Number(watchedArea) || 0) +
       (Number(watchedBalcony) || 0) +
@@ -363,6 +452,8 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
     }
   }, [
     cityData,
+    isBusiness,
+    watchedDesignations,
     watchedType,
     watchedSubType,
     watchedZone,
@@ -441,25 +532,42 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
     dispatch({ type: "NEXT_STEP" });
   };
 
+  const fieldsGridSx = {
+    display: "grid",
+    gridTemplateColumns:
+      "repeat(auto-fill, minmax(min(100%, 150px), 1fr))",
+    gap: 2,
+    width: "100%",
+    minWidth: 0,
+  } as const;
+
+  const fullRowSx = { gridColumn: "1 / -1" } as const;
+
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-      <Typography variant="h5" textAlign="center" mb={3}>
+    <Box
+      component="form"
+      onSubmit={handleSubmit(onSubmit)}
+      noValidate
+      sx={{ minWidth: 0 }}
+    >
+      <Typography variant="h6" component="h2" textAlign="center" sx={{ mb: 2 }}>
         מילוי פרטים
       </Typography>
 
-      <Grid container spacing={2}>
+      <Box sx={fieldsGridSx}>
         {/* 1. פרטי המשתמש */}
-        <Grid size={12}>
+        <Box sx={fullRowSx}>
           <Typography
-            variant="h6"
+            variant="subtitle1"
             color="text.secondary"
+            fontWeight={600}
             sx={{ mt: 0, mb: 0.5 }}
           >
             פרטי המשתמש
           </Typography>
-          <Divider sx={{ mb: 2 }} />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
+          <Divider sx={{ mb: 0 }} />
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
           <Controller
             name="fullName"
             control={control}
@@ -468,13 +576,14 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                 {...field}
                 label="שם מלא *"
                 fullWidth
+                size="small"
                 error={!!errors.fullName}
                 helperText={errors.fullName?.message}
               />
             )}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
           <Controller
             name="idNumber"
             control={control}
@@ -483,13 +592,14 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                 {...field}
                 label="ת.ז./ח.פ *"
                 fullWidth
+                size="small"
                 error={!!errors.idNumber}
                 helperText={errors.idNumber?.message}
               />
             )}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
           <Controller
             name="email"
             control={control}
@@ -498,29 +608,31 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                 {...field}
                 label="אימייל"
                 fullWidth
+                size="small"
                 error={!!errors.email}
                 helperText={errors.email?.message}
               />
             )}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
           <Controller
             name="phone"
             control={control}
             render={({ field }) => (
-              <TextField {...field} label="טלפון" fullWidth />
+              <TextField {...field} label="טלפון" fullWidth size="small" />
             )}
           />
-        </Grid>
+        </Box>
 
         {/* Business designations */}
         {isBusiness && (
-          <Grid size={12}>
+          <Box sx={fullRowSx}>
             <Typography
-              variant="h6"
+              variant="subtitle1"
               color="text.secondary"
-              sx={{ mt: 2, mb: 0.5 }}
+              fontWeight={600}
+              sx={{ mt: 1.5, mb: 0.5 }}
             >
               ייעודים עסקיים
             </Typography>
@@ -535,6 +647,9 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                 types={types}
                 removable={fields.length > 1}
                 onRemove={() => remove(idx)}
+                rowErrors={
+                  errors.designations?.[idx] as DesignationRowErrors | undefined
+                }
               />
             ))}
             {fields.length < 4 && (
@@ -544,32 +659,39 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                   append({ type: "", subtype: "", zone: "", area: 0 })
                 }
                 size="small"
-                sx={{ mt: 1 }}
+                sx={{ mt: 0.5 }}
               >
                 הוסף ייעוד
               </Button>
             )}
-          </Grid>
+          </Box>
         )}
 
-        {/* 2. סיווג הנכס — ייעוד → תת-סוג → אזור → קוד סיווג → שטחים */}
-        <Grid size={12}>
+        {/* 2. סיווג הנכס */}
+{!isBusiness &&     <>   <Box sx={fullRowSx}>
           <Typography
-            variant="h6"
+            variant="subtitle1"
             color="text.secondary"
-            sx={{ mt: 2, mb: 0.5 }}
+            fontWeight={600}
+            sx={{ mt: 1.5, mb: 0.5 }}
           >
             סיווג הנכס
           </Typography>
-          <Divider sx={{ mb: 2 }} />
-        </Grid>
-        {!isBusiness && (
-          <Grid size={{ xs: 12, sm: 3 }}>
+          <Divider sx={{ mb: 0 }} />
+        </Box>
+        
+          <Box sx={{ minWidth: 0 }}>
             <Controller
               name="propertyPurpose"
               control={control}
               render={({ field }) => (
-                <TextField {...field} label="ייעוד הנכס" select fullWidth>
+                <TextField
+                  {...field}
+                  label="ייעוד הנכס"
+                  select
+                  fullWidth
+                  size="small"
+                >
                   <MenuItem value="">בחר</MenuItem>
                   {types.map((t: IPropertyType) => (
                     <MenuItem key={t.code} value={t.code}>
@@ -579,9 +701,9 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                 </TextField>
               )}
             />
-          </Grid>
-        )}
-        <Grid size={{ xs: 12, sm: 3 }}>
+          </Box>
+      
+        <Box sx={{ minWidth: 0 }}>
           <Controller
             name="subType"
             control={control}
@@ -591,6 +713,7 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                 label="סוג/סיווג"
                 select
                 fullWidth
+                size="small"
                 disabled={!watchedType && !isBusiness}
               >
                 <MenuItem value="">בחר</MenuItem>
@@ -602,8 +725,8 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
               </TextField>
             )}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 3 }}>
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
           <Controller
             name="zone"
             control={control}
@@ -613,6 +736,7 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                 label="אזור"
                 select
                 fullWidth
+                size="small"
                 disabled={!watchedSubType}
               >
                 <MenuItem value="">בחר</MenuItem>
@@ -624,17 +748,8 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
               </TextField>
             )}
           />
-        </Grid>
-        {/* <Grid size={{ xs: 12, sm: 3 }}>
-          <Controller
-            name="classificationCode"
-            control={control}
-            render={({ field }) => (
-              <TextField {...field} label="קוד סיווג" fullWidth />
-            )}
-          />
-        </Grid> */}
-        <Grid size={{ xs: 12, sm: 3 }}>
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
           <Controller
             name="propertyArea"
             control={control}
@@ -644,13 +759,14 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                 label='שטח הנכס (מ"ר) *'
                 type="number"
                 fullWidth
+                size="small"
                 error={!!errors.propertyArea}
                 helperText={errors.propertyArea?.message}
               />
             )}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 3 }}>
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
           <Controller
             name="coveredBalconyArea"
             control={control}
@@ -660,11 +776,12 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                 label='מרפסת מקורה (מ"ר)'
                 type="number"
                 fullWidth
+                size="small"
               />
             )}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 3 }}>
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
           <Controller
             name="storageArea"
             control={control}
@@ -674,11 +791,12 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                 label='מחסן (מ"ר)'
                 type="number"
                 fullWidth
+                size="small"
               />
             )}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 3 }}>
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
           <Controller
             name="parkingArea"
             control={control}
@@ -688,15 +806,15 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                 label='חניה (מ"ר)'
                 type="number"
                 fullWidth
+                size="small"
               />
             )}
           />
-        </Grid>
+        </Box></>}
 
-        {/* תעריף חי (סיווג + שטחים) */}
-        {liveRate && state.citySlug !== 'other' && (
-          <Grid size={12}>
-            <Alert severity="info" sx={{ fontSize: "1.05rem" }}>
+        {liveRate && state.citySlug !== "other" && (
+          <Box sx={fullRowSx}>
+            <Alert severity="info" variant="outlined" sx={{ py: 0.75 }}>
               {"תעריף ארנונה: "}
               <strong>{liveRate.rate} ₪ למ&quot;ר לשנה</strong>
               {liveRate.propertyCode && (
@@ -710,78 +828,80 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                 | שטח כולל: {liveRate.totalArea} מ&quot;ר
               </Typography>
             </Alert>
-          </Grid>
+          </Box>
         )}
 
         {/* 3. פרטי הנכס */}
-        <Grid size={12}>
+        <Box sx={fullRowSx}>
           <Typography
-            variant="h6"
+            variant="subtitle1"
             color="text.secondary"
-            sx={{ mt: 2, mb: 0.5 }}
+            fontWeight={600}
+            sx={{ mt: 1.5, mb: 0.5 }}
           >
             פרטי הנכס
           </Typography>
-          <Divider sx={{ mb: 2 }} />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 3 }}>
+          <Divider sx={{ mb: 0 }} />
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
           <Controller
             name="propertyNumber"
             control={control}
             render={({ field }) => (
-              <TextField {...field} label="מספר נכס" fullWidth />
+              <TextField {...field} label="מספר נכס" fullWidth size="small" />
             )}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 3 }}>
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
           <Controller
             name="propertyId"
             control={control}
             render={({ field }) => (
-              <TextField {...field} label="זיהוי נכס" fullWidth />
+              <TextField {...field} label="זיהוי נכס" fullWidth size="small" />
             )}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
+        </Box>
+        <Box sx={{ ...fullRowSx, minWidth: 0 }}>
           <Controller
             name="address"
             control={control}
             render={({ field }) => (
-              <TextField {...field} label="כתובת" fullWidth />
+              <TextField {...field} label="כתובת" fullWidth size="small" />
             )}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 3 }}>
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
           <Controller
             name="block"
             control={control}
             render={({ field }) => (
-              <TextField {...field} label="גוש" fullWidth />
+              <TextField {...field} label="גוש" fullWidth size="small" />
             )}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 3 }}>
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
           <Controller
             name="parcel"
             control={control}
             render={({ field }) => (
-              <TextField {...field} label="חלקה" fullWidth />
+              <TextField {...field} label="חלקה" fullWidth size="small" />
             )}
           />
-        </Grid>
+        </Box>
 
         {/* 4. תשלום */}
-        <Grid size={12}>
+        <Box sx={fullRowSx}>
           <Typography
-            variant="h6"
+            variant="subtitle1"
             color="text.secondary"
-            sx={{ mt: 2, mb: 0.5 }}
+            fontWeight={600}
+            sx={{ mt: 1.5, mb: 0.5 }}
           >
             תשלום
           </Typography>
-          <Divider sx={{ mb: 2 }} />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 8 }}>
+          <Divider sx={{ mb: 0 }} />
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
           <Controller
             name="reportedPayment"
             control={control}
@@ -791,18 +911,25 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                 label="סכום תשלום (₪) *"
                 type="number"
                 fullWidth
+                size="small"
                 error={!!errors.reportedPayment}
                 helperText={errors.reportedPayment?.message}
               />
             )}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 4 }}>
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
           <Controller
             name="paymentPeriod"
             control={control}
             render={({ field }) => (
-              <TextField {...field} label="תקופת תשלום" select fullWidth>
+              <TextField
+                {...field}
+                label="תקופת תשלום"
+                select
+                fullWidth
+                size="small"
+              >
                 {PAYMENT_PERIODS.map((p) => (
                   <MenuItem key={p.value} value={p.value}>
                     {p.label}
@@ -811,11 +938,16 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
               </TextField>
             )}
           />
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       {/* 5. דיווח על שגיאות (אופציונלי) */}
-      <Typography variant="h6" color="text.secondary" sx={{ mt: 3, mb: 0.5 }}>
+      <Typography
+        variant="subtitle1"
+        color="text.secondary"
+        fontWeight={600}
+        sx={{ mt: 3, mb: 0.5 }}
+      >
         דיווח על שגיאות (אופציונלי)
       </Typography>
       <Divider sx={{ mb: 2 }} />
@@ -834,6 +966,7 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
             value={claimedArea || ''}
             onChange={(e) => setClaimedArea(Number(e.target.value))}
             fullWidth
+            size="small"
             sx={{ mb: 2 }}
           />
           <Button variant="outlined" size="small" disabled>
@@ -853,6 +986,7 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
             value={suggestedClass}
             onChange={(e) => setSuggestedClass(e.target.value)}
             fullWidth
+            size="small"
           >
             <MenuItem value="">בחר</MenuItem>
             {allSubtypes.map((s: ISubType) => (
