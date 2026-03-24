@@ -16,6 +16,84 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ===== Accessibility: Focus Styles ===== */
+*:focus-visible {
+  outline: 3px solid #1a4fdb;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Remove outline for mouse users */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ===== Accessibility: Skip Navigation ===== */
+.skip-to-content {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  background: #1a4fdb;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 0 0 8px 8px;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
+/* ===== Accessibility Widget Classes ===== */
+
+/* Large text - level 1 */
+html.a11y-large-text {
+  font-size: 120%;
+}
+
+/* Large text - level 2 */
+html.a11y-larger-text {
+  font-size: 140%;
+}
+
+/* High contrast */
+html.a11y-high-contrast {
+  filter: contrast(1.4);
+}
+
+html.a11y-high-contrast img {
+  filter: contrast(0.7);
+}
+
+/* Disable animations */
+html.a11y-no-animations *,
+html.a11y-no-animations *::before,
+html.a11y-no-animations *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
+}
+
+/* Highlight links */
+html.a11y-highlight-links a {
+  outline: 2px solid #1a4fdb !important;
+  outline-offset: 2px;
+  text-decoration: underline !important;
+}
+
+/* Big cursor */
+html.a11y-big-cursor,
+html.a11y-big-cursor * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24'%3E%3Cpath d='M5 3l3.057 11.293L12 10.236l4.144 5.08L13.12 21H5z' fill='%23000' stroke='%23fff' stroke-width='1'/%3E%3C/svg%3E"), auto !important;
+}
+
 /* Blog Content Styles - scoped under .blog-content */
 .blog-content {
   line-height: 1.8;
@@ -136,6 +214,12 @@ html {
 
 .blog-content a:hover {
   border-bottom-color: #1976d2;
+}
+
+.blog-content a:focus-visible {
+  outline: 3px solid #1976d2;
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .blog-content hr {

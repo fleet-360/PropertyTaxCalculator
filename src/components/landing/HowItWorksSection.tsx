@@ -51,6 +51,7 @@ export default function HowItWorksSection() {
           transition={{ duration: 0.6 }}
         >
           <Typography
+            component="h2"
             sx={{
               fontWeight: 700,
               fontSize: { xs: '28px', md: '38px' },

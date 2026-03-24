@@ -69,16 +69,16 @@ export default function Footer() {
                   wordBreak: 'break-word',
                 }}
               >
-                ✉&nbsp;&nbsp;support@arnona.co.il
+                <span aria-hidden="true">✉</span>&nbsp;&nbsp;support@arnona.co.il
               </Typography>
               <Typography sx={{ fontSize: { xs: '13px', md: '14px' }, color: '#060606' }}>
-                📞&nbsp;&nbsp;03-123-4567
+                <span aria-hidden="true">📞</span>&nbsp;&nbsp;03-123-4567
               </Typography>
               <Typography sx={{ fontSize: { xs: '13px', md: '14px' }, color: '#060606' }}>
-                🕐&nbsp;&nbsp;א-ה | 09:00 - 17:00
+                <span aria-hidden="true">🕐</span>&nbsp;&nbsp;א-ה | 09:00 - 17:00
               </Typography>
               <Typography sx={{ fontSize: { xs: '13px', md: '14px' }, color: '#060606' }}>
-                📍&nbsp;&nbsp;תל אביב, ישראל
+                <span aria-hidden="true">📍</span>&nbsp;&nbsp;תל אביב, ישראל
               </Typography>
             </Box>
           </Box>
@@ -184,6 +184,7 @@ export default function Footer() {
             >
               {/* TODO: Replace with actual logo image */}
               <Box
+                aria-hidden="true"
                 sx={{
                   width: { xs: 64, sm: 75 },
                   height: { xs: 58, sm: 68 },
@@ -253,7 +254,7 @@ export default function Footer() {
                   wordBreak: 'break-word',
                 }}
               >
-                ✉&nbsp;&nbsp;שלח לנו מייל לתמיכה
+                <span aria-hidden="true">✉</span>&nbsp;&nbsp;שלח לנו מייל לתמיכה
               </Typography>
             </Box>
           </Box>

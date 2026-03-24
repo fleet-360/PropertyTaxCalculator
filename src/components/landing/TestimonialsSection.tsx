@@ -39,6 +39,7 @@ export default function TestimonialsSection() {
           transition={{ duration: 0.6 }}
         >
           <Typography
+            component="h2"
             sx={{
               fontWeight: 700,
               fontSize: { xs: '24px', sm: '28px', md: '38px' },
@@ -100,6 +101,8 @@ export default function TestimonialsSection() {
               transition={{ duration: 0.5, delay: i * 0.15 }}
             >
               <Box
+                role="article"
+                aria-label={`המלצה של ${t.name} מ${t.city}`}
                 sx={{
                   width: '100%',
                   maxWidth: { xs: '100%', md: 382 },
@@ -129,6 +132,7 @@ export default function TestimonialsSection() {
                   }}
                 >
                   <Box
+                    aria-hidden="true"
                     sx={{
                       fontSize: { xs: '56px', sm: '72px', md: '80px' },
                       opacity: 0.3,
@@ -206,9 +210,10 @@ export default function TestimonialsSection() {
 
                   {/* Stars */}
                   <Typography
+                    aria-label="דירוג 5 מתוך 5 כוכבים"
                     sx={{ color: '#f59e0b', fontSize: { xs: '14px', md: '16px' } }}
                   >
-                    ★★★★★
+                    <span aria-hidden="true">★★★★★</span>
                   </Typography>
 
                   {/* Name + Avatar */}

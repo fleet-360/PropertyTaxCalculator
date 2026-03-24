@@ -64,7 +64,7 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
   };
 
   return (
-    <nav aria-label="Pagination" role="navigation">
+    <nav aria-label="ניווט עמודים" role="navigation">
       <Box
         sx={{
           display: 'flex',
@@ -82,13 +82,13 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
             href={getPageUrl(currentPage - 1)}
             style={inactiveLinkStyles}
             rel="prev"
-            aria-label="Go to previous page"
+            aria-label="לעמוד הקודם"
           >
-            &larr; Previous
+            הקודם &rarr;
           </Link>
         ) : (
           <span style={disabledStyles} aria-disabled="true">
-            &larr; Previous
+            הקודם &rarr;
           </span>
         )}
 
@@ -112,7 +112,7 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
                 key={page}
                 style={activeLinkStyles}
                 aria-current="page"
-                aria-label={`Page ${page}, current page`}
+                aria-label={`עמוד ${page}, עמוד נוכחי`}
               >
                 {page}
               </span>
@@ -124,7 +124,7 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
               key={page}
               href={getPageUrl(page)}
               style={inactiveLinkStyles}
-              aria-label={`Go to page ${page}`}
+              aria-label={`לעמוד ${page}`}
             >
               {page}
             </Link>
@@ -137,13 +137,13 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
             href={getPageUrl(currentPage + 1)}
             style={inactiveLinkStyles}
             rel="next"
-            aria-label="Go to next page"
+            aria-label="לעמוד הבא"
           >
-            Next &rarr;
+            &larr; הבא
           </Link>
         ) : (
           <span style={disabledStyles} aria-disabled="true">
-            Next &rarr;
+            &larr; הבא
           </span>
         )}
       </Box>

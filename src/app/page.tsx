@@ -11,7 +11,7 @@ export default function HomePage() {
   return (
     <>
       <Navbar />
-      <main style={{ overflowX: "hidden" }}>
+      <main id="main-content" style={{ overflowX: "hidden" }}>
         <HeroSection />
         <FormulasStrip />
         <StatsBar />

@@ -190,6 +190,7 @@ export default function HeroSection() {
     >
       {/* Background city logos — multi-row alternating infinite marquees */}
       <Box
+        aria-hidden="true"
         sx={{
           position: "absolute",
           top: "50%",
@@ -227,6 +228,7 @@ export default function HeroSection() {
           transition={{ duration: 0.7, delay: 0.15 }}
         >
           <Typography
+            component="h1"
             sx={{
               fontWeight: 700,
               fontSize: { xs: "36px", sm: "48px", md: "72px" },

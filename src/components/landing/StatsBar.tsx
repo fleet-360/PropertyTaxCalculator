@@ -99,6 +99,8 @@ export default function StatsBar() {
           transition={{ duration: 0.6 }}
         >
           <Box
+            role="group"
+            aria-label="נתונים סטטיסטיים"
             sx={{
               display: 'flex',
               justifyContent: 'center',

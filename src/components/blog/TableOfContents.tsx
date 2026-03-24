@@ -71,7 +71,7 @@ export default function TableOfContents({ blocks }: TableOfContentsProps) {
   return (
     <Box
       component="nav"
-      aria-label="Table of contents"
+      aria-label="תוכן עניינים"
       sx={{
         position: 'sticky',
         top: 100,
@@ -95,7 +95,7 @@ export default function TableOfContents({ blocks }: TableOfContentsProps) {
           color: 'text.secondary',
         }}
       >
-        On this page
+        בעמוד זה
       </Typography>
       <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
         {headings.map((heading, idx) => (
