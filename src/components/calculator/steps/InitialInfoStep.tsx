@@ -11,6 +11,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import type { StepProps } from '../CalculatorWizard';
 import TaxBillUpload from '../TaxBillUpload';
 import { findByPropertyCode } from '@/lib/calculator';
+import { ButtonGroup, Theme } from '@mui/material';
 
 interface CityOption {
   _id: string;
@@ -151,18 +152,21 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
       </Typography>
 
       {/* ── 1. Property Type ── */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mb: 4 }}>
+      <ButtonGroup sx={{ display: 'flex', justifyContent: 'center',mb:4, width: '100%' }}>
         {(['private', 'business'] as const).map((type) => {
           const isSelected = state.propertyType === type;
           const label = type === 'private' ? 'נכס פרטי' : 'נכס עסקי';
+          const icon=<CheckIcon sx={{ fontSize: '18px !important', visibility: isSelected ? 'visible' : 'hidden' }} />
           return (
             <Button
               key={type}
               onClick={() => handleSelectType(type)}
               variant="contained"
               disableElevation
-              startIcon={isSelected ? <CheckIcon sx={{ fontSize: '18px !important' }} /> : undefined}
+              startIcon={ type === 'private' ? icon : undefined}
+              endIcon={ type === 'business' ? icon : undefined}
               sx={{
+                border:(theme: Theme)=>`1px solid ${theme.palette.primary.light}`,
                 borderRadius: '24px',
                 px: 3,
                 py: 1,
@@ -171,7 +175,6 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
                 textTransform: 'none',
                 bgcolor: isSelected ? '#1a4fdb' : '#f0f2f5',
                 color: isSelected ? '#fff' : '#333',
-                border: 'none',
                 '&:hover': {
                   bgcolor: isSelected ? '#1540b8' : '#e4e6ea',
                 },
@@ -181,7 +184,7 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
             </Button>
           );
         })}
-      </Box>
+      </ButtonGroup>
 
       {/* ── 2. City Select ── */}
       <Typography
