@@ -59,7 +59,9 @@ export default function DisclaimerStep({ state, dispatch }: StepProps) {
                 storageSqm: state.storageArea,
                 parkingSqm: state.parkingArea,
                 bimonthlyPayment: state.bimonthlyPayment,
-                selectedExemptionCode: state.selectedExemption,
+                selectedExemptionCodes: state.selectedExemptions
+                  .filter((e) => e.subSectionCode)
+                  .map((e) => e.subSectionCode),
                 householdSize: state.householdSize,
                 childrenCount: state.childrenCount,
                 correctedAreaSqm: state.measurementError?.claimed,

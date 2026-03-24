@@ -16,6 +16,11 @@ html {
   scroll-behavior: smooth;
 }
 
+::-webkit-scrollbar {
+  display: none;
+}
+
+
 /* ===== Accessibility: Focus Styles ===== */
 *:focus-visible {
   outline: 3px solid #1a4fdb;

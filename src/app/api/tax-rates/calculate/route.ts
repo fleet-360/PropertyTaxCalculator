@@ -26,11 +26,16 @@ export async function POST(request: NextRequest) {
       parkingSqm,
       bimonthlyPayment,
       selectedExemptionCode,
+      selectedExemptionCodes,
       householdSize,
       childrenCount,
       correctedAreaSqm,
       designations,
     } = body;
+
+    // Normalize exemption codes: support both single string and array
+    const exemptionCodes: string[] = selectedExemptionCodes
+      ?? (selectedExemptionCode ? [selectedExemptionCode] : []);
 
     // Validate required fields
     if (!citySlug) {
@@ -63,7 +68,7 @@ export async function POST(request: NextRequest) {
         tariff,
         designations,
         bimonthlyPayment,
-        selectedExemptionCode,
+        exemptionCodes,
         householdSize,
         childrenCount
       );
@@ -95,7 +100,7 @@ export async function POST(request: NextRequest) {
       storageSqm,
       parkingSqm,
       bimonthlyPayment,
-      selectedExemptionCode,
+      selectedExemptionCodes: exemptionCodes,
       householdSize,
       childrenCount,
       correctedAreaSqm,
