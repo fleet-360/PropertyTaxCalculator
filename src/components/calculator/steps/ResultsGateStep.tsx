@@ -36,8 +36,8 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
             תודה שהשתמשת במחשבון הארנונה
           </Typography>
           <Box textAlign="center">
-            <Button variant="contained" href="/">
-              חזרה לדף הבית
+            <Button variant="contained" onClick={() => dispatch({ type: 'RESET_CALCULATOR' })}>
+              חזרה להתחלה
             </Button>
           </Box>
         </>
@@ -52,8 +52,8 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
             אין התאמה — תרצה לראות את התוצאות?
           </Typography>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-            <Button variant="outlined" href="/">
-              חזרה לדף הבית
+            <Button variant="outlined" onClick={() => dispatch({ type: 'RESET_CALCULATOR' })}>
+              חזרה להתחלה
             </Button>
             <Button variant="contained" onClick={() => dispatch({ type: 'NEXT_STEP' })}>
               צפה בתוצאות מפורטות
@@ -71,8 +71,8 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
             לצפייה בתוצאות המפורטות: <strong>34₪</strong>
           </Typography>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-            <Button variant="outlined" href="/">
-              חזרה לדף הבית
+            <Button variant="outlined" onClick={() => dispatch({ type: 'RESET_CALCULATOR' })}>
+              חזרה להתחלה
             </Button>
             <Button
               variant="contained"

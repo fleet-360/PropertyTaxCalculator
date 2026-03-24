@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   AppBar,
   Toolbar,
@@ -14,13 +14,17 @@ import {
   ListItemButton,
   ListItemText,
 } from "@mui/material";
-import useScrollTrigger from "@mui/material/useScrollTrigger";
 import MenuIcon from "@mui/icons-material/Menu";
 import Link from "next/link";
+import logo from "@/assets/icon-with-text-no-background.png";
 
 const NAV_HEIGHT = 84;
 const FLOAT_TOP = { xs: 12, sm: 16 };
 const FLOAT_INSET = { xs: 1.5, sm: 2, md: 3 };
+/** Ignore tiny scroll jitter (px). */
+const SCROLL_DIRECTION_DELTA = 6;
+/** Always show the bar when near the top of the page. */
+const SCROLL_TOP_THRESHOLD = 32;
 
 const navItems = [
   { label: "בית", href: "#hero" },
@@ -31,26 +35,71 @@ const navItems = [
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const stuck = useScrollTrigger({
-    disableHysteresis: true,
-    threshold: 48,
-  });
+  const [navHidden, setNavHidden] = useState(false);
+  const lastScrollY = useRef(0);
+  const scrollTicking = useRef(false);
 
-  const topValue = stuck ? 0 : FLOAT_TOP;
+  useEffect(() => {
+    lastScrollY.current = window.scrollY;
 
+    const onScroll = () => {
+      if (scrollTicking.current) return;
+      scrollTicking.current = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const prev = lastScrollY.current;
+
+        if (y < SCROLL_TOP_THRESHOLD) {
+          setNavHidden(false);
+        } else if (y > prev + SCROLL_DIRECTION_DELTA) {
+          setNavHidden(true);
+        } else if (y < prev - SCROLL_DIRECTION_DELTA) {
+          setNavHidden(false);
+        }
+
+        lastScrollY.current = y;
+        scrollTicking.current = false;
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (mobileOpen) setNavHidden(false);
+  }, [mobileOpen]);
+
+  const logoComponent = () => (
+    <Box
+      aria-hidden="true"
+      sx={{
+        width: 100,
+        height: 100,
+        backgroundImage: `url(${logo.src})`,
+        backgroundSize: "contain",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    />
+  );
   return (
     <>
       <Box
         sx={{
           position: "fixed",
-          top: topValue,
+          top: FLOAT_TOP,
           left: 0,
           right: 0,
           zIndex: (theme) => theme.zIndex.appBar,
-          px: stuck ? 0 : FLOAT_INSET,
+          px: FLOAT_INSET,
+          pointerEvents: navHidden ? "none" : "auto",
+          transform: navHidden
+            ? "translateY(calc(-100% - 24px))"
+            : "translateY(0)",
           transition: (theme) =>
-            theme.transitions.create(["top", "padding"], {
-              duration: theme.transitions.duration.shorter,
+            theme.transitions.create(["transform"], {
+              duration: theme.transitions.duration.standard,
               easing: theme.transitions.easing.easeInOut,
             }),
         }}
@@ -65,18 +114,17 @@ export default function Navbar() {
             backdropFilter: "blur(12px)",
             height: NAV_HEIGHT,
             justifyContent: "center",
-            borderRadius: stuck ? 0 : 3,
+            borderRadius: 3,
             overflow: "hidden",
-            boxShadow: stuck
-              ? "0px 2px 16px rgba(26,51,128,0.08)"
-              : "0px 8px 32px rgba(26,51,128,0.12), 0px 2px 8px rgba(26,51,128,0.06)",
+            boxShadow:
+              "0px 8px 32px rgba(26,51,128,0.12), 0px 2px 8px rgba(26,51,128,0.06)",
             transition: (theme) =>
               theme.transitions.create(
                 ["border-radius", "box-shadow", "transform"],
                 {
                   duration: theme.transitions.duration.short,
                   easing: theme.transitions.easing.easeInOut,
-                }
+                },
               ),
             animation: "navbarEnter 0.7s cubic-bezier(0.22, 1, 0.36, 1) both",
             "@keyframes navbarEnter": {
@@ -93,105 +141,94 @@ export default function Navbar() {
             },
           }}
         >
-        <Container maxWidth="xl" sx={{px:"44px"}}>
-          <Toolbar disableGutters sx={{gap:"43px"}}>
-            {/* Right side — Logo */}
-            <Box
-              component={Link}
-              href="/"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1.5,
-                textDecoration: "none",
-              }}
-            >
-
-              {/* TODO: Replace with actual logo image */}
+          <Container maxWidth="xl" sx={{ px: "44px" }}>
+            <Toolbar disableGutters sx={{ gap: "43px" }}>
+              {/* Right side — Logo */}
               <Box
-                aria-hidden="true"
+                component={"a"}
+                href="/"
                 sx={{
-                  width: 75,
-                  height: 68,
-                  bgcolor: "#e8eef6",
-                  borderRadius: 2,
-                  display: "flex",
+                  display: {xs:"none","md":"flex"},
                   alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "28px",
+                  gap: 1.5,
+                  textDecoration: "none",
                 }}
               >
-                🏠
+                {/* TODO: Replace with actual logo image */}
+                {logoComponent()}
               </Box>
-            </Box>
-            {/* Center — Nav items (desktop) */}
-            <Box
-              sx={{
-                display: { xs: "none", md: "flex" },
-                gap: 5,
-              }}
-            >
-              {navItems.map((item) => (
-                <Typography
-                  key={item.label}
-                  component={item.href.startsWith("/") ? Link : "a"}
-                  href={item.href}
+              {/* Center — Nav items (desktop) */}
+              <Box
+                sx={{
+                  display: { xs: "none", md: "flex" },
+                  gap: 5,
+                }}
+              >
+                {navItems.map((item) => (
+                  <Typography
+                    key={item.label}
+                    component={item.href.startsWith("/") ? Link : "a"}
+                    href={item.href}
+                    sx={{
+                      color: "#4a4a6a",
+                      fontSize: "16px",
+                      fontWeight: 500,
+                      textDecoration: "none",
+                      cursor: "pointer",
+                      transition: "color 0.2s",
+                      "&:hover": { color: "#1a4fdb" },
+                    }}
+                  >
+                    {item.label}
+                  </Typography>
+                ))}
+              </Box>
+              {/* Left side — CTA button (in RTL this appears on visual left) */}
+              <Box
+                sx={{
+                  display: { xs: "none", md: "flex" },
+                  alignItems: "center",
+                  ml: "auto",
+                }}
+              >
+                <Button
+                  component="a"
+                  href="#calculator-section"
+                  variant="contained"
                   sx={{
-                    color: "#4a4a6a",
-                    fontSize: "16px",
-                    fontWeight: 500,
-                    textDecoration: "none",
-                    cursor: "pointer",
-                    transition: "color 0.2s",
-                    "&:hover": { color: "#1a4fdb" },
+                    bgcolor: "#1a4fdb",
+                    color: "#fff",
+                    borderRadius: "21px",
+                    px: 3.5,
+                    py: 1.2,
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    minWidth: 130,
+                    height: 42,
+                    "&:hover": { bgcolor: "#1640b5" },
                   }}
                 >
-                  {item.label}
-                </Typography>
-              ))}
-            </Box>
-            {/* Left side — CTA button (in RTL this appears on visual left) */}
-            <Box
-              sx={{ display: { xs: "none", md: "flex" }, alignItems: "center",ml:"auto" }}
-            >
-              <Button
-                component="a"
-                href="#calculator-section"
-                variant="contained"
-                sx={{
-                  bgcolor: "#1a4fdb",
-                  color: "#fff",
-                  borderRadius: "21px",
-                  px: 3.5,
-                  py: 1.2,
-                  fontSize: "15px",
-                  fontWeight: 700,
-                  minWidth: 130,
-                  height: 42,
-                  "&:hover": { bgcolor: "#1640b5" },
-                }}
-              >
-                חשב עכשיו
-              </Button>
-            </Box>
+                  חשב עכשיו
+                </Button>
+              </Box>
 
-            {/* Mobile menu button */}
-            <IconButton
-              aria-label="פתח תפריט ניווט"
-              sx={{ display: { md: "none" }, color: "#4a4a6a" }}
-              onClick={() => setMobileOpen(true)}
-            >
-              <MenuIcon />
-            </IconButton>
-          </Toolbar>
-        </Container>
+              {/* Mobile menu button */}
+              <IconButton
+                aria-label="פתח תפריט ניווט"
+                sx={{ display: { md: "none" }, color: "#4a4a6a",m:"auto" }}
+                onClick={() => setMobileOpen(true)}
+              >
+                <MenuIcon />
+              </IconButton>
+            </Toolbar>
+          </Container>
         </AppBar>
       </Box>
 
       {/* Spacer: account for floating offset + bar height */}
       {/* <Box
         sx={{
-          height: stuck ? NAV_HEIGHT : { xs: NAV_HEIGHT + 12, sm: NAV_HEIGHT + 16 },
+          height: { xs: NAV_HEIGHT + 12, sm: NAV_HEIGHT + 16 },
           transition: (theme) =>
             theme.transitions.create("height", {
               duration: theme.transitions.duration.shorter,
@@ -203,51 +240,45 @@ export default function Navbar() {
       {/* Mobile drawer */}
       <Drawer
         open={mobileOpen}
+        anchor="top"
         onClose={() => setMobileOpen(false)}
         aria-label="תפריט ניווט"
       >
-        <Box sx={{ width: 280, pt: 2 }}>
+        <Box sx={{ width: 280, pt: 2, m: "auto" }}>
           {/* Logo in drawer */}
           <Box
             sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, mb: 2 }}
           >
-            <Box
-              aria-hidden="true"
-              sx={{
-                width: 50,
-                height: 45,
-                bgcolor: "#e8eef6",
-                borderRadius: 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "20px",
-              }}
-            >
-              🏠
-            </Box>
+           {logoComponent()}
             <Typography sx={{ fontWeight: 700, fontSize: "18px" }}>
               ארנונה חכמה
             </Typography>
           </Box>
           <List>
             {navItems.map((item) => (
-              <ListItem key={item.label} disablePadding>
+              <ListItem
+                key={item.label}
+                disablePadding
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  textAlign: "center",
+                }}
+              >
                 <ListItemButton
                   component={item.href.startsWith("/") ? Link : "a"}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
                 >
-                  <ListItemText
-                    primary={item.label}
-                  />
+                  <ListItemText primary={item.label} />
                 </ListItemButton>
               </ListItem>
             ))}
             <ListItem disablePadding sx={{ px: 2, mt: 2 }}>
               <Button
-                component={Link}
-                href="/calculator"
+                component={"a"}
+                href="#calculator-section"
                 variant="contained"
                 fullWidth
                 onClick={() => setMobileOpen(false)}

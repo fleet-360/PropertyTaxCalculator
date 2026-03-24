@@ -193,7 +193,6 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
           color: '#333',
           fontWeight: 600,
           mb: 1,
-          textAlign: 'right',
         }}
       >
         עיר/ מועצה מקומית
@@ -204,6 +203,7 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
         loading={loadingCities}
         value={selectedCity}
         onChange={(_, v) => handleSelectCity(v)}
+        size="small"
         renderInput={(params) => (
           <TextField
             {...params}
@@ -237,7 +237,6 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
           color: '#333',
           fontWeight: 600,
           mb: 1,
-          textAlign: 'right',
         }}
       >
         העלאת שובר ארנונה

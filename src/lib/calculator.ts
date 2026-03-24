@@ -19,7 +19,8 @@ export interface TaxCalculationInput {
   parkingSqm?: number;
   bimonthlyPayment: number;   // reported payment from council bill
   // Exemption
-  selectedExemptionCode?: string; // subsection code (e.g., "senior_25")
+  selectedExemptionCode?: string;   // single code (backward compat)
+  selectedExemptionCodes?: string[]; // multiple codes — best one is applied
   householdSize?: number;
   childrenCount?: number;
   // Error corrections
@@ -202,6 +203,25 @@ export function resolveExemption(
   return null;
 }
 
+/**
+ * Resolve multiple exemption codes and return the best (highest discount).
+ */
+export function resolveBestExemption(
+  tariff: ICityTariff,
+  codes: string[],
+  householdSize?: number,
+  childrenCount?: number
+): ResolvedExemption | null {
+  let best: ResolvedExemption | null = null;
+  for (const code of codes) {
+    const resolved = resolveExemption(tariff, code, householdSize, childrenCount);
+    if (resolved && (!best || resolved.discountPercent > best.discountPercent)) {
+      best = resolved;
+    }
+  }
+  return best;
+}
+
 // ── Main calculation ───────────────────────────────────────────────────
 
 /**
@@ -245,10 +265,14 @@ export function calculatePropertyTax(
   let annualAfterExemption = annualBeforeExemption;
   let appliedExemption: TaxCalculationResult['appliedExemption'] = undefined;
 
-  if (input.selectedExemptionCode) {
-    const exemption = resolveExemption(
+  // Normalize: support both single code and array of codes
+  const exemptionCodes = input.selectedExemptionCodes
+    ?? (input.selectedExemptionCode ? [input.selectedExemptionCode] : []);
+
+  if (exemptionCodes.length > 0) {
+    const exemption = resolveBestExemption(
       tariff,
-      input.selectedExemptionCode,
+      exemptionCodes,
       input.householdSize,
       input.childrenCount
     );
@@ -320,7 +344,7 @@ export function calculateBusinessPropertyTax(
   tariff: ICityTariff,
   designations: { typeCode: string; subtypeCode: string; zone: string; areaSqm: number }[],
   bimonthlyPayment: number,
-  selectedExemptionCode?: string,
+  selectedExemptionCodes?: string[],
   householdSize?: number,
   childrenCount?: number
 ): TaxCalculationResult {
@@ -342,8 +366,8 @@ export function calculateBusinessPropertyTax(
   let appliedExemption: TaxCalculationResult['appliedExemption'] = undefined;
 
   // Business exemptions are less common but still possible
-  if (selectedExemptionCode) {
-    const exemption = resolveExemption(tariff, selectedExemptionCode, householdSize, childrenCount);
+  if (selectedExemptionCodes && selectedExemptionCodes.length > 0) {
+    const exemption = resolveBestExemption(tariff, selectedExemptionCodes, householdSize, childrenCount);
     if (exemption) {
       const eligibleArea = exemption.maxAreaSqm
         ? Math.min(totalArea, exemption.maxAreaSqm)

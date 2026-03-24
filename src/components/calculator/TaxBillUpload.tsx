@@ -203,9 +203,6 @@ export default function TaxBillUpload({ dispatch, onExtracted, deferExtraction, 
 
   return (
     <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-      <Typography variant="subtitle1" fontWeight="bold" mb={1}>
-        מילוי אוטומטי מצילום שובר
-      </Typography>
 
       {/* ── Upload zone ── */}
       {status === 'idle' && (

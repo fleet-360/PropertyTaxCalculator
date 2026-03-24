@@ -83,97 +83,96 @@ export default function CalculatorSection() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.35 }}
             >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 0,
-                width: "100%",
-                justifyContent: { xs: "center", md: "flex-start" },
-              }}
-            >
-
-                            {/* Character illustration placeholder */}
-                            <Box
-                sx={{
-                  width: 150,
-                  height: 433,
-                  display: { xs: "none", md: "flex" },
-                  alignItems: "flex-end",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                {/* TODO: Replace with actual character illustration (Lottie animation or image) */}
-                <Box
-                  sx={{
-                    width: 120,
-                    height: 350,
-                    bgcolor: "#e8eef6",
-                    borderRadius: "60px 60px 10px 10px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexDirection: "column",
-                    gap: 1,
-                  }}
-                >
-                  <Box aria-hidden="true" sx={{ fontSize: "48px" }}>👩‍💼</Box>
-                  <Typography
-                    sx={{
-                      fontSize: "11px",
-                      color: "#666",
-                      textAlign: "center",
-                    }}
-                  >
-                    מיה
-                    <br />
-                    יועצת ארנונה
-                  </Typography>
-                </Box>
-              </Box>  
-              {/* Speech bubble */}
               <Box
                 sx={{
-                  position: "relative",
-                  width: { xs: "100%", md: "auto" },
-                  maxWidth: { xs: "100%", md: 340 },
-                  minWidth: 0,
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 0,
+                  width: "100%",
+                  justifyContent: { xs: "center", md: "flex-start" },
                 }}
               >
+                {/* Character illustration placeholder */}
                 <Box
                   sx={{
-                    bgcolor: "rgba(255,255,255,0.96)",
-                    borderRadius: "20px",
-                    boxShadow: "0px 12px 30px rgba(0,0,0,0.2)",
-                    p: { xs: 2, sm: 2.5 },
-                    width: "100%",
-                    textAlign: "right",
-                    wordBreak: "break-word",
-                    overflowWrap: "break-word",
+                    width: 150,
+                    height: 433,
+                    display: { xs: "none", md: "flex" },
+                    alignItems: "flex-end",
+                    justifyContent: "center",
+                    flexShrink: 0,
                   }}
                 >
-                  <CalculatorMiaSpeechBubbleTyping />
+                  {/* TODO: Replace with actual character illustration (Lottie animation or image) */}
+                  <Box
+                    sx={{
+                      width: 120,
+                      height: 350,
+                      bgcolor: "#e8eef6",
+                      borderRadius: "60px 60px 10px 10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexDirection: "column",
+                      gap: 1,
+                    }}
+                  >
+                    <Box aria-hidden="true" sx={{ fontSize: "48px" }}>
+                      👩‍💼
+                    </Box>
+                    <Typography
+                      sx={{
+                        fontSize: "11px",
+                        color: "#666",
+                        textAlign: "center",
+                      }}
+                    >
+                      מיה
+                      <br />
+                      יועצת ארנונה
+                    </Typography>
+                  </Box>
                 </Box>
-
-                {/* Triangle pointer */}
+                {/* Speech bubble */}
                 <Box
                   sx={{
-                    position: "absolute",
-                    left: -20,
-                    top: 64,
-                    width: 0,
-                    height: 0,
-                    borderTop: "15px solid transparent",
-                    borderBottom: "15px solid transparent",
-                    borderRight: "20px solid rgba(255,255,255,0.96)",
-                    display: { xs: "none", md: "block" },
+                    position: "relative",
+                    width: { xs: "100%", md: "auto" },
+                    maxWidth: { xs: "100%", md: 340 },
+                    minWidth: 0,
                   }}
-                />
+                >
+                  <Box
+                    sx={{
+                      bgcolor: "rgba(255,255,255,0.96)",
+                      borderRadius: "20px",
+                      boxShadow: "0px 12px 30px rgba(0,0,0,0.2)",
+                      p: { xs: 2, sm: 2.5 },
+                      width: "100%",
+                      textAlign: "right",
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                    }}
+                  >
+                    <CalculatorMiaSpeechBubbleTyping />
+                  </Box>
+
+                  {/* Triangle pointer */}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      left: -20,
+                      top: 64,
+                      width: 0,
+                      height: 0,
+                      borderTop: "15px solid transparent",
+                      borderBottom: "15px solid transparent",
+                      borderRight: "20px solid rgba(255,255,255,0.96)",
+                      display: { xs: "none", md: "block" },
+                    }}
+                  />
+                </Box>
               </Box>
-
-
-            </Box>
             </motion.div>
           </Box>
           {/* Left side — Embedded Calculator */}
@@ -197,10 +196,11 @@ export default function CalculatorSection() {
                   bgcolor: "#f1f5f9",
                   border: "1px solid #d2d2d2",
                   borderRadius: "20px",
+                  overflowY: "scroll",
                   p: { xs: 1.5, sm: 2, md: 3 },
                   mx: "auto",
                   width: "100%",
-                  minHeight: { xs: 420, sm: 460, md: 500 },
+                  height: "600px",
                   maxWidth: "100%",
                   boxSizing: "border-box",
                 }}

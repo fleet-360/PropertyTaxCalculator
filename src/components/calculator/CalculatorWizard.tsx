@@ -21,6 +21,11 @@ export interface Designation {
   area: number;
 }
 
+export interface SelectedExemption {
+  sectionCode: string;
+  subSectionCode: string;
+}
+
 export interface WizardState {
   currentStep: number;
   propertyType: 'private' | 'business' | null;
@@ -53,7 +58,7 @@ export interface WizardState {
   measurementError: { claimed: number; attachment: string } | null;
   classificationError: { suggested: string } | null;
   // Exemptions
-  selectedExemption: string;
+  selectedExemptions: SelectedExemption[];
   householdSize: number;
   childrenCount: number;
   // Consent
@@ -94,7 +99,7 @@ const initialState: WizardState = {
   designations: [{ type: '', subtype: '', zone: '', area: 0 }],
   measurementError: null,
   classificationError: null,
-  selectedExemption: '',
+  selectedExemptions: [],
   householdSize: 1,
   childrenCount: 0,
   consentGiven: false,
@@ -122,12 +127,14 @@ export type WizardAction =
   | { type: 'SET_STEP'; step: number }
   | { type: 'NEXT_STEP' }
   | { type: 'PREV_STEP' }
+  | { type: 'RESET_CALCULATOR' }
   | { type: 'SET_PROPERTY_TYPE'; payload: 'private' | 'business' }
   | { type: 'SET_CITY'; payload: { slug: string; data?: any } }
   | { type: 'SET_CITY_DATA'; payload: any }
   | { type: 'UPDATE_FIELD'; field: keyof WizardState; value: any }
   | { type: 'UPDATE_FIELDS_BULK'; payload: Partial<WizardState> }
   | { type: 'SET_DESIGNATIONS'; payload: Designation[] }
+  | { type: 'SET_SELECTED_EXEMPTIONS'; payload: SelectedExemption[] }
   | { type: 'SET_MEASUREMENT_ERROR'; payload: WizardState['measurementError'] }
   | { type: 'SET_CLASSIFICATION_ERROR'; payload: WizardState['classificationError'] }
   | { type: 'SET_CALCULATION_RESULT'; payload: any }
@@ -170,14 +177,16 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
       return { ...state, ...action.payload };
     case 'SET_DESIGNATIONS':
       return { ...state, designations: action.payload };
+    case 'SET_SELECTED_EXEMPTIONS':
+      return { ...state, selectedExemptions: action.payload };
     case 'SET_MEASUREMENT_ERROR':
       return { ...state, measurementError: action.payload };
     case 'SET_CLASSIFICATION_ERROR':
       return { ...state, classificationError: action.payload };
     case 'SET_CALCULATION_RESULT':
       return { ...state, calculationResult: action.payload };
-    case 'SET_LOADING':
-      return { ...state, isLoading: action.payload };
+    case 'RESET_CALCULATOR':
+      return { ...initialState };
     case 'SET_CONTACT_REDIRECT':
       return { ...state, contactRedirectReason: action.payload };
     default:
