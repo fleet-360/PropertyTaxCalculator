@@ -46,6 +46,11 @@ export default function DisclaimerStep({ state, dispatch }: StepProps) {
           onClick={() => {
             // Trigger calculation before advancing
             dispatch({ type: 'SET_LOADING', payload: true });
+            if(state.designations.length > 1){
+              dispatch({ type: 'SET_LOADING', payload: false });
+              dispatch({ type: 'SET_CONTACT_REDIRECT', payload: 'designations' });
+              return;
+            }
             fetch('/api/tax-rates/calculate', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },

@@ -57,9 +57,60 @@ export interface TaxCalculationResult {
 
 // ── Rate lookup ────────────────────────────────────────────────────────
 
+export interface RateResult {
+  rate: number;             // blended rate per sqm (annualTotal / area) — for display
+  propertyCode?: string;    // property code of the primary (last applicable) range
+  annualTotal: number;      // actual annual cost — use this for calculations
+  isProgressive: boolean;   // true if progressive size-range calculation was used
+}
+
+/**
+ * Calculate progressive (cumulative/bracket-style) annual cost.
+ *
+ * Each size range applies ONLY to the portion of area within its bracket.
+ * Example: ranges [0-60 @40, 61-100 @65] for 70 sqm =
+ *   60 × 40 + 10 × 65 = 2400 + 650 = 3050
+ *
+ * Uses cumulative thresholds: range.max is the upper boundary of the bracket.
+ * Ranges are sorted by min ascending. max=-1 means unbounded.
+ */
+function calculateProgressiveAnnual(
+  sizeRanges: ISizeRange[],
+  totalAreaSqm: number
+): { annualTotal: number; primaryPropertyCode?: string } {
+  // Sort by min ascending
+  const sorted = [...sizeRanges].sort((a, b) => a.min - b.min);
+
+  let annualTotal = 0;
+  let coveredSoFar = 0;
+  let primaryPropertyCode: string | undefined;
+
+  for (const range of sorted) {
+    if (coveredSoFar >= totalAreaSqm) break;
+
+    // Bracket end — use range.max as cumulative threshold
+    const bracketEnd = range.max === -1 ? totalAreaSqm : range.max+1;
+
+    // Area taxed in this bracket
+    const areaInBracket = Math.max(0, Math.min(totalAreaSqm, bracketEnd) - coveredSoFar);
+
+    if (areaInBracket > 0) {
+      annualTotal += areaInBracket * range.rate;
+      primaryPropertyCode = range.propertyCode;
+    }
+
+    coveredSoFar = bracketEnd;
+  }
+
+  return { annualTotal, primaryPropertyCode };
+}
+
 /**
  * Find the rate per sqm by traversing the tariff tree:
  * types → subtypes → zones → (sizeRanges?) → rate
+ *
+ * When size ranges exist, calculates progressive (bracket-style) cost:
+ * each bracket's rate applies only to the area within that bracket.
  */
 export function findRate(
   tariff: ICityTariff,
@@ -67,7 +118,7 @@ export function findRate(
   subtypeCode: string,
   zoneCode: string,
   propertySizeSqm: number
-): { rate: number; propertyCode?: string } {
+): RateResult {
   // Find type
   const propertyType = tariff.types.find(
     (t: IPropertyType) => t.code === typeCode
@@ -92,24 +143,50 @@ export function findRate(
     throw new Error(`אזור "${zoneCode}" לא נמצא עבור ${subType.label}`);
   }
 
-  // If zone has size ranges, find matching range
+  // If zone has size ranges
   if (zoneRate.sizeRanges && zoneRate.sizeRanges.length > 0) {
-    const matchingRange = zoneRate.sizeRanges.find(
-      (sr: ISizeRange) =>
-        propertySizeSqm >= sr.min &&
-        (sr.max === -1 || propertySizeSqm <= sr.max)
-    );
-    if (!matchingRange) {
-      throw new Error(
-        `לא נמצא תעריף לשטח ${propertySizeSqm} מ"ר באזור ${zoneRate.zoneLabel}`
+    if (subType.isProgressiveRate) {
+      // Progressive (bracket-style): each range applies only to the area within its bracket
+      const { annualTotal, primaryPropertyCode } = calculateProgressiveAnnual(
+        zoneRate.sizeRanges,
+        propertySizeSqm
       );
+      const blendedRate = propertySizeSqm > 0 ? annualTotal / propertySizeSqm : 0;
+      return {
+        rate: Math.round(blendedRate * 100) / 100,
+        propertyCode: primaryPropertyCode,
+        annualTotal,
+        isProgressive: true,
+      };
+    } else {
+      // Flat: find the matching range and apply its rate to the entire area
+      const matchingRange = zoneRate.sizeRanges.find(
+        (sr: ISizeRange) =>
+          propertySizeSqm >= sr.min &&
+          (sr.max === -1 || propertySizeSqm <= sr.max)
+      );
+      if (!matchingRange) {
+        throw new Error(
+          `לא נמצא תעריף לשטח ${propertySizeSqm} מ"ר באזור ${zoneRate.zoneLabel}`
+        );
+      }
+      return {
+        rate: matchingRange.rate,
+        propertyCode: matchingRange.propertyCode,
+        annualTotal: propertySizeSqm * matchingRange.rate,
+        isProgressive: false,
+      };
     }
-    return { rate: matchingRange.rate, propertyCode: matchingRange.propertyCode };
   }
 
-  // Direct rate on zone
+  // Direct rate on zone (flat — no size ranges)
   if (zoneRate.rate !== undefined && zoneRate.rate !== null) {
-    return { rate: zoneRate.rate, propertyCode: zoneRate.propertyCode };
+    return {
+      rate: zoneRate.rate,
+      propertyCode: zoneRate.propertyCode,
+      annualTotal: propertySizeSqm * zoneRate.rate,
+      isProgressive: false,
+    };
   }
 
   throw new Error(`לא נמצא תעריף עבור ${subType.label} באזור ${zoneRate.zoneLabel}`);
@@ -249,8 +326,8 @@ export function calculatePropertyTax(
     (input.storageSqm ?? 0) +
     (input.parkingSqm ?? 0);
 
-  // Find rate
-  const { rate: ratePerSqm, propertyCode } = findRate(
+  // Find rate (progressive if size ranges exist)
+  const { rate: ratePerSqm, propertyCode, annualTotal } = findRate(
     tariff,
     input.propertyType,
     input.subType,
@@ -258,8 +335,8 @@ export function calculatePropertyTax(
     totalArea
   );
 
-  // Calculate annual before exemption
-  const annualBeforeExemption = totalArea * ratePerSqm;
+  // Calculate annual before exemption (use progressive total from findRate)
+  const annualBeforeExemption = annualTotal;
 
   // Apply exemption if selected
   let annualAfterExemption = annualBeforeExemption;
@@ -282,11 +359,10 @@ export function calculatePropertyTax(
       const eligibleArea = exemption.maxAreaSqm
         ? Math.min(totalArea, exemption.maxAreaSqm)
         : totalArea;
-      const remainderArea = totalArea - eligibleArea;
 
-      const discountedPortion = eligibleArea * ratePerSqm * (1 - exemption.discountPercent / 100);
-      const fullPricePortion = remainderArea * ratePerSqm;
-      annualAfterExemption = discountedPortion + fullPricePortion;
+      // For exemptions with area cap, calculate the discount proportionally
+      const discountRatio = eligibleArea / totalArea;
+      annualAfterExemption = annualBeforeExemption * (1 - (exemption.discountPercent / 100) * discountRatio);
 
       appliedExemption = {
         sectionCode: exemption.sectionCode,
@@ -354,8 +430,8 @@ export function calculateBusinessPropertyTax(
   let lastPropertyCode: string | undefined;
 
   for (const d of designations) {
-    const { rate, propertyCode } = findRate(tariff, d.typeCode, d.subtypeCode, d.zone, d.areaSqm);
-    totalAnnual += d.areaSqm * rate;
+    const { rate, propertyCode, annualTotal } = findRate(tariff, d.typeCode, d.subtypeCode, d.zone, d.areaSqm);
+    totalAnnual += annualTotal;
     totalArea += d.areaSqm;
     lastRate = rate;
     lastPropertyCode = propertyCode;

@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+
     // Business with designations
     if (designations && Array.isArray(designations) && designations.length > 0) {
       const result = calculateBusinessPropertyTax(

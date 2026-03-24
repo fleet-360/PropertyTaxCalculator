@@ -251,7 +251,7 @@ Single-page wizard with step transitions. Minimal design, easily changeable.
 | 1 | `PropertyTypeStep` | נכס פרטי / נכס עסקי |
 | 2 | `CitySelectStep` | City dropdown |
 | 3 | `DataEntryStep` | Manual entry: name, ID, property details, council bill data |
-| 4 | `RateInfoStep` | Rate per sqm + ordinance download |
+| 4 | *(wizard shell)* | תעריף בתוצאות; צו ארנונה — `DocumentPreviewPopover` ב־`CalculatorWizard` כשקיים `ordinanceUrl` (לא שלב נפרד) |
 | 5 | `ErrorReportStep` | Measurement/classification errors |
 | 6 | `ExemptionsStep` | Exemption selection + doc uploads |
 | 7 | `DisclaimerStep` | Legal + consent |

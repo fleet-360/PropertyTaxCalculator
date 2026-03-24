@@ -50,7 +50,7 @@ src/
 │   ├── blog/
 │   ├── calculator/
 │   │   └── steps/          # Wizard step components
-│   ├── common/             # Shared/reusable components
+│   ├── common/             # Shared/reusable components (e.g. DocumentPreviewPopover)
 │   ├── editor/
 │   └── landing/
 ├── lib/                    # Core logic
@@ -186,6 +186,13 @@ Only use `useEffect` when genuinely needed (DOM measurements, third-party librar
 - Use `react-hook-form` with `zod` schemas via `@hookform/resolvers`.
 - Define Zod schemas close to where they're used.
 - Use the wizard pattern (step components in `src/components/calculator/steps/`) for multi-step flows.
+
+### Calculator wizard & ordinance PDF
+
+- **Shell:** `src/components/calculator/CalculatorWizard.tsx` — step flow, shared state, and `ContactRedirectStep` when the flow cannot continue.
+- **Steps:** `src/components/calculator/steps/*.tsx` — each receives `StepProps` (`state`, `dispatch` from the wizard reducer).
+- **צו ארנונה (municipal PDF):** URL comes from `cityData.ordinanceUrl` on the city tariff (`ICityTariff` / `GET /api/cities/[id]`). Use **`DocumentPreviewPopover`** at `src/components/common/DocumentPreviewPopover.tsx` for the Hebrew trigger, MUI Popover preview (iframe), and download action. Reuse it anywhere you need the same PDF preview + download pattern (implement this file once if it is not in the tree yet; avoid one-off duplicate modal/iframe code).
+- **No separate “rate info” step:** Do not reintroduce a dedicated ordinance-only wizard step; keep ordinance UX in the shell or shared component above.
 
 ### Mongoose Models
 
