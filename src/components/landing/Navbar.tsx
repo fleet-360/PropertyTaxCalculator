@@ -56,6 +56,8 @@ export default function Navbar() {
         }}
       >
         <AppBar
+          component="nav"
+          aria-label="ניווט ראשי"
           position="static"
           elevation={0}
           sx={{
@@ -107,6 +109,7 @@ export default function Navbar() {
 
               {/* TODO: Replace with actual logo image */}
               <Box
+                aria-hidden="true"
                 sx={{
                   width: 75,
                   height: 68,
@@ -174,6 +177,7 @@ export default function Navbar() {
 
             {/* Mobile menu button */}
             <IconButton
+              aria-label="פתח תפריט ניווט"
               sx={{ display: { md: "none" }, color: "#4a4a6a" }}
               onClick={() => setMobileOpen(true)}
             >
@@ -200,6 +204,7 @@ export default function Navbar() {
       <Drawer
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
+        aria-label="תפריט ניווט"
       >
         <Box sx={{ width: 280, pt: 2 }}>
           {/* Logo in drawer */}
@@ -207,6 +212,7 @@ export default function Navbar() {
             sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, mb: 2 }}
           >
             <Box
+              aria-hidden="true"
               sx={{
                 width: 50,
                 height: 45,

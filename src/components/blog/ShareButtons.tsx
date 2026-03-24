@@ -74,13 +74,13 @@ export default function ShareButtons({ title, slug }: ShareButtonsProps) {
         variant="subtitle2"
         sx={{ mb: 1, fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: 1 }}
       >
-        Share this article
+        שתף מאמר זה
       </Typography>
       <Box sx={{ display: 'flex', gap: 1 }}>
         <Tooltip title="Share on Twitter / X">
           <IconButton
             onClick={handleTwitterShare}
-            aria-label="Share on Twitter"
+            aria-label="שתף בטוויטר"
             sx={{
               border: '1px solid',
               borderColor: 'divider',
@@ -100,7 +100,7 @@ export default function ShareButtons({ title, slug }: ShareButtonsProps) {
         <Tooltip title="Share on Facebook">
           <IconButton
             onClick={handleFacebookShare}
-            aria-label="Share on Facebook"
+            aria-label="שתף בפייסבוק"
             sx={{
               border: '1px solid',
               borderColor: 'divider',
@@ -120,7 +120,7 @@ export default function ShareButtons({ title, slug }: ShareButtonsProps) {
         <Tooltip title="Share on LinkedIn">
           <IconButton
             onClick={handleLinkedInShare}
-            aria-label="Share on LinkedIn"
+            aria-label="שתף בלינקדאין"
             sx={{
               border: '1px solid',
               borderColor: 'divider',
@@ -140,7 +140,7 @@ export default function ShareButtons({ title, slug }: ShareButtonsProps) {
         <Tooltip title="Copy link">
           <IconButton
             onClick={handleCopyUrl}
-            aria-label="Copy link to clipboard"
+            aria-label="העתק קישור"
             sx={{
               border: '1px solid',
               borderColor: 'divider',
@@ -162,7 +162,7 @@ export default function ShareButtons({ title, slug }: ShareButtonsProps) {
         open={copied}
         autoHideDuration={2000}
         onClose={() => setCopied(false)}
-        message="Link copied to clipboard"
+        message="הקישור הועתק ללוח"
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
     </Box>

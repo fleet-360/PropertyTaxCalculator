@@ -29,6 +29,7 @@ export default function CalculatorSection() {
         >
           <Box sx={{ textAlign: "center", mb: { xs: 4, md: 6 } }}>
             <Typography
+              component="h2"
               sx={{
                 fontWeight: 700,
                 fontSize: { xs: "24px", sm: "28px", md: "44px" },
@@ -117,7 +118,7 @@ export default function CalculatorSection() {
                     gap: 1,
                   }}
                 >
-                  <Box sx={{ fontSize: "48px" }}>👩‍💼</Box>
+                  <Box aria-hidden="true" sx={{ fontSize: "48px" }}>👩‍💼</Box>
                   <Typography
                     sx={{
                       fontSize: "11px",

@@ -77,6 +77,7 @@ function FormulaSequence({ items }: { items: FormulaItem[] }) {
 export default function FormulasStrip() {
   return (
     <Box
+      aria-hidden="true"
       sx={{
         height: 56,
         overflow: 'hidden',
