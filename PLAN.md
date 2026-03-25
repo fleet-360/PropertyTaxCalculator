@@ -87,6 +87,8 @@ Includes: public blog pages (SSR for SEO) + admin panel with Elementor-style blo
 
 ## Project Structure
 
+> **This repo:** public blog + calculator live under `src/app/(public)/` (shared `layout.tsx`); URLs remain `/blog` and `/calculator`. The tree below is the original template layout (`(blog)/`).
+
 ```
 blogsManagerTemplate/
 ├── src/

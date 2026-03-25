@@ -42,9 +42,11 @@ src/
 ├── app/                    # Next.js App Router
 │   ├── api/                # Route handlers (REST API)
 │   ├── admin/              # Admin panel pages
-│   ├── blog/               # Blog/educational content
-│   ├── calculator/         # Calculator wizard page
-│   └── landing/            # Marketing/landing pages
+│   ├── (public)/           # Route group: /blog + /calculator (shared layout, URLs unchanged)
+│   │   ├── layout.tsx      # Settings (GA, custom head/CSS), Navbar variant routes, Footer
+│   │   ├── blog/           # Blog/educational content
+│   │   └── calculator/     # Calculator wizard page
+│   └── page.tsx            # Landing — Navbar + Footer colocated here (not under (public))
 ├── components/             # React components (by domain)
 │   ├── admin/
 │   ├── blog/

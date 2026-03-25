@@ -13,8 +13,8 @@ Building a property tax calculator for Israeli citizens to check if they're over
 ## Phase 0: Structural Groundwork
 
 ### Routing Reorganization
-- Move blog from `src/app/(blog)/` → `src/app/blog/` so landing page owns `/`
-- Update internal links in blog components
+- Public blog and calculator live under `src/app/(public)/` with a shared `layout.tsx` (URLs remain `/blog`, `/calculator`); landing stays at `src/app/page.tsx` with its own Navbar/Footer.
+- Historical note: blog was previously moved from `(blog)/` to a top-level segment; it now sits under `(public)/` next to `calculator/`.
 
 ### RTL & Hebrew Setup
 - `src/app/layout.tsx` — `lang="he"`, `dir="rtl"`
@@ -240,9 +240,9 @@ Convert 5 Excel tariff files → MongoDB: נתניה, ראשון לציון, א�
 
 ---
 
-## Phase 3: Calculator Wizard (`src/app/calculator/`)
+## Phase 3: Calculator Wizard (`src/app/(public)/calculator/`)
 
-Single-page wizard with step transitions. Minimal design, easily changeable.
+Single-page wizard with step transitions. Minimal design, easily changeable. Shares `(public)/layout.tsx` with the blog (same Navbar + Footer, GA/custom head from Settings).
 
 **Private Property Flow:**
 

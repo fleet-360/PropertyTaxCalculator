@@ -45,7 +45,7 @@ describe('Step 1: Area aggregation', () => {
   it('uses only main area when no extras provided', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 80, bimonthlyPayment: 0,
+      propertyAreaSqm: 80, bimonthlyPayment: 1,
     });
     expect(r.totalAreaSqm).toBe(80);
   });
@@ -54,7 +54,7 @@ describe('Step 1: Area aggregation', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
       propertyAreaSqm: 60, coveredBalconySqm: 10, storageSqm: 5, parkingSqm: 15,
-      bimonthlyPayment: 0,
+      bimonthlyPayment: 1,
     });
     expect(r.totalAreaSqm).toBe(90); // 60 + 10 + 5 + 15
   });
@@ -63,7 +63,7 @@ describe('Step 1: Area aggregation', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
       propertyAreaSqm: 100, coveredBalconySqm: undefined, storageSqm: undefined,
-      bimonthlyPayment: 0,
+      bimonthlyPayment: 1,
     });
     expect(r.totalAreaSqm).toBe(100);
   });
@@ -72,7 +72,7 @@ describe('Step 1: Area aggregation', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
       propertyAreaSqm: 100, correctedAreaSqm: 75,
-      bimonthlyPayment: 0,
+      bimonthlyPayment: 1,
     });
     expect(r.totalAreaSqm).toBe(75);
   });
@@ -81,7 +81,7 @@ describe('Step 1: Area aggregation', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
       propertyAreaSqm: 100, correctedAreaSqm: 70, storageSqm: 10, parkingSqm: 5,
-      bimonthlyPayment: 0,
+      bimonthlyPayment: 1,
     });
     expect(r.totalAreaSqm).toBe(85); // 70 + 10 + 5
   });
@@ -109,7 +109,7 @@ describe('Step 2: Rate lookup traversal', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'size_based', zone: 'all',
       propertyAreaSqm: 50, storageSqm: 15,
-      bimonthlyPayment: 0,
+      bimonthlyPayment: 1,
     });
     expect(r.ratePerSqm).toBe(65.0); // not 40 (0-60 range)
     expect(r.totalAreaSqm).toBe(65);
@@ -123,7 +123,7 @@ describe('Step 2: Rate lookup traversal', () => {
   it('propertyCode passes through from rate result', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'ג',
-      propertyAreaSqm: 50, bimonthlyPayment: 0,
+      propertyAreaSqm: 50, bimonthlyPayment: 1,
     });
     expect(r.propertyCode).toBe('103');
   });
@@ -149,7 +149,7 @@ describe('Step 3: Annual before exemption = totalArea × ratePerSqm', () => {
   it('simple multiplication', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 80, bimonthlyPayment: 0,
+      propertyAreaSqm: 80, bimonthlyPayment: 1,
     });
     expect(r.annualBeforeExemption).toBe(80 * 95); // 7600
   });
@@ -158,7 +158,7 @@ describe('Step 3: Annual before exemption = totalArea × ratePerSqm', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'ב',
       propertyAreaSqm: 60, coveredBalconySqm: 20, storageSqm: 10,
-      bimonthlyPayment: 0,
+      bimonthlyPayment: 1,
     });
     expect(r.annualBeforeExemption).toBe(90 * 78.5); // 7065
   });
@@ -166,7 +166,7 @@ describe('Step 3: Annual before exemption = totalArea × ratePerSqm', () => {
   it('large business property', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'business', subType: 'supermarket', zone: 'all',
-      propertyAreaSqm: 500, bimonthlyPayment: 0,
+      propertyAreaSqm: 500, bimonthlyPayment: 1,
     });
     expect(r.annualBeforeExemption).toBe(500 * 450); // 225000
   });
@@ -174,7 +174,7 @@ describe('Step 3: Annual before exemption = totalArea × ratePerSqm', () => {
   it('annualBeforeExemption equals annualAfterExemption when no exemption', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 80, bimonthlyPayment: 0,
+      propertyAreaSqm: 80, bimonthlyPayment: 1,
     });
     expect(r.annualBeforeExemption).toBe(r.annualAfterExemption);
     expect(r.appliedExemption).toBeUndefined();
@@ -235,7 +235,7 @@ describe('Step 5: Exemption application', () => {
     // 80 sqm property, senior_25 maxAreaSqm=100 → all 80 eligible
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 80, bimonthlyPayment: 0,
+      propertyAreaSqm: 80, bimonthlyPayment: 1,
       selectedExemptionCode: 'senior_25',
     });
     expect(r.appliedExemption!.eligibleAreaSqm).toBe(80);
@@ -247,7 +247,7 @@ describe('Step 5: Exemption application', () => {
     // 120 sqm property, senior_25 maxAreaSqm=100 → 100 eligible, 20 full price
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 120, bimonthlyPayment: 0,
+      propertyAreaSqm: 120, bimonthlyPayment: 1,
       selectedExemptionCode: 'senior_25',
     });
     expect(r.appliedExemption!.eligibleAreaSqm).toBe(100);
@@ -261,7 +261,7 @@ describe('Step 5: Exemption application', () => {
     // 70 sqm, disabled_100 maxAreaSqm=100 → all 70 eligible, 100% off
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'ג',
-      propertyAreaSqm: 70, bimonthlyPayment: 0,
+      propertyAreaSqm: 70, bimonthlyPayment: 1,
       selectedExemptionCode: 'disabled_100',
     });
     expect(r.appliedExemption!.eligibleAreaSqm).toBe(70);
@@ -274,7 +274,7 @@ describe('Step 5: Exemption application', () => {
     // 200 sqm, empty_100 no maxAreaSqm → all 200 eligible
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 200, bimonthlyPayment: 0,
+      propertyAreaSqm: 200, bimonthlyPayment: 1,
       selectedExemptionCode: 'empty_100',
     });
     expect(r.appliedExemption!.eligibleAreaSqm).toBe(200);
@@ -285,7 +285,7 @@ describe('Step 5: Exemption application', () => {
     // 150 sqm, disabled_100 maxAreaSqm=100 → 100 free, 50 full price
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 150, bimonthlyPayment: 0,
+      propertyAreaSqm: 150, bimonthlyPayment: 1,
       selectedExemptionCode: 'disabled_100',
     });
     expect(r.appliedExemption!.eligibleAreaSqm).toBe(100);
@@ -298,7 +298,7 @@ describe('Step 5: Exemption application', () => {
     // income_80_large needs householdSize 5+, but only 2
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 80, bimonthlyPayment: 0,
+      propertyAreaSqm: 80, bimonthlyPayment: 1,
       selectedExemptionCode: 'income_80_large',
       householdSize: 2,
     });
@@ -313,7 +313,7 @@ describe('Step 5: Exemption application', () => {
     // total: 1900
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 110, bimonthlyPayment: 0,
+      propertyAreaSqm: 110, bimonthlyPayment: 1,
       selectedExemptionCode: 'immigrant_90',
     });
     expect(r.appliedExemption!.eligibleAreaSqm).toBe(100);
@@ -324,7 +324,7 @@ describe('Step 5: Exemption application', () => {
   it('appliedExemption metadata is correct', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 80, bimonthlyPayment: 0,
+      propertyAreaSqm: 80, bimonthlyPayment: 1,
       selectedExemptionCode: 'disabled_80',
     });
     expect(r.appliedExemption).toEqual({
@@ -346,7 +346,7 @@ describe('Step 6: Annual after exemption', () => {
   it('no exemption → annualAfter = annualBefore', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 100, bimonthlyPayment: 0,
+      propertyAreaSqm: 100, bimonthlyPayment: 1,
     });
     expect(r.annualAfterExemption).toBe(r.annualBeforeExemption);
     expect(r.annualAfterExemption).toBe(9500);
@@ -355,7 +355,7 @@ describe('Step 6: Annual after exemption', () => {
   it('with exemption → annualAfter < annualBefore', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 80, bimonthlyPayment: 0,
+      propertyAreaSqm: 80, bimonthlyPayment: 1,
       selectedExemptionCode: 'senior_25',
     });
     expect(r.annualAfterExemption).toBeLessThan(r.annualBeforeExemption);
@@ -367,7 +367,7 @@ describe('Step 6: Annual after exemption', () => {
     // 65 × 78.5 = 5102.5 → should stay 5102.5
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'ב',
-      propertyAreaSqm: 65, bimonthlyPayment: 0,
+      propertyAreaSqm: 65, bimonthlyPayment: 1,
     });
     expect(r.annualBeforeExemption).toBe(5102.5);
     const decimalPlaces = r.annualBeforeExemption.toString().split('.')[1]?.length ?? 0;
@@ -385,7 +385,7 @@ describe('Step 7: Bimonthly calculation (annual / 6)', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
       propertyAreaSqm: 94.74, // ~94.74 × 95 ≈ 9000.3 → rounded
-      bimonthlyPayment: 0,
+      bimonthlyPayment: 1,
     });
     expect(r.calculatedBimonthly).toBe(Math.round((r.annualAfterExemption / 6) * 100) / 100);
   });
@@ -393,7 +393,7 @@ describe('Step 7: Bimonthly calculation (annual / 6)', () => {
   it('bimonthly is rounded to 2 decimal places', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 80, bimonthlyPayment: 0,
+      propertyAreaSqm: 80, bimonthlyPayment: 1,
     });
     // 7600 / 6 = 1266.666... → 1266.67
     expect(r.calculatedBimonthly).toBe(1266.67);
@@ -404,7 +404,7 @@ describe('Step 7: Bimonthly calculation (annual / 6)', () => {
   it('bimonthly × 6 ≈ annual (within rounding)', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'ב',
-      propertyAreaSqm: 100, bimonthlyPayment: 0,
+      propertyAreaSqm: 100, bimonthlyPayment: 1,
     });
     expect(r.calculatedBimonthly * 6).toBeCloseTo(r.annualAfterExemption, 0);
   });
@@ -412,7 +412,7 @@ describe('Step 7: Bimonthly calculation (annual / 6)', () => {
   it('with exemption: bimonthly based on annualAfterExemption', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 80, bimonthlyPayment: 0,
+      propertyAreaSqm: 80, bimonthlyPayment: 1,
       selectedExemptionCode: 'senior_25',
     });
     // annual after = 5700, bimonthly = 5700 / 6 = 950
@@ -422,7 +422,7 @@ describe('Step 7: Bimonthly calculation (annual / 6)', () => {
   it('zero annual → zero bimonthly', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'ג',
-      propertyAreaSqm: 70, bimonthlyPayment: 0,
+      propertyAreaSqm: 70, bimonthlyPayment: 1,
       selectedExemptionCode: 'disabled_100',
     });
     expect(r.annualAfterExemption).toBe(0);
@@ -431,7 +431,7 @@ describe('Step 7: Bimonthly calculation (annual / 6)', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════
-// STEP 8: Outcome determination (5₪ tolerance)
+// STEP 8: Outcome determination (10₪ tolerance)
 // ═══════════════════════════════════════════════════════════════════════
 
 describe('Step 8: Outcome determination', () => {
@@ -445,18 +445,18 @@ describe('Step 8: Outcome determination', () => {
     expect(r.outcome).toBe('match');
   });
 
-  it('match: within +5₪ tolerance', () => {
+  it('match: within +10₪ tolerance', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 80, bimonthlyPayment: 1271.67, // +5 exactly
+      propertyAreaSqm: 80, bimonthlyPayment: 1276.67, // +10 exactly
     });
     expect(r.outcome).toBe('match');
   });
 
-  it('match: within -5₪ tolerance', () => {
+  it('match: within -10₪ tolerance', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 80, bimonthlyPayment: 1261.67, // -5 exactly
+      propertyAreaSqm: 80, bimonthlyPayment: 1256.67, // -10 exactly
     });
     expect(r.outcome).toBe('match');
   });
@@ -464,7 +464,7 @@ describe('Step 8: Outcome determination', () => {
   it('overpaying: reported > calculated + tolerance', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 80, bimonthlyPayment: 1271.68, // +5.01
+      propertyAreaSqm: 80, bimonthlyPayment: 1276.68, // +10.01
     });
     expect(r.outcome).toBe('overpaying');
   });
@@ -472,7 +472,7 @@ describe('Step 8: Outcome determination', () => {
   it('underpaying: reported < calculated - tolerance', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 80, bimonthlyPayment: 1261.66, // -5.01
+      propertyAreaSqm: 80, bimonthlyPayment: 1256.66, // -10.01
     });
     expect(r.outcome).toBe('underpaying');
   });
@@ -485,10 +485,10 @@ describe('Step 8: Outcome determination', () => {
     expect(r.outcome).toBe('overpaying');
   });
 
-  it('underpaying: paying 0', () => {
+  it('underpaying: paying almost nothing', () => {
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 80, bimonthlyPayment: 0,
+      propertyAreaSqm: 80, bimonthlyPayment: 1,
     });
     expect(r.outcome).toBe('underpaying');
   });
@@ -628,43 +628,29 @@ describe('Step 10: Full pipeline verification', () => {
     expect(r.savingsBimonthly).toBeCloseTo(1016.83, 0);
   });
 
-  it('business multi-designation — all steps', () => {
+  it('business multi-designation throws error — redirect to representative', () => {
     const designations = [
       { typeCode: 'industry', subtypeCode: 'manufacturing', zone: 'ד', areaSqm: 400 },
       { typeCode: 'industry', subtypeCode: 'storage', zone: 'ד', areaSqm: 200 },
-      { typeCode: 'industry', subtypeCode: 'land', zone: 'all', areaSqm: 1000 },
     ];
-    // manufacturing 400 × 180 = 72000
-    // storage 200 × 80 = 16000
-    // land 1000 × 22 = 22000
-    // total annual = 110000
-    const expectedBimonthly = Math.round((110000 / 6) * 100) / 100; // 18333.33
-
-    const r = calculateBusinessPropertyTax(city, designations, 20000);
-
-    expect(r.totalAreaSqm).toBe(1600);
-    expect(r.annualBeforeExemption).toBe(110000);
-    expect(r.annualAfterExemption).toBe(110000); // no exemption
-    expect(r.calculatedBimonthly).toBe(expectedBimonthly);
-    expect(r.outcome).toBe('overpaying'); // 20000 > 18333.33
-    expect(r.savingsBimonthly).toBeCloseTo(20000 - expectedBimonthly, 0);
-    expect(r.savingsAnnual).toBeCloseTo((20000 - expectedBimonthly) * 6, 0);
+    expect(() => calculateBusinessPropertyTax(city, designations, 20000))
+      .toThrow('מספר ייעודים — יש לפנות לנציג');
   });
 
   it('edge: exactly at tolerance boundary → match', () => {
-    // calculated = 1266.67, payment = 1271.67 (diff = 5.00)
+    // calculated = 1266.67, payment = 1276.67 (diff = 10.00)
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 80, bimonthlyPayment: 1271.67,
+      propertyAreaSqm: 80, bimonthlyPayment: 1276.67,
     });
     expect(r.outcome).toBe('match');
   });
 
   it('edge: 1 agora over tolerance → overpaying', () => {
-    // calculated = 1266.67, payment = 1271.68 (diff = 5.01)
+    // calculated = 1266.67, payment = 1276.68 (diff = 10.01)
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'standard', zone: 'א',
-      propertyAreaSqm: 80, bimonthlyPayment: 1271.68,
+      propertyAreaSqm: 80, bimonthlyPayment: 1276.68,
     });
     expect(r.outcome).toBe('overpaying');
   });

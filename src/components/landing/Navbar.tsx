@@ -19,6 +19,8 @@ import Link from "next/link";
 import logo from "@/assets/icon-with-text-no-background.png";
 
 const NAV_HEIGHT = 84;
+/** Padding-top for `main` under the fixed floating navbar (px). Matches former spacer in this file. */
+export const NAVBAR_MAIN_PADDING_TOP = { xs: NAV_HEIGHT + 12, sm: NAV_HEIGHT + 16 } as const;
 const FLOAT_TOP = { xs: 12, sm: 16 };
 const FLOAT_INSET = { xs: 1.5, sm: 2, md: 3 };
 /** Ignore tiny scroll jitter (px). */
@@ -26,14 +28,25 @@ const SCROLL_DIRECTION_DELTA = 6;
 /** Always show the bar when near the top of the page. */
 const SCROLL_TOP_THRESHOLD = 32;
 
-const navItems = [
+const navItemsLanding = [
   { label: "בית", href: "#hero" },
   { label: "מחשבון", href: "#calculator-section" },
   { label: "המלצות", href: "#testimonials" },
   { label: "מאמרים", href: "/blog" },
 ];
 
-export default function Navbar() {
+const navItemsRoutes = [
+  { label: "בית", href: "/" },
+  { label: "מחשבון", href: "/calculator" },
+  { label: "המלצות", href: "/#testimonials" },
+  { label: "מאמרים", href: "/blog" },
+];
+
+export type NavbarVariant = "landing" | "routes";
+
+export default function Navbar({ variant = "landing" }: { variant?: NavbarVariant }) {
+  const navItems = variant === "routes" ? navItemsRoutes : navItemsLanding;
+  const ctaHref = variant === "routes" ? "/calculator" : "#calculator-section";
   const [mobileOpen, setMobileOpen] = useState(false);
   const [navHidden, setNavHidden] = useState(false);
   const lastScrollY = useRef(0);
@@ -192,8 +205,8 @@ export default function Navbar() {
                 }}
               >
                 <Button
-                  component="a"
-                  href="#calculator-section"
+                  component={variant === "routes" ? Link : "a"}
+                  href={ctaHref}
                   variant="contained"
                   sx={{
                     bgcolor: "#1a4fdb",
@@ -277,8 +290,8 @@ export default function Navbar() {
             ))}
             <ListItem disablePadding sx={{ px: 2, mt: 2 }}>
               <Button
-                component={"a"}
-                href="#calculator-section"
+                component={variant === "routes" ? Link : "a"}
+                href={ctaHref}
                 variant="contained"
                 fullWidth
                 onClick={() => setMobileOpen(false)}
