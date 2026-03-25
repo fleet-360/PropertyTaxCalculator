@@ -39,7 +39,7 @@ export default function AppealStep({ state, dispatch }: StepProps) {
 
   if (submitted) {
     return (
-      <Box>
+      <Box sx={{ pt: 5 }}>
         <Alert severity="success" sx={{ mb: 3, fontSize: '1.1rem' }}>
           ההשגה נשלחה למייל שלך ({state.email || 'לא הוזן מייל'})
         </Alert>

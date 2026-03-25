@@ -37,7 +37,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/admin', icon: <DashboardIcon /> },
+  { label: 'לוח בקרה', href: '/admin', icon: <DashboardIcon /> },
   { label: 'מחשבונים', href: '/admin/cities', icon: <CalculateIcon /> },
   { label: 'קופונים', href: '/admin/coupons', icon: <ConfirmationNumberIcon /> },
   { label: 'לקוחות', href: '/admin/customers', icon: <PeopleIcon /> },
