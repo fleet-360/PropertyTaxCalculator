@@ -14,7 +14,6 @@ import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
 import Chip from '@mui/material/Chip';
-import Divider from '@mui/material/Divider';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import Select from '@mui/material/Select';
@@ -33,6 +32,13 @@ import { ALL_ZONES_TARIFF_CODE, ALL_ZONES_LABEL_HE } from '@/lib/tariff-constant
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
+import FormHelperText from '@mui/material/FormHelperText';
+import {
+  normalizeCityTariffPayload,
+  validateCityTariffPayload,
+  validationIssuesToFieldMap,
+  accordionSectionForValidationPath,
+} from '@/lib/validateCityTariffPayload';
 
 // ── Types ────────────────────────────────────────────────────────────
 interface SizeRange {
@@ -128,12 +134,39 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
   const [data, setData] = React.useState<CityTariffData>(city || emptyCityData);
   const [saving, setSaving] = React.useState(false);
   const [snackbar, setSnackbar] = React.useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
+  const [expandedAccordion, setExpandedAccordion] = React.useState({
+    basic: true,
+    zones: true,
+    types: true,
+    exemptions: true,
+  });
+
+  const clearFieldErr = React.useCallback((path: string) => {
+    setFieldErrors((prev) => {
+      if (!(path in prev)) return prev;
+      const next = { ...prev };
+      delete next[path];
+      return next;
+    });
+  }, []);
+
+  const fieldErr = (path: string) => fieldErrors[path];
+
   const [selectedTypeIndex, setSelectedTypeIndex] = React.useState<number | null>(() =>
     city && city.types.length > 0 ? 0 : null,
   );
   const [selectedSubtypeIndex, setSelectedSubtypeIndex] = React.useState<number | null>(() => {
     if (!city?.types?.length) return null;
     return city.types[0].subtypes.length > 0 ? 0 : null;
+  });
+
+  const [selectedExemptionSectionIndex, setSelectedExemptionSectionIndex] = React.useState<number | null>(() =>
+    city && city.exemptions.length > 0 ? 0 : null,
+  );
+  const [selectedExemptionSubIndex, setSelectedExemptionSubIndex] = React.useState<number | null>(() => {
+    if (!city?.exemptions?.length) return null;
+    return city.exemptions[0].subSections.length > 0 ? 0 : null;
   });
 
   const selectedSubtypesLen =
@@ -151,8 +184,29 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
     setSelectedSubtypeIndex((si) => (si === null || si >= selectedSubtypesLen ? 0 : si));
   }, [selectedTypeIndex, selectedSubtypesLen]);
 
+  const selectedExemptionSubsLen =
+    selectedExemptionSectionIndex !== null
+      ? data.exemptions[selectedExemptionSectionIndex]?.subSections.length ?? 0
+      : 0;
+
+  React.useEffect(() => {
+    if (selectedExemptionSectionIndex === null) {
+      setSelectedExemptionSubIndex(null);
+      return;
+    }
+    if (selectedExemptionSubsLen === 0) {
+      setSelectedExemptionSubIndex(null);
+      return;
+    }
+    setSelectedExemptionSubIndex((ssi) =>
+      ssi === null || ssi >= selectedExemptionSubsLen ? 0 : ssi,
+    );
+  }, [selectedExemptionSectionIndex, selectedExemptionSubsLen]);
+
   // Update slug from English name
   const handleCityNameEnChange = (value: string) => {
+    clearFieldErr('cityNameEn');
+    clearFieldErr('slug');
     setData((prev) => ({
       ...prev,
       cityNameEn: value,
@@ -161,27 +215,32 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
   };
 
   const handleSave = async () => {
-    if (!data.cityName || !data.cityNameEn || !data.slug || !data.year) {
-      setSnackbar({ open: true, message: 'נא למלא שדות חובה: שם עיר, שם באנגלית, slug, שנה', severity: 'error' });
+    const normalized = normalizeCityTariffPayload(data);
+    const issues = validateCityTariffPayload(normalized);
+    if (issues.length > 0) {
+      setFieldErrors(validationIssuesToFieldMap(issues));
+      setExpandedAccordion((prev) => {
+        const next = { ...prev };
+        for (const issue of issues) {
+          next[accordionSectionForValidationPath(issue.path)] = true;
+        }
+        return next;
+      });
+      setSnackbar({
+        open: true,
+        message: `נמצאו ${issues.length} בעיות אימות — נא לתקן לפי השדות המסומנים`,
+        severity: 'error',
+      });
       return;
     }
 
+    setFieldErrors({});
     setSaving(true);
     try {
       const url = isNew ? '/api/cities' : `/api/cities/${data._id}`;
       const method = isNew ? 'POST' : 'PUT';
 
-      const payload = {
-        ...data,
-        types: data.types.map((t) => ({
-          ...t,
-          category: t.category ?? 'private',
-          subtypes: t.subtypes.map((s) => ({
-            ...s,
-            isProgressiveRate: s.isProgressiveRate ?? false,
-          })),
-        })),
-      };
+      const payload = { ...data, types: normalized.types, exemptions: normalized.exemptions };
 
       const res = await fetch(url, {
         method,
@@ -406,10 +465,16 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
 
   // ── Exemption helpers ───────────────────────────────────────────────
   const addExemptionSection = () => {
-    setData((prev) => ({
-      ...prev,
-      exemptions: [...prev.exemptions, { sectionCode: '', sectionLabel: '', subSections: [] }],
-    }));
+    let newEi = 0;
+    setData((prev) => {
+      newEi = prev.exemptions.length;
+      return {
+        ...prev,
+        exemptions: [...prev.exemptions, { sectionCode: '', sectionLabel: '', subSections: [] }],
+      };
+    });
+    setSelectedExemptionSectionIndex(newEi);
+    setSelectedExemptionSubIndex(null);
   };
 
   const updateExemptionSection = (ei: number, field: string, value: string) => {
@@ -421,27 +486,48 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
   };
 
   const removeExemptionSection = (ei: number) => {
-    setData((prev) => ({
-      ...prev,
-      exemptions: prev.exemptions.filter((_, i) => i !== ei),
-    }));
+    const newSecs = data.exemptions.filter((_, i) => i !== ei);
+    setData((prev) => ({ ...prev, exemptions: newSecs }));
+    setSelectedExemptionSectionIndex((prevSel) => {
+      if (newSecs.length === 0) return null;
+      if (prevSel === null) return 0;
+      if (ei < prevSel) return prevSel - 1;
+      if (ei === prevSel) return Math.min(prevSel, newSecs.length - 1);
+      return prevSel;
+    });
   };
 
   const addExemptionSubSection = (ei: number) => {
+    let newSi = 0;
     setData((prev) => {
       const exemptions = [...prev.exemptions];
+      newSi = exemptions[ei].subSections.length;
       exemptions[ei] = {
         ...exemptions[ei],
         subSections: [
           ...exemptions[ei].subSections,
-          { code: '', description: '', discountPercent: 0, restrictions: {}, requiresDocuments: false, documentTypes: [] },
+          {
+            code: '',
+            description: '',
+            discountPercent: 0,
+            restrictions: {},
+            requiresDocuments: false,
+            documentTypes: [],
+          },
         ],
       };
       return { ...prev, exemptions };
     });
+    setSelectedExemptionSectionIndex(ei);
+    setSelectedExemptionSubIndex(newSi);
   };
 
-  const updateExemptionSubSection = (ei: number, si: number, field: string, value: string | number | boolean) => {
+  const updateExemptionSubSection = (
+    ei: number,
+    si: number,
+    field: string,
+    value: string | number | boolean | string[],
+  ) => {
     setData((prev) => {
       const exemptions = [...prev.exemptions];
       const subs = [...exemptions[ei].subSections];
@@ -462,14 +548,24 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
   };
 
   const removeExemptionSubSection = (ei: number, si: number) => {
+    const newSubs = data.exemptions[ei].subSections.filter((_, i) => i !== si);
     setData((prev) => {
       const exemptions = [...prev.exemptions];
       exemptions[ei] = {
         ...exemptions[ei],
-        subSections: exemptions[ei].subSections.filter((_, i) => i !== si),
+        subSections: newSubs,
       };
       return { ...prev, exemptions };
     });
+    if (selectedExemptionSectionIndex === ei) {
+      setSelectedExemptionSubIndex((prevSel) => {
+        if (newSubs.length === 0) return null;
+        if (prevSel === null) return 0;
+        if (si < prevSel) return prevSel - 1;
+        if (si === prevSel) return Math.min(prevSel, newSubs.length - 1);
+        return prevSel;
+      });
+    }
   };
 
   return (
@@ -495,7 +591,10 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       </Box>
 
       {/* Section 1: Basic Info */}
-      <Accordion defaultExpanded>
+      <Accordion
+        expanded={expandedAccordion.basic}
+        onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, basic: exp }))}
+      >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>פרטי עיר</Typography>
         </AccordionSummary>
@@ -506,8 +605,13 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                 fullWidth
                 label="שם העיר (עברית)"
                 value={data.cityName}
-                onChange={(e) => setData((prev) => ({ ...prev, cityName: e.target.value }))}
+                onChange={(e) => {
+                  clearFieldErr('cityName');
+                  setData((prev) => ({ ...prev, cityName: e.target.value }));
+                }}
                 required
+                error={Boolean(fieldErr('cityName'))}
+                helperText={fieldErr('cityName')}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -517,6 +621,8 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                 value={data.cityNameEn}
                 onChange={(e) => handleCityNameEnChange(e.target.value)}
                 required
+                error={Boolean(fieldErr('cityNameEn'))}
+                helperText={fieldErr('cityNameEn')}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
@@ -524,10 +630,16 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                 fullWidth
                 label="Slug"
                 value={data.slug}
-                onChange={(e) => setData((prev) => ({ ...prev, slug: e.target.value }))}
+                onChange={(e) => {
+                  clearFieldErr('slug');
+                  setData((prev) => ({ ...prev, slug: e.target.value }));
+                }}
                 required
                 disabled={!isNew}
-                helperText={isNew ? 'נוצר אוטומטית מהשם באנגלית' : 'לא ניתן לשינוי'}
+                error={Boolean(fieldErr('slug'))}
+                helperText={
+                  fieldErr('slug') ?? (isNew ? 'נוצר אוטומטית מהשם באנגלית' : 'לא ניתן לשינוי')
+                }
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
@@ -536,8 +648,13 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                 label="שנה"
                 type="number"
                 value={data.year}
-                onChange={(e) => setData((prev) => ({ ...prev, year: parseInt(e.target.value, 10) || 0 }))}
+                onChange={(e) => {
+                  clearFieldErr('year');
+                  setData((prev) => ({ ...prev, year: parseInt(e.target.value, 10) || 0 }));
+                }}
                 required
+                error={Boolean(fieldErr('year'))}
+                helperText={fieldErr('year')}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
@@ -558,7 +675,12 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                 fullWidth
                 label="קישור לצו ארנונה (URL)"
                 value={data.ordinanceUrl || ''}
-                onChange={(e) => setData((prev) => ({ ...prev, ordinanceUrl: e.target.value }))}
+                onChange={(e) => {
+                  clearFieldErr('ordinanceUrl');
+                  setData((prev) => ({ ...prev, ordinanceUrl: e.target.value }));
+                }}
+                error={Boolean(fieldErr('ordinanceUrl'))}
+                helperText={fieldErr('ordinanceUrl')}
               />
             </Grid>
           </Grid>
@@ -566,7 +688,10 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       </Accordion>
 
       {/* Section 2: Available Zones */}
-      <Accordion defaultExpanded>
+      <Accordion
+        expanded={expandedAccordion.zones}
+        onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, zones: exp }))}
+      >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
             אזורים <Chip label={data.availableZones.length} size="small" sx={{ ml: 1 }} />
@@ -574,20 +699,30 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
         </AccordionSummary>
         <AccordionDetails>
           {data.availableZones.map((zone, zi) => (
-            <Box key={zi} sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center' }}>
+            <Box key={zi} sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'flex-start' }}>
               <TextField
                 size="small"
                 label="קוד"
                 value={zone.code}
-                onChange={(e) => updateZone(zi, 'code', e.target.value)}
+                onChange={(e) => {
+                  clearFieldErr(`availableZones.${zi}.code`);
+                  updateZone(zi, 'code', e.target.value);
+                }}
                 sx={{ width: 120 }}
+                error={Boolean(fieldErr(`availableZones.${zi}.code`))}
+                helperText={fieldErr(`availableZones.${zi}.code`)}
               />
               <TextField
                 size="small"
                 label="שם אזור"
                 value={zone.label}
-                onChange={(e) => updateZone(zi, 'label', e.target.value)}
+                onChange={(e) => {
+                  clearFieldErr(`availableZones.${zi}.label`);
+                  updateZone(zi, 'label', e.target.value);
+                }}
                 sx={{ flex: 1 }}
+                error={Boolean(fieldErr(`availableZones.${zi}.label`))}
+                helperText={fieldErr(`availableZones.${zi}.label`)}
               />
               <IconButton size="small" color="error" onClick={() => removeZone(zi)}>
                 <DeleteIcon fontSize="small" />
@@ -601,7 +736,10 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       </Accordion>
 
       {/* Section 3: Property Types & Tariffs — sideways master / detail */}
-      <Accordion defaultExpanded>
+      <Accordion
+        expanded={expandedAccordion.types}
+        onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, types: exp }))}
+      >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
             סוגי נכס ותעריפים <Chip label={data.types.length} size="small" sx={{ ml: 1 }} />
@@ -624,28 +762,46 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                       size="small"
                       label="קוד סוג"
                       value={data.types[selectedTypeIndex].code}
-                      onChange={(e) => updateType(selectedTypeIndex, 'code', e.target.value)}
+                      onChange={(e) => {
+                        clearFieldErr(`types.${selectedTypeIndex}.code`);
+                        updateType(selectedTypeIndex, 'code', e.target.value);
+                      }}
                       sx={{ width: 140 }}
+                      error={Boolean(fieldErr(`types.${selectedTypeIndex}.code`))}
+                      helperText={fieldErr(`types.${selectedTypeIndex}.code`)}
                     />
                     <TextField
                       size="small"
                       label="שם סוג"
                       value={data.types[selectedTypeIndex].label}
-                      onChange={(e) => updateType(selectedTypeIndex, 'label', e.target.value)}
+                      onChange={(e) => {
+                        clearFieldErr(`types.${selectedTypeIndex}.label`);
+                        updateType(selectedTypeIndex, 'label', e.target.value);
+                      }}
                       sx={{ flex: 1, minWidth: 160 }}
+                      error={Boolean(fieldErr(`types.${selectedTypeIndex}.label`))}
+                      helperText={fieldErr(`types.${selectedTypeIndex}.label`)}
                     />
-                    <FormControl size="small" sx={{ minWidth: 140 }}>
+                    <FormControl
+                      size="small"
+                      sx={{ minWidth: 140 }}
+                      error={Boolean(fieldErr(`types.${selectedTypeIndex}.category`))}
+                    >
                       <InputLabel>קטגוריה</InputLabel>
                       <Select
                         label="קטגוריה"
                         value={(data.types[selectedTypeIndex].category ?? 'private') as 'private' | 'business'}
-                        onChange={(e) =>
-                          updateType(selectedTypeIndex, 'category', e.target.value as 'private' | 'business')
-                        }
+                        onChange={(e) => {
+                          clearFieldErr(`types.${selectedTypeIndex}.category`);
+                          updateType(selectedTypeIndex, 'category', e.target.value as 'private' | 'business');
+                        }}
                       >
                         <MenuItem value="private">מגורים</MenuItem>
                         <MenuItem value="business">עסקים</MenuItem>
                       </Select>
+                      {fieldErr(`types.${selectedTypeIndex}.category`) ? (
+                        <FormHelperText>{fieldErr(`types.${selectedTypeIndex}.category`)}</FormHelperText>
+                      ) : null}
                     </FormControl>
                     <IconButton
                       size="small"
@@ -802,15 +958,25 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                               size="small"
                               label="קוד תת-סוג"
                               value={sub.code}
-                              onChange={(e) => updateSubtype(ti, si, 'code', e.target.value)}
+                              onChange={(e) => {
+                                clearFieldErr(`types.${ti}.subtypes.${si}.code`);
+                                updateSubtype(ti, si, 'code', e.target.value);
+                              }}
                               sx={{ width: 130 }}
+                              error={Boolean(fieldErr(`types.${ti}.subtypes.${si}.code`))}
+                              helperText={fieldErr(`types.${ti}.subtypes.${si}.code`)}
                             />
                             <TextField
                               size="small"
                               label="שם תת-סוג"
                               value={sub.label}
-                              onChange={(e) => updateSubtype(ti, si, 'label', e.target.value)}
+                              onChange={(e) => {
+                                clearFieldErr(`types.${ti}.subtypes.${si}.label`);
+                                updateSubtype(ti, si, 'label', e.target.value);
+                              }}
                               sx={{ flex: 1, minWidth: 150 }}
+                              error={Boolean(fieldErr(`types.${ti}.subtypes.${si}.label`))}
+                              helperText={fieldErr(`types.${ti}.subtypes.${si}.label`)}
                             />
                             <FormControlLabel
                               control={
@@ -864,19 +1030,28 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                             </Box>
                           )}
 
-                          {sub.zones.map((zr, zi) => (
+                          {sub.zones.map((zr, zi) => {
+                            const zPath = `types.${ti}.subtypes.${si}.zones.${zi}`;
+                            const zoneFieldMsg = [fieldErr(`${zPath}.zone`), fieldErr(`${zPath}.zoneLabel`)]
+                              .filter(Boolean)
+                              .join(' — ');
+                            return (
                             <Paper
                               key={zi}
                               variant="outlined"
                               sx={{ p: 1, mb: 1, backgroundColor: 'action.hover' }}
                             >
-                              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-                                <FormControl size="small" sx={{ minWidth: 140 }}>
+                              <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                                <FormControl size="small" sx={{ minWidth: 140 }} error={Boolean(zoneFieldMsg)}>
                                   <InputLabel>אזור</InputLabel>
                                   <Select
                                     value={zr.zone}
                                     label="אזור"
-                                    onChange={(e) => updateZoneRate(ti, si, zi, 'zone', e.target.value)}
+                                    onChange={(e) => {
+                                      clearFieldErr(`${zPath}.zone`);
+                                      clearFieldErr(`${zPath}.zoneLabel`);
+                                      updateZoneRate(ti, si, zi, 'zone', e.target.value);
+                                    }}
                                   >
                                     <MenuItem value={ALL_ZONES_TARIFF_CODE}>
                                       {ALL_ZONES_LABEL_HE} ({ALL_ZONES_TARIFF_CODE})
@@ -887,6 +1062,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                                       </MenuItem>
                                     ))}
                                   </Select>
+                                  {zoneFieldMsg ? <FormHelperText>{zoneFieldMsg}</FormHelperText> : null}
                                 </FormControl>
                                 {!sub.hasSizeRanges && (
                                   <TextField
@@ -920,33 +1096,42 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                               {sub.hasSizeRanges && (
                                 <Box sx={{ mt: 1, ml: 1 }}>
                                   {(zr.sizeRanges || []).map((sr, ri) => (
-                                    <Box key={ri} sx={{ display: 'flex', gap: 1, mb: 0.5, alignItems: 'center' }}>
+                                    <Box key={ri} sx={{ display: 'flex', gap: 1, mb: 0.5, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                                       <TextField
                                         size="small"
                                         label="מ-"
                                         type="number"
                                         value={sr.min}
-                                        onChange={(e) =>
-                                          updateSizeRange(ti, si, zi, ri, 'min', parseFloat(e.target.value) || 0)
-                                        }
+                                        onChange={(e) => {
+                                          clearFieldErr(`${zPath}.sizeRanges.${ri}.min`);
+                                          updateSizeRange(ti, si, zi, ri, 'min', parseFloat(e.target.value) || 0);
+                                        }}
+                                        error={Boolean(fieldErr(`${zPath}.sizeRanges.${ri}.min`))}
+                                        helperText={fieldErr(`${zPath}.sizeRanges.${ri}.min`)}
                                       />
                                       <TextField
                                         size="small"
                                         label="עד"
                                         type="number"
                                         value={sr.max}
-                                        onChange={(e) =>
-                                          updateSizeRange(ti, si, zi, ri, 'max', parseFloat(e.target.value) || 0)
-                                        }
+                                        onChange={(e) => {
+                                          clearFieldErr(`${zPath}.sizeRanges.${ri}.max`);
+                                          updateSizeRange(ti, si, zi, ri, 'max', parseFloat(e.target.value) || 0);
+                                        }}
+                                        error={Boolean(fieldErr(`${zPath}.sizeRanges.${ri}.max`))}
+                                        helperText={fieldErr(`${zPath}.sizeRanges.${ri}.max`)}
                                       />
                                       <TextField
                                         size="small"
                                         label="תעריף"
                                         type="number"
                                         value={sr.rate}
-                                        onChange={(e) =>
-                                          updateSizeRange(ti, si, zi, ri, 'rate', parseFloat(e.target.value) || 0)
-                                        }
+                                        onChange={(e) => {
+                                          clearFieldErr(`${zPath}.sizeRanges.${ri}.rate`);
+                                          updateSizeRange(ti, si, zi, ri, 'rate', parseFloat(e.target.value) || 0);
+                                        }}
+                                        error={Boolean(fieldErr(`${zPath}.sizeRanges.${ri}.rate`))}
+                                        helperText={fieldErr(`${zPath}.sizeRanges.${ri}.rate`)}
                                       />
                                       <TextField
                                         size="small"
@@ -972,7 +1157,8 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                                 </Box>
                               )}
                             </Paper>
-                          ))}
+                          );
+                          })}
                           <Button size="small" startIcon={<AddIcon />} onClick={() => addZoneRate(ti, si)}>
                             הוסף אזור תעריף
                           </Button>
@@ -987,125 +1173,345 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
         </AccordionDetails>
       </Accordion>
 
-      {/* Section 4: Exemptions */}
-      <Accordion>
+      {/* Section 4: Exemptions — same master / detail pattern as Property Types */}
+      <Accordion
+        expanded={expandedAccordion.exemptions}
+        onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, exemptions: exp }))}
+      >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
             הנחות / פטורים <Chip label={data.exemptions.length} size="small" sx={{ ml: 1 }} />
           </Typography>
         </AccordionSummary>
         <AccordionDetails>
-          {data.exemptions.map((section, ei) => (
-            <Paper key={ei} variant="outlined" sx={{ p: 2, mb: 2 }}>
-              <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center' }}>
-                <TextField
-                  size="small"
-                  label="קוד סעיף"
-                  value={section.sectionCode}
-                  onChange={(e) => updateExemptionSection(ei, 'sectionCode', e.target.value)}
-                  sx={{ width: 130 }}
-                />
-                <TextField
-                  size="small"
-                  label="שם סעיף"
-                  value={section.sectionLabel}
-                  onChange={(e) => updateExemptionSection(ei, 'sectionLabel', e.target.value)}
-                  sx={{ flex: 1 }}
-                />
-                <IconButton size="small" color="error" onClick={() => removeExemptionSection(ei)}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Box>
-
-              {section.subSections.map((sub, si) => (
-                <Paper key={si} variant="outlined" sx={{ p: 1.5, mb: 1, ml: 2, backgroundColor: '#fafafa' }}>
-                  <Grid container spacing={1}>
-                    <Grid size={{ xs: 6, sm: 3 }}>
-                      <TextField
-                        size="small"
-                        fullWidth
-                        label="קוד"
-                        value={sub.code}
-                        onChange={(e) => updateExemptionSubSection(ei, si, 'code', e.target.value)}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 6, sm: 3 }}>
-                      <TextField
-                        size="small"
-                        fullWidth
-                        label="אחוז הנחה"
-                        type="number"
-                        value={sub.discountPercent}
-                        onChange={(e) => updateExemptionSubSection(ei, si, 'discountPercent', parseFloat(e.target.value) || 0)}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        size="small"
-                        fullWidth
-                        label="תיאור"
-                        value={sub.description}
-                        onChange={(e) => updateExemptionSubSection(ei, si, 'description', e.target.value)}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 4, sm: 2 }}>
-                      <TextField
-                        size="small"
-                        fullWidth
-                        label="שטח מקסימלי"
-                        type="number"
-                        value={sub.restrictions?.maxAreaSqm ?? ''}
-                        onChange={(e) => updateExemptionRestriction(ei, si, 'maxAreaSqm', e.target.value ? parseFloat(e.target.value) : undefined)}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 4, sm: 2 }}>
-                      <TextField
-                        size="small"
-                        fullWidth
-                        label="מינ׳ ילדים"
-                        type="number"
-                        value={sub.restrictions?.minChildren ?? ''}
-                        onChange={(e) => updateExemptionRestriction(ei, si, 'minChildren', e.target.value ? parseInt(e.target.value, 10) : undefined)}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 4, sm: 2 }}>
-                      <TextField
-                        size="small"
-                        fullWidth
-                        label="מינ׳ נפשות"
-                        type="number"
-                        value={sub.restrictions?.minHouseholdSize ?? ''}
-                        onChange={(e) => updateExemptionRestriction(ei, si, 'minHouseholdSize', e.target.value ? parseInt(e.target.value, 10) : undefined)}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 6, sm: 3 }}>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            size="small"
-                            checked={sub.requiresDocuments}
-                            onChange={(e) => updateExemptionSubSection(ei, si, 'requiresDocuments', e.target.checked)}
-                          />
-                        }
-                        label="דורש מסמכים"
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 6, sm: 1 }}>
-                      <IconButton size="small" color="error" onClick={() => removeExemptionSubSection(ei, si)}>
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Grid>
-                  </Grid>
+          {data.exemptions.length === 0 ? (
+            <Button startIcon={<AddIcon />} onClick={addExemptionSection} variant="outlined">
+              הוסף סעיף הנחה
+            </Button>
+          ) : (
+            <>
+              {selectedExemptionSectionIndex !== null && data.exemptions[selectedExemptionSectionIndex] && (
+                <Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                    עריכת סעיף הנחה
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <TextField
+                      size="small"
+                      label="קוד סעיף"
+                      value={data.exemptions[selectedExemptionSectionIndex].sectionCode}
+                      onChange={(e) => {
+                        clearFieldErr(`exemptions.${selectedExemptionSectionIndex}.sectionCode`);
+                        updateExemptionSection(selectedExemptionSectionIndex, 'sectionCode', e.target.value);
+                      }}
+                      sx={{ width: 140 }}
+                      error={Boolean(fieldErr(`exemptions.${selectedExemptionSectionIndex}.sectionCode`))}
+                      helperText={fieldErr(`exemptions.${selectedExemptionSectionIndex}.sectionCode`)}
+                    />
+                    <TextField
+                      size="small"
+                      label="שם סעיף"
+                      value={data.exemptions[selectedExemptionSectionIndex].sectionLabel}
+                      onChange={(e) => {
+                        clearFieldErr(`exemptions.${selectedExemptionSectionIndex}.sectionLabel`);
+                        updateExemptionSection(selectedExemptionSectionIndex, 'sectionLabel', e.target.value);
+                      }}
+                      sx={{ flex: 1, minWidth: 160 }}
+                      error={Boolean(fieldErr(`exemptions.${selectedExemptionSectionIndex}.sectionLabel`))}
+                      helperText={fieldErr(`exemptions.${selectedExemptionSectionIndex}.sectionLabel`)}
+                    />
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => removeExemptionSection(selectedExemptionSectionIndex)}
+                      aria-label="מחק סעיף הנחה"
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
                 </Paper>
-              ))}
-              <Button size="small" startIcon={<AddIcon />} onClick={() => addExemptionSubSection(ei)} sx={{ ml: 2 }}>
-                הוסף תת-סעיף
-              </Button>
-            </Paper>
-          ))}
-          <Button startIcon={<AddIcon />} onClick={addExemptionSection} variant="outlined" sx={{ mt: 1 }}>
-            הוסף סעיף הנחה
-          </Button>
+              )}
+
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={2}
+                sx={{ alignItems: 'stretch', minHeight: 280 }}
+              >
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    flex: { sm: '0 0 240px' },
+                    maxHeight: { sm: 420 },
+                    overflow: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <Box sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                      סעיפי הנחה
+                    </Typography>
+                    <Button size="small" fullWidth startIcon={<AddIcon />} onClick={addExemptionSection} variant="outlined">
+                      הוסף סעיף
+                    </Button>
+                  </Box>
+                  <List dense disablePadding aria-label="רשימת סעיפי הנחה">
+                    {data.exemptions.map((section, ei) => (
+                      <ListItemButton
+                        key={ei}
+                        selected={selectedExemptionSectionIndex === ei}
+                        onClick={() => {
+                          setSelectedExemptionSectionIndex(ei);
+                          setSelectedExemptionSubIndex(section.subSections.length ? 0 : null);
+                        }}
+                        aria-current={selectedExemptionSectionIndex === ei ? 'true' : undefined}
+                        aria-label={`בחר סעיף ${section.sectionLabel || section.sectionCode || ei}`}
+                      >
+                        <ListItemText
+                          primary={
+                            <Typography component="span" variant="body2" sx={{ fontWeight: 600 }}>
+                              {section.sectionCode || '—'} · {section.sectionLabel || 'ללא שם'}
+                            </Typography>
+                          }
+                          secondary={`${section.subSections.length} תתי־סעיף`}
+                        />
+                      </ListItemButton>
+                    ))}
+                  </List>
+                </Paper>
+
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    flex: { sm: '0 0 220px' },
+                    maxHeight: { sm: 420 },
+                    overflow: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <Box sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                      תתי־סעיף
+                    </Typography>
+                    {selectedExemptionSectionIndex !== null && (
+                      <Button
+                        size="small"
+                        fullWidth
+                        startIcon={<AddIcon />}
+                        onClick={() => addExemptionSubSection(selectedExemptionSectionIndex)}
+                        variant="outlined"
+                      >
+                        הוסף תת־סעיף
+                      </Button>
+                    )}
+                  </Box>
+                  {selectedExemptionSectionIndex === null ? (
+                    <Box sx={{ p: 2 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        בחר סעיף הנחה
+                      </Typography>
+                    </Box>
+                  ) : data.exemptions[selectedExemptionSectionIndex].subSections.length === 0 ? (
+                    <Box sx={{ p: 2 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        אין תתי־סעיף — הוסף תת־סעיף
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <List dense disablePadding aria-label="רשימת תתי־סעיף">
+                      {data.exemptions[selectedExemptionSectionIndex].subSections.map((sub, ssi) => (
+                        <ListItemButton
+                          key={ssi}
+                          selected={selectedExemptionSubIndex === ssi}
+                          onClick={() => setSelectedExemptionSubIndex(ssi)}
+                          aria-current={selectedExemptionSubIndex === ssi ? 'true' : undefined}
+                          aria-label={`בחר תת־סעיף ${sub.code || sub.description || ssi}`}
+                        >
+                          <ListItemText
+                            primary={`${sub.code || '—'} · ${sub.discountPercent}%`}
+                            secondary={sub.description ? `${sub.description.slice(0, 48)}${sub.description.length > 48 ? '…' : ''}` : '—'}
+                          />
+                        </ListItemButton>
+                      ))}
+                    </List>
+                  )}
+                </Paper>
+
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    flex: 1,
+                    minWidth: 0,
+                    maxHeight: { sm: 420 },
+                    overflow: 'auto',
+                    p: 1.5,
+                  }}
+                >
+                  {selectedExemptionSectionIndex === null || selectedExemptionSubIndex === null ? (
+                    <Typography variant="body2" color="text.secondary">
+                      בחר תת־סעיף לעריכת פרטי ההנחה
+                    </Typography>
+                  ) : (
+                    (() => {
+                      const ei = selectedExemptionSectionIndex;
+                      const ssi = selectedExemptionSubIndex;
+                      const sub = data.exemptions[ei].subSections[ssi];
+                      const docTypes = Array.isArray(sub.documentTypes) ? sub.documentTypes : [];
+                      return (
+                        <Box>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
+                            תת־סעיף: {sub.code || sub.description?.slice(0, 40) || 'תת־סעיף'}
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 1, mb: 1.5, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                            <TextField
+                              size="small"
+                              label="קוד תת־סעיף"
+                              value={sub.code}
+                              onChange={(e) => {
+                                clearFieldErr(`exemptions.${ei}.subSections.${ssi}.code`);
+                                updateExemptionSubSection(ei, ssi, 'code', e.target.value);
+                              }}
+                              sx={{ width: 130 }}
+                              error={Boolean(fieldErr(`exemptions.${ei}.subSections.${ssi}.code`))}
+                              helperText={fieldErr(`exemptions.${ei}.subSections.${ssi}.code`)}
+                            />
+                            <TextField
+                              size="small"
+                              label="אחוז הנחה"
+                              type="number"
+                              value={sub.discountPercent}
+                              onChange={(e) => {
+                                clearFieldErr(`exemptions.${ei}.subSections.${ssi}.discountPercent`);
+                                updateExemptionSubSection(
+                                  ei,
+                                  ssi,
+                                  'discountPercent',
+                                  parseFloat(e.target.value) || 0,
+                                );
+                              }}
+                              sx={{ width: 120 }}
+                              error={Boolean(fieldErr(`exemptions.${ei}.subSections.${ssi}.discountPercent`))}
+                              helperText={fieldErr(`exemptions.${ei}.subSections.${ssi}.discountPercent`)}
+                            />
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => removeExemptionSubSection(ei, ssi)}
+                              aria-label="מחק תת־סעיף"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+                          <TextField
+                            size="small"
+                            fullWidth
+                            label="תיאור"
+                            value={sub.description}
+                            onChange={(e) => {
+                              clearFieldErr(`exemptions.${ei}.subSections.${ssi}.description`);
+                              updateExemptionSubSection(ei, ssi, 'description', e.target.value);
+                            }}
+                            sx={{ mb: 1.5 }}
+                            multiline
+                            minRows={2}
+                            error={Boolean(fieldErr(`exemptions.${ei}.subSections.${ssi}.description`))}
+                            helperText={fieldErr(`exemptions.${ei}.subSections.${ssi}.description`)}
+                          />
+
+                          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.75 }}>
+                            הגבלות (אופציונלי)
+                          </Typography>
+                          <Paper variant="outlined" sx={{ p: 1, mb: 1.5, backgroundColor: 'action.hover' }}>
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+                              <TextField
+                                size="small"
+                                label="שטח מקס׳ (מ״ר)"
+                                type="number"
+                                value={sub.restrictions?.maxAreaSqm ?? ''}
+                                onChange={(e) =>
+                                  updateExemptionRestriction(
+                                    ei,
+                                    ssi,
+                                    'maxAreaSqm',
+                                    e.target.value ? parseFloat(e.target.value) : undefined,
+                                  )
+                                }
+                                sx={{ width: 130 }}
+                              />
+                              <TextField
+                                size="small"
+                                label="מינ׳ ילדים"
+                                type="number"
+                                value={sub.restrictions?.minChildren ?? ''}
+                                onChange={(e) =>
+                                  updateExemptionRestriction(
+                                    ei,
+                                    ssi,
+                                    'minChildren',
+                                    e.target.value ? parseInt(e.target.value, 10) : undefined,
+                                  )
+                                }
+                                sx={{ width: 110 }}
+                              />
+                              <TextField
+                                size="small"
+                                label="מינ׳ נפשות במשפחה"
+                                type="number"
+                                value={sub.restrictions?.minHouseholdSize ?? ''}
+                                onChange={(e) =>
+                                  updateExemptionRestriction(
+                                    ei,
+                                    ssi,
+                                    'minHouseholdSize',
+                                    e.target.value ? parseInt(e.target.value, 10) : undefined,
+                                  )
+                                }
+                                sx={{ width: 150 }}
+                              />
+                            </Box>
+                          </Paper>
+
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                size="small"
+                                checked={sub.requiresDocuments}
+                                onChange={(e) =>
+                                  updateExemptionSubSection(ei, ssi, 'requiresDocuments', e.target.checked)
+                                }
+                              />
+                            }
+                            label="דורש מסמכים"
+                            sx={{ mb: 1 }}
+                          />
+                          <TextField
+                            size="small"
+                            fullWidth
+                            label="סוגי מסמכים (מופרדים בפסיק)"
+                            value={docTypes.join(', ')}
+                            onChange={(e) => {
+                              const parts = e.target.value
+                                .split(',')
+                                .map((s) => s.trim())
+                                .filter(Boolean);
+                              updateExemptionSubSection(ei, ssi, 'documentTypes', parts);
+                            }}
+                            disabled={!sub.requiresDocuments}
+                            helperText={
+                              sub.requiresDocuments
+                                ? 'הפרדה בפסיק בין סוגי מסמכים'
+                                : 'סמן ״דורש מסמכים״ כדי לערוך רשימה'
+                            }
+                          />
+                        </Box>
+                      );
+                    })()
+                  )}
+                </Paper>
+              </Stack>
+            </>
+          )}
         </AccordionDetails>
       </Accordion>
 

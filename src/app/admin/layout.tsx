@@ -107,7 +107,7 @@ export default function AdminLayout({
             letterSpacing: '-0.01em',
           }}
         >
-          Blog Manager
+          מחשבון ארנונה
         </Typography>
       </Box>
 
@@ -245,26 +245,9 @@ export default function AdminLayout({
                 fontSize: '1.1rem',
               }}
             >
-              Admin Panel
+              מערכת מנהל
             </Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<OpenInNewIcon />}
-              href="/"
-              target="_blank"
-              sx={{
-                borderColor: '#e0e0e0',
-                color: '#555',
-                '&:hover': {
-                  borderColor: '#1976d2',
-                  color: '#1976d2',
-                  backgroundColor: 'rgba(25, 118, 210, 0.04)',
-                },
-              }}
-            >
-              View Blog
-            </Button>
+
           </Toolbar>
         </AppBar>
 
