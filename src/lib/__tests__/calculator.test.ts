@@ -40,14 +40,20 @@ describe('findRate', () => {
     expect(result.rate).toBe(40.0);
   });
 
-  it('size range medium (61-100): residential/size_based/all/80sqm → rate 65.00', () => {
+  it('size range medium (progressive): residential/size_based/all/80sqm → annualTotal 3675', () => {
     const result = findRate(mockCity, 'residential', 'size_based', 'all', 80);
-    expect(result.rate).toBe(65.0);
+    // Progressive: 61×40 + 19×65 = 2440 + 1235 = 3675
+    expect(result.annualTotal).toBe(3675);
+    expect(result.isProgressive).toBe(true);
+    expect(result.rate).toBeCloseTo(3675 / 80, 2); // blended rate
   });
 
-  it('size range large (151+): residential/size_based/all/200sqm → rate 110.00', () => {
+  it('size range large (progressive): residential/size_based/all/200sqm → annualTotal 14680', () => {
     const result = findRate(mockCity, 'residential', 'size_based', 'all', 200);
-    expect(result.rate).toBe(110.0);
+    // Progressive: 61×40 + 40×65 + 50×85 + 49×110 = 14680
+    expect(result.annualTotal).toBe(14680);
+    expect(result.isProgressive).toBe(true);
+    expect(result.rate).toBeCloseTo(14680 / 200, 2); // blended rate
   });
 
   it('boundary max: industry/manufacturing/zone ד/500sqm → rate 180.00', () => {

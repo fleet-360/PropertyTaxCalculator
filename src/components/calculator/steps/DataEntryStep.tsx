@@ -27,6 +27,7 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import type { StepProps } from "../CalculatorWizard";
 import { IPropertyType, ISubType, IZoneRate } from "@/lib/models/CityTariff";
+import { ALL_ZONES_TARIFF_CODE, ALL_ZONES_LABEL_HE } from "@/lib/tariff-constants";
 import { findRate } from "@/lib/calculator";
 
 // ── Payment period conversion ────────────────────────────────────────
@@ -189,12 +190,18 @@ function DesignationRow({
     setValue(`designations.${idx}.zone` as const, "");
   }, [rowType, idx, setValue]);
 
-  // Clear zone when subtype changes
+  // Clear or default zone when subtype changes
   useEffect(() => {
     if (prevRowSubtype.current === rowSubtype) return;
     prevRowSubtype.current = rowSubtype;
-    setValue(`designations.${idx}.zone` as const, "");
-  }, [rowSubtype, idx, setValue]);
+    const typeObj = types.find((t) => t.code === rowType);
+    const zones = typeObj?.subtypes.find((s) => s.code === rowSubtype)?.zones ?? [];
+    if (rowSubtype && rowType && zones.length === 0) {
+      setValue(`designations.${idx}.zone` as const, ALL_ZONES_TARIFF_CODE);
+    } else {
+      setValue(`designations.${idx}.zone` as const, "");
+    }
+  }, [rowSubtype, rowType, idx, setValue, types]);
 
   return (
     <Box
@@ -270,6 +277,9 @@ function DesignationRow({
               helperText={rowErrors?.zone?.message}
             >
               <MenuItem value="">בחר</MenuItem>
+              <MenuItem value={ALL_ZONES_TARIFF_CODE}>
+                {ALL_ZONES_LABEL_HE} ({ALL_ZONES_TARIFF_CODE})
+              </MenuItem>
               {rowFilteredZones.map((z: IZoneRate) => (
                 <MenuItem key={z.zone} value={z.zone}>
                   {z.zoneLabel}
@@ -475,15 +485,22 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
     setValue("classificationCode", "");
   }, [watchedType, setValue]);
 
-  // ── Forward cascade: subType changes → clear zone & code ───────
+  // ── Forward cascade: subType changes → clear zone & code (default zone all if no rows) ───────
   useEffect(() => {
     if (prevSubTypeRef.current === watchedSubType) return;
     prevSubTypeRef.current = watchedSubType;
     prevZoneRef.current = "";
-    // prevClassCodeRef.current = '';
-    setValue("zone", "");
+    const selectedSubtype = types
+      .find((t) => t.code === watchedType)
+      ?.subtypes.find((s) => s.code === watchedSubType);
+    const zones = selectedSubtype?.zones ?? [];
+    if (watchedSubType && watchedType && zones.length === 0) {
+      setValue("zone", ALL_ZONES_TARIFF_CODE);
+    } else {
+      setValue("zone", "");
+    }
     setValue("classificationCode", "");
-  }, [watchedSubType, setValue]);
+  }, [watchedSubType, watchedType, setValue, types]);
 
   // ── Error report state ──
   const [claimedArea, setClaimedArea] = useState<number>(state.measurementError?.claimed ?? 0);
@@ -740,6 +757,9 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                 disabled={!watchedSubType}
               >
                 <MenuItem value="">בחר</MenuItem>
+                <MenuItem value={ALL_ZONES_TARIFF_CODE}>
+                  {ALL_ZONES_LABEL_HE} ({ALL_ZONES_TARIFF_CODE})
+                </MenuItem>
                 {filteredZones.map((z: IZoneRate) => (
                   <MenuItem key={z.zone} value={z.zone}>
                     {z.zoneLabel}

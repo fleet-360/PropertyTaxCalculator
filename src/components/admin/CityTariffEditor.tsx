@@ -22,8 +22,14 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Checkbox from '@mui/material/Checkbox';
-import Skeleton from '@mui/material/Skeleton';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Stack from '@mui/material/Stack';
+import List from '@mui/material/List';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemText from '@mui/material/ListItemText';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { ALL_ZONES_TARIFF_CODE, ALL_ZONES_LABEL_HE } from '@/lib/tariff-constants';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
@@ -48,10 +54,13 @@ interface SubType {
   code: string;
   label: string;
   hasSizeRanges: boolean;
+  /** מצטבר (מדורג) מול קבוע לפי טווח — תואם ל־isProgressiveRate במודל */
+  isProgressiveRate?: boolean;
   zones: ZoneRate[];
 }
 
 interface PropertyType {
+  category?: 'private' | 'business';
   code: string;
   label: string;
   subtypes: SubType[];
@@ -119,6 +128,28 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
   const [data, setData] = React.useState<CityTariffData>(city || emptyCityData);
   const [saving, setSaving] = React.useState(false);
   const [snackbar, setSnackbar] = React.useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [selectedTypeIndex, setSelectedTypeIndex] = React.useState<number | null>(() =>
+    city && city.types.length > 0 ? 0 : null,
+  );
+  const [selectedSubtypeIndex, setSelectedSubtypeIndex] = React.useState<number | null>(() => {
+    if (!city?.types?.length) return null;
+    return city.types[0].subtypes.length > 0 ? 0 : null;
+  });
+
+  const selectedSubtypesLen =
+    selectedTypeIndex !== null ? data.types[selectedTypeIndex]?.subtypes.length ?? 0 : 0;
+
+  React.useEffect(() => {
+    if (selectedTypeIndex === null) {
+      setSelectedSubtypeIndex(null);
+      return;
+    }
+    if (selectedSubtypesLen === 0) {
+      setSelectedSubtypeIndex(null);
+      return;
+    }
+    setSelectedSubtypeIndex((si) => (si === null || si >= selectedSubtypesLen ? 0 : si));
+  }, [selectedTypeIndex, selectedSubtypesLen]);
 
   // Update slug from English name
   const handleCityNameEnChange = (value: string) => {
@@ -140,10 +171,22 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       const url = isNew ? '/api/cities' : `/api/cities/${data._id}`;
       const method = isNew ? 'POST' : 'PUT';
 
+      const payload = {
+        ...data,
+        types: data.types.map((t) => ({
+          ...t,
+          category: t.category ?? 'private',
+          subtypes: t.subtypes.map((s) => ({
+            ...s,
+            isProgressiveRate: s.isProgressiveRate ?? false,
+          })),
+        })),
+      };
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -187,10 +230,16 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
 
   // ── Type helpers ────────────────────────────────────────────────────
   const addType = () => {
-    setData((prev) => ({
-      ...prev,
-      types: [...prev.types, { code: '', label: '', subtypes: [] }],
-    }));
+    let newTi = 0;
+    setData((prev) => {
+      newTi = prev.types.length;
+      return {
+        ...prev,
+        types: [...prev.types, { code: '', label: '', category: 'business', subtypes: [] }],
+      };
+    });
+    setSelectedTypeIndex(newTi);
+    setSelectedSubtypeIndex(null);
   };
 
   const updateType = (ti: number, field: string, value: string) => {
@@ -202,22 +251,34 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
   };
 
   const removeType = (ti: number) => {
-    setData((prev) => ({
-      ...prev,
-      types: prev.types.filter((_, i) => i !== ti),
-    }));
+    const newTypes = data.types.filter((_, i) => i !== ti);
+    setData((prev) => ({ ...prev, types: newTypes }));
+    setSelectedTypeIndex((prevSel) => {
+      if (newTypes.length === 0) return null;
+      if (prevSel === null) return 0;
+      if (ti < prevSel) return prevSel - 1;
+      if (ti === prevSel) return Math.min(prevSel, newTypes.length - 1);
+      return prevSel;
+    });
   };
 
   // ── Subtype helpers ─────────────────────────────────────────────────
   const addSubtype = (ti: number) => {
+    let newSi = 0;
     setData((prev) => {
       const types = [...prev.types];
+      newSi = types[ti].subtypes.length;
       types[ti] = {
         ...types[ti],
-        subtypes: [...types[ti].subtypes, { code: '', label: '', hasSizeRanges: false, zones: [] }],
+        subtypes: [
+          ...types[ti].subtypes,
+          { code: '', label: '', hasSizeRanges: false, isProgressiveRate: false, zones: [] },
+        ],
       };
       return { ...prev, types };
     });
+    setSelectedTypeIndex(ti);
+    setSelectedSubtypeIndex(newSi);
   };
 
   const updateSubtype = (ti: number, si: number, field: string, value: string | boolean) => {
@@ -231,14 +292,24 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
   };
 
   const removeSubtype = (ti: number, si: number) => {
+    const newSubs = data.types[ti].subtypes.filter((_, i) => i !== si);
     setData((prev) => {
       const types = [...prev.types];
       types[ti] = {
         ...types[ti],
-        subtypes: types[ti].subtypes.filter((_, i) => i !== si),
+        subtypes: newSubs,
       };
       return { ...prev, types };
     });
+    if (selectedTypeIndex === ti) {
+      setSelectedSubtypeIndex((prevSel) => {
+        if (newSubs.length === 0) return null;
+        if (prevSel === null) return 0;
+        if (si < prevSel) return prevSel - 1;
+        if (si === prevSel) return Math.min(prevSel, newSubs.length - 1);
+        return prevSel;
+      });
+    }
   };
 
   // ── Zone rate helpers ───────────────────────────────────────────────
@@ -261,10 +332,13 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       const subtypes = [...types[ti].subtypes];
       const zones = [...subtypes[si].zones];
       zones[zi] = { ...zones[zi], [field]: value };
-      // Auto-fill zoneLabel from availableZones
       if (field === 'zone') {
-        const found = prev.availableZones.find((z) => z.code === value);
-        if (found) zones[zi].zoneLabel = found.label;
+        if (value === ALL_ZONES_TARIFF_CODE) {
+          zones[zi].zoneLabel = ALL_ZONES_LABEL_HE;
+        } else {
+          const found = prev.availableZones.find((z) => z.code === value);
+          if (found) zones[zi].zoneLabel = found.label;
+        }
       }
       subtypes[si] = { ...subtypes[si], zones };
       types[ti] = { ...types[ti], subtypes };
@@ -526,7 +600,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
         </AccordionDetails>
       </Accordion>
 
-      {/* Section 3: Property Types & Tariffs */}
+      {/* Section 3: Property Types & Tariffs — sideways master / detail */}
       <Accordion defaultExpanded>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -534,164 +608,382 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
           </Typography>
         </AccordionSummary>
         <AccordionDetails>
-          {data.types.map((type, ti) => (
-            <Paper key={ti} variant="outlined" sx={{ p: 2, mb: 2 }}>
-              <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center' }}>
-                <TextField
-                  size="small"
-                  label="קוד סוג"
-                  value={type.code}
-                  onChange={(e) => updateType(ti, 'code', e.target.value)}
-                  sx={{ width: 150 }}
-                />
-                <TextField
-                  size="small"
-                  label="שם סוג"
-                  value={type.label}
-                  onChange={(e) => updateType(ti, 'label', e.target.value)}
-                  sx={{ flex: 1 }}
-                />
-                <IconButton size="small" color="error" onClick={() => removeType(ti)}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Box>
-
-              <Divider sx={{ mb: 2 }} />
-
-              {/* Subtypes */}
-              {type.subtypes.map((sub, si) => (
-                <Paper key={si} variant="outlined" sx={{ p: 1.5, mb: 1.5, ml: 2, backgroundColor: '#fafafa' }}>
-                  <Box sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+          {data.types.length === 0 ? (
+            <Button startIcon={<AddIcon />} onClick={addType} variant="outlined">
+              הוסף סוג נכס
+            </Button>
+          ) : (
+            <>
+              {selectedTypeIndex !== null && data.types[selectedTypeIndex] && (
+                <Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                    עריכת סוג נכס
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
                     <TextField
                       size="small"
-                      label="קוד תת-סוג"
-                      value={sub.code}
-                      onChange={(e) => updateSubtype(ti, si, 'code', e.target.value)}
-                      sx={{ width: 130 }}
+                      label="קוד סוג"
+                      value={data.types[selectedTypeIndex].code}
+                      onChange={(e) => updateType(selectedTypeIndex, 'code', e.target.value)}
+                      sx={{ width: 140 }}
                     />
                     <TextField
                       size="small"
-                      label="שם תת-סוג"
-                      value={sub.label}
-                      onChange={(e) => updateSubtype(ti, si, 'label', e.target.value)}
-                      sx={{ flex: 1, minWidth: 150 }}
+                      label="שם סוג"
+                      value={data.types[selectedTypeIndex].label}
+                      onChange={(e) => updateType(selectedTypeIndex, 'label', e.target.value)}
+                      sx={{ flex: 1, minWidth: 160 }}
                     />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          size="small"
-                          checked={sub.hasSizeRanges}
-                          onChange={(e) => updateSubtype(ti, si, 'hasSizeRanges', e.target.checked)}
-                        />
-                      }
-                      label="טווחי גודל"
-                    />
-                    <IconButton size="small" color="error" onClick={() => removeSubtype(ti, si)}>
+                    <FormControl size="small" sx={{ minWidth: 140 }}>
+                      <InputLabel>קטגוריה</InputLabel>
+                      <Select
+                        label="קטגוריה"
+                        value={(data.types[selectedTypeIndex].category ?? 'private') as 'private' | 'business'}
+                        onChange={(e) =>
+                          updateType(selectedTypeIndex, 'category', e.target.value as 'private' | 'business')
+                        }
+                      >
+                        <MenuItem value="private">מגורים</MenuItem>
+                        <MenuItem value="business">עסקים</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => removeType(selectedTypeIndex)}
+                      aria-label="מחק סוג נכס"
+                    >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Box>
+                </Paper>
+              )}
 
-                  {/* Zone rates */}
-                  {sub.zones.map((zr, zi) => (
-                    <Paper key={zi} variant="outlined" sx={{ p: 1, mb: 1, ml: 2, backgroundColor: '#f5f5f5' }}>
-                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <FormControl size="small" sx={{ minWidth: 120 }}>
-                          <InputLabel>אזור</InputLabel>
-                          <Select
-                            value={zr.zone}
-                            label="אזור"
-                            onChange={(e) => updateZoneRate(ti, si, zi, 'zone', e.target.value)}
-                          >
-                            {data.availableZones.map((az) => (
-                              <MenuItem key={az.code} value={az.code}>
-                                {az.label} ({az.code})
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                        {!sub.hasSizeRanges && (
-                          <TextField
-                            size="small"
-                            label="תעריף (₪/מ״ר)"
-                            type="number"
-                            value={zr.rate ?? ''}
-                            onChange={(e) => updateZoneRate(ti, si, zi, 'rate', parseFloat(e.target.value) || 0)}
-                            sx={{ width: 130 }}
-                          />
-                        )}
-                        <TextField
-                          size="small"
-                          label="קוד נכס"
-                          value={zr.propertyCode || ''}
-                          onChange={(e) => updateZoneRate(ti, si, zi, 'propertyCode', e.target.value)}
-                          sx={{ width: 120 }}
-                        />
-                        <IconButton size="small" color="error" onClick={() => removeZoneRate(ti, si, zi)}>
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-
-                      {/* Size ranges */}
-                      {sub.hasSizeRanges && (
-                        <Box sx={{ mt: 1, ml: 2 }}>
-                          {(zr.sizeRanges || []).map((sr, ri) => (
-                            <Box key={ri} sx={{ display: 'flex', gap: 1, mb: 0.5, alignItems: 'center' }}>
-                              <TextField
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={2}
+                sx={{ alignItems: 'stretch', minHeight: 280 }}
+              >
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    flex: { sm: '0 0 240px' },
+                    maxHeight: { sm: 420 },
+                    overflow: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <Box sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                      סוגי נכס
+                    </Typography>
+                    <Button size="small" fullWidth startIcon={<AddIcon />} onClick={addType} variant="outlined">
+                      הוסף סוג
+                    </Button>
+                  </Box>
+                  <List dense disablePadding aria-label="רשימת סוגי נכס">
+                    {data.types.map((type, ti) => (
+                      <ListItemButton
+                        key={ti}
+                        selected={selectedTypeIndex === ti}
+                        onClick={() => {
+                          setSelectedTypeIndex(ti);
+                          setSelectedSubtypeIndex(type.subtypes.length ? 0 : null);
+                        }}
+                        aria-current={selectedTypeIndex === ti ? 'true' : undefined}
+                        aria-label={`בחר סוג ${type.label || type.code || ti}`}
+                      >
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+                              <Typography component="span" variant="body2" sx={{ fontWeight: 600 }}>
+                                {type.code || '—'} · {type.label || 'ללא שם'}
+                              </Typography>
+                              <Chip
                                 size="small"
-                                label="מ-"
-                                type="number"
-                                value={sr.min}
-                                onChange={(e) => updateSizeRange(ti, si, zi, ri, 'min', parseFloat(e.target.value) || 0)}
-                                sx={{ width: 80 }}
+                                label={(type.category ?? 'private') === 'business' ? 'עסקים' : 'מגורים'}
+                                color={(type.category ?? 'private') === 'business' ? 'secondary' : 'default'}
+                                variant="outlined"
                               />
-                              <TextField
-                                size="small"
-                                label="עד"
-                                type="number"
-                                value={sr.max}
-                                onChange={(e) => updateSizeRange(ti, si, zi, ri, 'max', parseFloat(e.target.value) || 0)}
-                                sx={{ width: 80 }}
-                              />
-                              <TextField
-                                size="small"
-                                label="תעריף"
-                                type="number"
-                                value={sr.rate}
-                                onChange={(e) => updateSizeRange(ti, si, zi, ri, 'rate', parseFloat(e.target.value) || 0)}
-                                sx={{ width: 100 }}
-                              />
-                              <TextField
-                                size="small"
-                                label="קוד"
-                                value={sr.propertyCode || ''}
-                                onChange={(e) => updateSizeRange(ti, si, zi, ri, 'propertyCode', e.target.value)}
-                                sx={{ width: 100 }}
-                              />
-                              <IconButton size="small" color="error" onClick={() => removeSizeRange(ti, si, zi, ri)}>
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
                             </Box>
+                          }
+                          secondary={`${type.subtypes.length} תתי־סוג`}
+                        />
+                      </ListItemButton>
+                    ))}
+                  </List>
+                </Paper>
+
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    flex: { sm: '0 0 220px' },
+                    maxHeight: { sm: 420 },
+                    overflow: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <Box sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                      תתי־סוג
+                    </Typography>
+                    {selectedTypeIndex !== null && (
+                      <Button
+                        size="small"
+                        fullWidth
+                        startIcon={<AddIcon />}
+                        onClick={() => addSubtype(selectedTypeIndex)}
+                        variant="outlined"
+                      >
+                        הוסף תת־סוג
+                      </Button>
+                    )}
+                  </Box>
+                  {selectedTypeIndex === null ? (
+                    <Box sx={{ p: 2 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        בחר סוג נכס
+                      </Typography>
+                    </Box>
+                  ) : data.types[selectedTypeIndex].subtypes.length === 0 ? (
+                    <Box sx={{ p: 2 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        אין תתי־סוג — הוסף תת־סוג
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <List dense disablePadding aria-label="רשימת תתי־סוג">
+                      {data.types[selectedTypeIndex].subtypes.map((sub, si) => (
+                        <ListItemButton
+                          key={si}
+                          selected={selectedSubtypeIndex === si}
+                          onClick={() => setSelectedSubtypeIndex(si)}
+                          aria-current={selectedSubtypeIndex === si ? 'true' : undefined}
+                          aria-label={`בחר תת־סוג ${sub.label || sub.code || si}`}
+                        >
+                          <ListItemText
+                            primary={`${sub.code || '—'} · ${sub.label || 'ללא שם'}`}
+                            secondary={sub.hasSizeRanges ? 'טווחי גודל' : 'תעריף אחיד'}
+                          />
+                        </ListItemButton>
+                      ))}
+                    </List>
+                  )}
+                </Paper>
+
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    flex: 1,
+                    minWidth: 0,
+                    maxHeight: { sm: 420 },
+                    overflow: 'auto',
+                    p: 1.5,
+                  }}
+                >
+                  {selectedTypeIndex === null || selectedSubtypeIndex === null ? (
+                    <Typography variant="body2" color="text.secondary">
+                      בחר תת־סוג לעריכת תעריפים
+                    </Typography>
+                  ) : (
+                    (() => {
+                      const ti = selectedTypeIndex;
+                      const si = selectedSubtypeIndex;
+                      const sub = data.types[ti].subtypes[si];
+                      return (
+                        <Box>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
+                            תעריף: {sub.label || sub.code || 'תת־סוג'}
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <TextField
+                              size="small"
+                              label="קוד תת-סוג"
+                              value={sub.code}
+                              onChange={(e) => updateSubtype(ti, si, 'code', e.target.value)}
+                              sx={{ width: 130 }}
+                            />
+                            <TextField
+                              size="small"
+                              label="שם תת-סוג"
+                              value={sub.label}
+                              onChange={(e) => updateSubtype(ti, si, 'label', e.target.value)}
+                              sx={{ flex: 1, minWidth: 150 }}
+                            />
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  size="small"
+                                  checked={sub.hasSizeRanges}
+                                  onChange={(e) => updateSubtype(ti, si, 'hasSizeRanges', e.target.checked)}
+                                />
+                              }
+                              label="טווחי גודל"
+                            />
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => removeSubtype(ti, si)}
+                              aria-label="מחק תת־סוג"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+
+                          {sub.hasSizeRanges && (
+                            <Box sx={{ mb: 1, ml: 0.5 }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                סוג חישוב לפי טווחי גודל (חל על כל האזורים של תת־סוג זה)
+                              </Typography>
+                              <ToggleButtonGroup
+                                exclusive
+                                size="small"
+                                value={(sub.isProgressiveRate ?? false) ? 'progressive' : 'flat'}
+                                onChange={(_, v) => {
+                                  if (v !== null) {
+                                    updateSubtype(ti, si, 'isProgressiveRate', v === 'progressive');
+                                  }
+                                }}
+                                aria-label="סוג חישוב טווחי גודל"
+                              >
+                                <ToggleButton
+                                  value="progressive"
+                                  title="כל טווח חל רק על החלק מהשטח שנופל בתוך המדרגה (למשל 60 מ״ר ראשונים בתעריף אחד והמשך במדרגה הבאה)"
+                                >
+                                  מצטבר (מדורג)
+                                </ToggleButton>
+                                <ToggleButton
+                                  value="flat"
+                                  title="נבחר טווח אחד לפי שטח הנכס, והתעריף שלו חל על כל השטח"
+                                >
+                                  קבוע (לפי טווח)
+                                </ToggleButton>
+                              </ToggleButtonGroup>
+                            </Box>
+                          )}
+
+                          {sub.zones.map((zr, zi) => (
+                            <Paper
+                              key={zi}
+                              variant="outlined"
+                              sx={{ p: 1, mb: 1, backgroundColor: 'action.hover' }}
+                            >
+                              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                                <FormControl size="small" sx={{ minWidth: 140 }}>
+                                  <InputLabel>אזור</InputLabel>
+                                  <Select
+                                    value={zr.zone}
+                                    label="אזור"
+                                    onChange={(e) => updateZoneRate(ti, si, zi, 'zone', e.target.value)}
+                                  >
+                                    <MenuItem value={ALL_ZONES_TARIFF_CODE}>
+                                      {ALL_ZONES_LABEL_HE} ({ALL_ZONES_TARIFF_CODE})
+                                    </MenuItem>
+                                    {data.availableZones.map((az) => (
+                                      <MenuItem key={az.code} value={az.code}>
+                                        {az.label} ({az.code})
+                                      </MenuItem>
+                                    ))}
+                                  </Select>
+                                </FormControl>
+                                {!sub.hasSizeRanges && (
+                                  <TextField
+                                    size="small"
+                                    label="תעריף (₪/מ״ר)"
+                                    type="number"
+                                    value={zr.rate ?? ''}
+                                    onChange={(e) =>
+                                      updateZoneRate(ti, si, zi, 'rate', parseFloat(e.target.value) || 0)
+                                    }
+                                    sx={{ width: 130 }}
+                                  />
+                                )}
+                                <TextField
+                                  size="small"
+                                  label="קוד נכס"
+                                  value={zr.propertyCode || ''}
+                                  onChange={(e) => updateZoneRate(ti, si, zi, 'propertyCode', e.target.value)}
+                                  sx={{ width: 120 }}
+                                />
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() => removeZoneRate(ti, si, zi)}
+                                  aria-label="מחק שורת אזור"
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </Box>
+
+                              {sub.hasSizeRanges && (
+                                <Box sx={{ mt: 1, ml: 1 }}>
+                                  {(zr.sizeRanges || []).map((sr, ri) => (
+                                    <Box key={ri} sx={{ display: 'flex', gap: 1, mb: 0.5, alignItems: 'center' }}>
+                                      <TextField
+                                        size="small"
+                                        label="מ-"
+                                        type="number"
+                                        value={sr.min}
+                                        onChange={(e) =>
+                                          updateSizeRange(ti, si, zi, ri, 'min', parseFloat(e.target.value) || 0)
+                                        }
+                                      />
+                                      <TextField
+                                        size="small"
+                                        label="עד"
+                                        type="number"
+                                        value={sr.max}
+                                        onChange={(e) =>
+                                          updateSizeRange(ti, si, zi, ri, 'max', parseFloat(e.target.value) || 0)
+                                        }
+                                      />
+                                      <TextField
+                                        size="small"
+                                        label="תעריף"
+                                        type="number"
+                                        value={sr.rate}
+                                        onChange={(e) =>
+                                          updateSizeRange(ti, si, zi, ri, 'rate', parseFloat(e.target.value) || 0)
+                                        }
+                                      />
+                                      <TextField
+                                        size="small"
+                                        label="קוד"
+                                        value={sr.propertyCode || ''}
+                                        onChange={(e) =>
+                                          updateSizeRange(ti, si, zi, ri, 'propertyCode', e.target.value)
+                                        }
+                                      />
+                                      <IconButton
+                                        size="small"
+                                        color="error"
+                                        onClick={() => removeSizeRange(ti, si, zi, ri)}
+                                        aria-label="מחק טווח גודל"
+                                      >
+                                        <DeleteIcon fontSize="small" />
+                                      </IconButton>
+                                    </Box>
+                                  ))}
+                                  <Button size="small" startIcon={<AddIcon />} onClick={() => addSizeRange(ti, si, zi)}>
+                                    הוסף טווח
+                                  </Button>
+                                </Box>
+                              )}
+                            </Paper>
                           ))}
-                          <Button size="small" startIcon={<AddIcon />} onClick={() => addSizeRange(ti, si, zi)}>
-                            הוסף טווח
+                          <Button size="small" startIcon={<AddIcon />} onClick={() => addZoneRate(ti, si)}>
+                            הוסף אזור תעריף
                           </Button>
                         </Box>
-                      )}
-                    </Paper>
-                  ))}
-                  <Button size="small" startIcon={<AddIcon />} onClick={() => addZoneRate(ti, si)} sx={{ ml: 2 }}>
-                    הוסף אזור תעריף
-                  </Button>
+                      );
+                    })()
+                  )}
                 </Paper>
-              ))}
-              <Button size="small" startIcon={<AddIcon />} onClick={() => addSubtype(ti)}>
-                הוסף תת-סוג
-              </Button>
-            </Paper>
-          ))}
-          <Button startIcon={<AddIcon />} onClick={addType} variant="outlined" sx={{ mt: 1 }}>
-            הוסף סוג נכס
-          </Button>
+              </Stack>
+            </>
+          )}
         </AccordionDetails>
       </Accordion>
 
@@ -762,7 +1054,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                         fullWidth
                         label="שטח מקסימלי"
                         type="number"
-                        value={sub.restrictions.maxAreaSqm ?? ''}
+                        value={sub.restrictions?.maxAreaSqm ?? ''}
                         onChange={(e) => updateExemptionRestriction(ei, si, 'maxAreaSqm', e.target.value ? parseFloat(e.target.value) : undefined)}
                       />
                     </Grid>
@@ -772,7 +1064,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                         fullWidth
                         label="מינ׳ ילדים"
                         type="number"
-                        value={sub.restrictions.minChildren ?? ''}
+                        value={sub.restrictions?.minChildren ?? ''}
                         onChange={(e) => updateExemptionRestriction(ei, si, 'minChildren', e.target.value ? parseInt(e.target.value, 10) : undefined)}
                       />
                     </Grid>
@@ -782,7 +1074,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                         fullWidth
                         label="מינ׳ נפשות"
                         type="number"
-                        value={sub.restrictions.minHouseholdSize ?? ''}
+                        value={sub.restrictions?.minHouseholdSize ?? ''}
                         onChange={(e) => updateExemptionRestriction(ei, si, 'minHouseholdSize', e.target.value ? parseInt(e.target.value, 10) : undefined)}
                       />
                     </Grid>

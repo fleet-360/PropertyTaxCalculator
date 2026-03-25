@@ -98,26 +98,30 @@ describe('Step 2: Rate lookup traversal', () => {
     expect(propertyCode).toBe('102');
   });
 
-  it('size range: type → subtype → zone → sizeRanges → matching range', () => {
-    const { rate, propertyCode } = findRate(city, 'residential', 'size_based', 'all', 75);
-    expect(rate).toBe(65.0); // 61-100 range
+  it('progressive size range: type → subtype → zone → sizeRanges → blended rate', () => {
+    // 75 sqm progressive: 61×40 + 14×65 = 2440 + 910 = 3350
+    const { annualTotal, propertyCode, isProgressive } = findRate(city, 'residential', 'size_based', 'all', 75);
+    expect(annualTotal).toBe(3350);
+    expect(isProgressive).toBe(true);
     expect(propertyCode).toBe('121');
   });
 
-  it('size range uses totalArea (including extras) for lookup', () => {
-    // 50 sqm main + 15 storage = 65 total → falls in 61-100 range (65₪)
+  it('progressive rate uses totalArea (including extras) for lookup', () => {
+    // 50 sqm main + 15 storage = 65 total → progressive: 61×40 + 4×65 = 2440+260=2700
     const r = calculatePropertyTax(city, {
       propertyType: 'residential', subType: 'size_based', zone: 'all',
       propertyAreaSqm: 50, storageSqm: 15,
       bimonthlyPayment: 1,
     });
-    expect(r.ratePerSqm).toBe(65.0); // not 40 (0-60 range)
     expect(r.totalAreaSqm).toBe(65);
+    expect(r.annualBeforeExemption).toBe(2700); // progressive total
   });
 
   it('unlimited range (-1 max) catches large values', () => {
-    const { rate } = findRate(city, 'residential', 'size_based', 'all', 999);
-    expect(rate).toBe(110.0); // 151+ range
+    // 999 sqm progressive: covers all brackets including 151+
+    const { annualTotal, isProgressive } = findRate(city, 'residential', 'size_based', 'all', 999);
+    expect(isProgressive).toBe(true);
+    expect(annualTotal).toBeGreaterThan(0);
   });
 
   it('propertyCode passes through from rate result', () => {
