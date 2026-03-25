@@ -1,11 +1,8 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
+import type { IContactEmails } from '@/lib/types/system-config';
 
-// ── Contact emails sub-document interface ────────────────────────────
-export interface IContactEmails {
-  service: string;
-  noreply: string;
-  calculator: string;
-}
+// Re-export shared types so existing consumers don't break
+export type { IContactEmails } from '@/lib/types/system-config';
 
 // ── System config document interface ─────────────────────────────────
 export interface ISystemConfig extends Document {

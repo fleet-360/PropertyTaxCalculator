@@ -5,11 +5,12 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import ContactRedirectStep from '@/components/calculator/steps/ContactRedirectStep';
 import ResultsGateStep from '@/components/calculator/steps/ResultsGateStep';
 import InitialWaiverStep from '@/components/calculator/steps/InitialWaiverStep';
+import { CalculatorFeaturesContext } from '@/components/calculator/CalculatorFeaturesContext';
 import { initialState, type WizardState } from '@/components/calculator/CalculatorWizard';
 
 // Simple RTL theme for MUI
@@ -103,6 +104,32 @@ describe('ResultsGateStep', () => {
     });
     renderWithTheme(<ResultsGateStep state={state} dispatch={dispatch} />);
     expect(screen.getByText('חזרה להתחלה')).toBeInTheDocument();
+  });
+
+  it('outcome="underpaying" with paymentEnabled opens dummy dialog then dispatches NEXT_STEP', () => {
+    const state = makeState({
+      calculationResult: { outcome: 'underpaying' },
+    });
+    dispatch.mockClear();
+    renderWithTheme(
+      <CalculatorFeaturesContext.Provider
+        value={{
+          paymentEnabled: true,
+          calculatorPrice: 42,
+          appealPrice: 180,
+          calculatorChargeAmount: 42,
+          appealChargeAmount: 180,
+        }}
+      >
+        <ResultsGateStep state={state} dispatch={dispatch} />
+      </CalculatorFeaturesContext.Provider>
+    );
+    fireEvent.click(screen.getByText('תשלום וצפייה בתוצאות'));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('תשלום (הדגמה)')).toBeInTheDocument();
+    expect(within(dialog).getByText(/סכום להצגה:/)).toBeInTheDocument();
+    fireEvent.click(screen.getByText('אישור והמשך'));
+    expect(dispatch).toHaveBeenCalledWith({ type: 'NEXT_STEP' });
   });
 });
 

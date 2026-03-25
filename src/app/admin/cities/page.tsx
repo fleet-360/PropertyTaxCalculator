@@ -27,20 +27,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CalculateIcon from '@mui/icons-material/Calculate';
-
-interface CitySummary {
-  _id: string;
-  cityName: string;
-  cityNameEn: string;
-  slug: string;
-  year: number;
-  isActive: boolean;
-  ordinanceUrl?: string;
-  zonesCount: number;
-  typesCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { CitySummary } from '@/lib/types/admin';
 
 export default function CitiesPage() {
   const [cities, setCities] = React.useState<CitySummary[]>([]);

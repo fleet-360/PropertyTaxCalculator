@@ -3,50 +3,15 @@
  * (required fields and enums). Used by the admin city tariff editor before save.
  */
 
+import type { ICityTariffData } from '@/lib/types/city-tariff';
+
 export interface CityTariffValidationIssue {
   path: string;
   message: string;
 }
 
 /** Loose input shape from the editor (matches JSON body sent to API). */
-export interface CityTariffPayloadInput {
-  cityName: string;
-  cityNameEn: string;
-  slug: string;
-  year: number;
-  ordinanceUrl?: string;
-  availableZones: { code: string; label: string }[];
-  types: {
-    category?: 'private' | 'business';
-    code: string;
-    label: string;
-    subtypes: {
-      code: string;
-      label: string;
-      hasSizeRanges: boolean;
-      isProgressiveRate?: boolean;
-      zones: {
-        zone: string;
-        zoneLabel: string;
-        rate?: number;
-        sizeRanges?: { min: number; max: number; rate: number; propertyCode?: string }[];
-        propertyCode?: string;
-      }[];
-    }[];
-  }[];
-  exemptions: {
-    sectionCode: string;
-    sectionLabel: string;
-    subSections: {
-      code: string;
-      description: string;
-      discountPercent: number;
-      restrictions?: { maxAreaSqm?: number; minChildren?: number; minHouseholdSize?: number };
-      requiresDocuments: boolean;
-      documentTypes: string[];
-    }[];
-  }[];
-}
+export type CityTariffPayloadInput = ICityTariffData;
 
 function trimNonEmpty(s: string | undefined | null): boolean {
   return typeof s === 'string' && s.trim().length > 0;

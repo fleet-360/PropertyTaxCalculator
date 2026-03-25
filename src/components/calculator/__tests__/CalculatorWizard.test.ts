@@ -127,11 +127,10 @@ describe('wizardReducer', () => {
     expect(result.contactRedirectReason).toBe('area');
   });
 
-  it('SET_LOADING falls through to default (state unchanged)', () => {
+  it('SET_LOADING updates isLoading', () => {
     const state = makeState({ isLoading: false });
-    const result = wizardReducer(state, { type: 'SET_LOADING', payload: true } as any);
-    // SET_LOADING is not handled by the reducer — it uses UPDATE_FIELD instead
-    expect(result.isLoading).toBe(false);
+    const result = wizardReducer(state, { type: 'SET_LOADING', payload: true });
+    expect(result.isLoading).toBe(true);
   });
 });
 

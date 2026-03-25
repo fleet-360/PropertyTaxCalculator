@@ -12,21 +12,9 @@ import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Grid from '@mui/material/Grid';
 import SaveIcon from '@mui/icons-material/Save';
+import type { ISystemConfigData } from '@/lib/types/system-config';
 
-interface SystemConfig {
-  _id: string;
-  paymentEnabled: boolean;
-  systemEnabled: boolean;
-  calculatorPrice: number;
-  appealPrice: number;
-  contactEmails?: {
-    service: string;
-    noreply: string;
-    calculator: string;
-  };
-}
-
-const defaultConfig: SystemConfig = {
+const defaultConfig: ISystemConfigData = {
   _id: '',
   paymentEnabled: true,
   systemEnabled: true,
@@ -40,7 +28,7 @@ const defaultConfig: SystemConfig = {
 };
 
 export default function SystemConfigPage() {
-  const [config, setConfig] = React.useState<SystemConfig>(defaultConfig);
+  const [config, setConfig] = React.useState<ISystemConfigData>(defaultConfig);
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState('');
@@ -80,11 +68,11 @@ export default function SystemConfigPage() {
     fetchConfig();
   }, []);
 
-  const updateField = <K extends keyof SystemConfig>(field: K, value: SystemConfig[K]) => {
+  const updateField = <K extends keyof ISystemConfigData>(field: K, value: ISystemConfigData[K]) => {
     setConfig((prev) => ({ ...prev, [field]: value }));
   };
 
-  const updateContactEmail = (field: keyof NonNullable<SystemConfig['contactEmails']>, value: string) => {
+  const updateContactEmail = (field: keyof NonNullable<ISystemConfigData['contactEmails']>, value: string) => {
     setConfig((prev) => ({
       ...prev,
       contactEmails: {

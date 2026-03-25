@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 const quickLinks = [
   { label: 'דף הבית', href: '/' },
-  { label: 'מחשבון ארנונה', href: '/calculator' },
+  { label: 'מחשבון ארנונה', href: '/#calculator-section' },
   { label: 'המלצות לקוחות', href: '#testimonials' },
   { label: 'מאמרים', href: '/blog' },
   { label: 'אודות', href: '#' },

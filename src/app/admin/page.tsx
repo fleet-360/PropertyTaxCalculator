@@ -26,38 +26,14 @@ import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 import PaymentIcon from '@mui/icons-material/Payment';
 import AddIcon from '@mui/icons-material/Add';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-
-interface Post {
-  _id: string;
-  title: string;
-  slug: string;
-  status: 'draft' | 'published' | 'archived';
-  category: string;
-  author: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface PostsResponse {
-  posts: Post[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
+import type { PostListItem, PostsResponse } from '@/lib/types/post';
+import type { StatCardProps } from '@/lib/types/admin';
 
 const statusColorMap: Record<string, 'success' | 'warning' | 'default'> = {
   published: 'success',
   draft: 'warning',
   archived: 'default',
 };
-
-interface StatCardProps {
-  title: string;
-  value: number | string;
-  icon: React.ReactNode;
-  color: string;
-  loading: boolean;
-}
 
 function StatCard({ title, value, icon, color, loading }: StatCardProps) {
   return (
@@ -106,7 +82,7 @@ function StatCard({ title, value, icon, color, loading }: StatCardProps) {
 }
 
 export default function DashboardPage() {
-  const [posts, setPosts] = React.useState<Post[]>([]);
+  const [posts, setPosts] = React.useState<PostListItem[]>([]);
   const [stats, setStats] = React.useState({
     total: 0,
     published: 0,

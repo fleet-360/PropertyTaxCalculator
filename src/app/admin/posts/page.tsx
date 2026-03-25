@@ -38,28 +38,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-
-interface Post {
-  _id: string;
-  title: string;
-  slug: string;
-  excerpt?: string;
-  status: 'draft' | 'published' | 'archived';
-  category: string;
-  author: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface PostsResponse {
-  posts: Post[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
-
-type SortField = 'title' | 'status' | 'category' | 'author' | 'createdAt';
-type SortDirection = 'asc' | 'desc';
+import type { PostListItem, PostsResponse, PostSortField, SortDirection } from '@/lib/types/post';
 
 const statusColorMap: Record<string, 'success' | 'warning' | 'default'> = {
   published: 'success',
@@ -71,7 +50,7 @@ export default function PostsListPage() {
   const router = useRouter();
 
   // Data state
-  const [posts, setPosts] = React.useState<Post[]>([]);
+  const [posts, setPosts] = React.useState<PostListItem[]>([]);
   const [total, setTotal] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
@@ -87,7 +66,7 @@ export default function PostsListPage() {
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
   // Sorting
-  const [sortField, setSortField] = React.useState<SortField>('createdAt');
+  const [sortField, setSortField] = React.useState<PostSortField>('createdAt');
   const [sortDirection, setSortDirection] = React.useState<SortDirection>('desc');
 
   // Selection
@@ -176,7 +155,7 @@ export default function PostsListPage() {
   }, []);
 
   // Handlers
-  const handleSort = (field: SortField) => {
+  const handleSort = (field: PostSortField) => {
     if (sortField === field) {
       setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {

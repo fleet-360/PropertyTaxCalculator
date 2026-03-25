@@ -12,26 +12,12 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import type { StepProps } from '../CalculatorWizard';
 import type { SelectedExemption } from '../CalculatorWizard';
-import { IExemptionRestrictions } from '@/lib/models/CityTariff';
-
-interface ExemptionSubsection {
-  code: string;
-  label: string;
-  description?: string;
-  discountPercent: number;
-  restrictions: IExemptionRestrictions;
-}
-
-interface ExemptionSection {
-  sectionCode: string;
-  sectionLabel: string;
-  subSections: ExemptionSubsection[];
-}
+import type { IExemptionSubSection, IExemptionSection } from '@/lib/types/city-tariff';
 
 const MAX_ROWS = 3;
 
 export default function ExemptionsStep({ state, dispatch }: StepProps) {
-  const exemptionSections: ExemptionSection[] = state.cityData?.exemptions ?? [];
+  const exemptionSections: IExemptionSection[] = state.cityData?.exemptions ?? [];
   const rows = state.selectedExemptions.length > 0
     ? state.selectedExemptions
     : [{ sectionCode: '', subSectionCode: '' }];
