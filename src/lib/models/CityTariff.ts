@@ -1,5 +1,7 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
+export { ALL_ZONES_TARIFF_CODE, ALL_ZONES_LABEL_HE } from '@/lib/tariff-constants';
+
 // ── Size range sub-document interface ────────────────────────────────
 export interface ISizeRange {
   min: number;

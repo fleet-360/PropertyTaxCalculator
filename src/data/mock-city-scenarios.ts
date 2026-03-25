@@ -144,23 +144,23 @@ export const residentialScenarios: Scenario[] = [
     },
   },
 
-  // ── 6. Size-based subtype — large apartment ────────────────────────
+  // ── 6. Size-based subtype — large apartment (progressive) ──────────
   {
     name: 'דירה גדולה - תעריף לפי גודל',
-    description: 'דירה 200 מ"ר (טווח 151+), תעריף 110₪/מ"ר.',
+    description: 'דירה 200 מ"ר, חישוב מדורג: 61×40+40×65+50×85+49×110=14680.',
     input: {
       propertyType: 'residential',
       subType: 'size_based',
       zone: 'all',
       propertyAreaSqm: 200,
-      bimonthlyPayment: 3666.67, // 200 × 110 = 22000 / 6 = 3666.67
+      bimonthlyPayment: 2446.67, // 14680 / 6 = 2446.67
     },
     expected: {
-      ratePerSqm: 110.0,
+      ratePerSqm: 73.4, // blended: 14680/200
       totalAreaSqm: 200,
-      annualBeforeExemption: 22000,
-      annualAfterExemption: 22000,
-      calculatedBimonthly: 3666.67,
+      annualBeforeExemption: 14680,
+      annualAfterExemption: 14680,
+      calculatedBimonthly: 2446.67,
       outcome: 'match',
       savingsBimonthly: 0,
     },
