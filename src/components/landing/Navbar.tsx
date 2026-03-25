@@ -20,7 +20,7 @@ import logo from "@/assets/icon-with-text-no-background.png";
 
 const NAV_HEIGHT = 84;
 /** Padding-top for `main` under the fixed floating navbar (px). Matches former spacer in this file. */
-export const NAVBAR_MAIN_PADDING_TOP = { xs: NAV_HEIGHT + 12, sm: NAV_HEIGHT + 16 } as const;
+export const NAVBAR_MAIN_PADDING_TOP = { xs: `${NAV_HEIGHT + 12}px`, sm: `${NAV_HEIGHT + 16}px` } as const;
 const FLOAT_TOP = { xs: 12, sm: 16 };
 const FLOAT_INSET = { xs: 1.5, sm: 2, md: 3 };
 /** Ignore tiny scroll jitter (px). */
@@ -37,7 +37,7 @@ const navItemsLanding = [
 
 const navItemsRoutes = [
   { label: "בית", href: "/" },
-  { label: "מחשבון", href: "/calculator" },
+  { label: "מחשבון", href: "/#calculator-section" },
   { label: "המלצות", href: "/#testimonials" },
   { label: "מאמרים", href: "/blog" },
 ];
@@ -46,7 +46,7 @@ export type NavbarVariant = "landing" | "routes";
 
 export default function Navbar({ variant = "landing" }: { variant?: NavbarVariant }) {
   const navItems = variant === "routes" ? navItemsRoutes : navItemsLanding;
-  const ctaHref = variant === "routes" ? "/calculator" : "#calculator-section";
+  const ctaHref =  "/#calculator-section";
   const [mobileOpen, setMobileOpen] = useState(false);
   const [navHidden, setNavHidden] = useState(false);
   const lastScrollY = useRef(0);

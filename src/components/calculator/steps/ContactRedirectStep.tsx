@@ -67,7 +67,7 @@ export default function ContactRedirectStep({ reason }: ContactRedirectStepProps
       </Box>
 
       <Box textAlign="center">
-        <Button variant="text" href="/">
+        <Button variant="text" href="/#hero">
           חזרה לדף הבית
         </Button>
       </Box>

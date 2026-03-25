@@ -1,7 +1,13 @@
-'use client';
+import CalculatorUnavailableMessage from '@/components/calculator/CalculatorUnavailableMessage';
+import CalculatorPageClient from '@/components/calculator/CalculatorPageClient';
+import { loadCalculatorFeatureConfig } from '@/lib/loadCalculatorFeatureConfig';
 
-import CalculatorWizard from '@/components/calculator/CalculatorWizard';
+export default async function CalculatorPage() {
+  const features = await loadCalculatorFeatureConfig();
 
-export default function CalculatorPage() {
-  return <CalculatorWizard />;
+  if (!features.systemEnabled) {
+    return <CalculatorUnavailableMessage />;
+  }
+
+  return <CalculatorPageClient features={features} />;
 }

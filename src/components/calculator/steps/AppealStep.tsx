@@ -8,17 +8,33 @@ import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
+import DummyPaymentDialog from '@/components/calculator/DummyPaymentDialog';
+import CouponPaymentSection from '@/components/calculator/CouponPaymentSection';
+import { useCalculatorFeatures } from '../CalculatorFeaturesContext';
 import type { StepProps } from '../CalculatorWizard';
 
 const APPEAL_WAIVER_TEXT = `הנני מצהיר/ה ומאשר/ת כי ידוע לי שהגשת השגה באמצעות מחשבון הארנונה אינה מהווה ייעוץ משפטי. הנני מוותר/ת על כל טענה כלפי מפעילי המחשבון בנוגע לתוצאות ההשגה ו/או לכל נזק שעלול להיגרם כתוצאה מהגשתה. ידוע לי כי ההשגה מוגשת על בסיס הנתונים שהזנתי במחשבון ועל אחריותי בלבד.`;
 
 export default function AppealStep({ state, dispatch }: StepProps) {
+  const { paymentEnabled, appealChargeAmount } = useCalculatorFeatures();
   const [appealWaiverAccepted, setAppealWaiverAccepted] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+
+  const completeSubmit = () => {
+    setSubmitted(true);
+  };
 
   const handleSubmit = () => {
-    // Mock payment & submission
-    setSubmitted(true);
+    if (paymentEnabled) {
+      setPaymentDialogOpen(true);
+      return;
+    }
+    completeSubmit();
+  };
+
+  const handlePaymentConfirm = () => {
+    completeSubmit();
   };
 
   if (submitted) {
@@ -45,6 +61,10 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         הגשת השגה
       </Typography>
 
+      {paymentEnabled && (
+        <CouponPaymentSection state={state} dispatch={dispatch} context="appeal" />
+      )}
+
       <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
         <Typography variant="body1" mb={2}>
           השגה היא בעצם ערעור על חיוב הארנונה. ניתן להגיש השגה תוך 90 יום ממועד קבלת החיוב.
@@ -53,11 +73,10 @@ export default function AppealStep({ state, dispatch }: StepProps) {
           בלחיצה אחת נוכל להכין עבורך השגה שמתאימה למידע שהזנת במחשבון.
         </Typography>
         <Typography variant="h6" color="primary.main">
-          מחיר: 180₪
+          מחיר: {appealChargeAmount.toLocaleString('he-IL')} ₪
         </Typography>
       </Paper>
 
-      {/* Appeal-specific waiver */}
       <Paper variant="outlined" sx={{ p: 2, mb: 2, maxHeight: 140, overflowY: 'auto', lineHeight: 1.8 }}>
         <Typography variant="body2">{APPEAL_WAIVER_TEXT}</Typography>
       </Paper>
@@ -81,6 +100,14 @@ export default function AppealStep({ state, dispatch }: StepProps) {
           תשלום והכנת השגה
         </Button>
       </Box>
+
+      <DummyPaymentDialog
+        open={paymentDialogOpen}
+        onClose={() => setPaymentDialogOpen(false)}
+        onConfirm={handlePaymentConfirm}
+        amountNis={appealChargeAmount}
+        title="תשלום השגה (הדגמה)"
+      />
     </Box>
   );
 }

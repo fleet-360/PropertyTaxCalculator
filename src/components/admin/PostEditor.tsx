@@ -33,51 +33,7 @@ import WarningIcon from '@mui/icons-material/Warning';
 import ErrorIcon from '@mui/icons-material/Error';
 import ImageIcon from '@mui/icons-material/Image';
 import type { BlockData } from '@/components/editor/types';
-
-// ── Types ──────────────────────────────────────────────────────────────
-
-interface SeoData {
-  metaTitle: string;
-  metaDescription: string;
-  metaKeywords: string[];
-  canonicalUrl: string;
-  ogTitle: string;
-  ogDescription: string;
-  ogImage: string;
-  twitterCard: 'summary' | 'summary_large_image';
-  noIndex: boolean;
-  noFollow: boolean;
-  jsonLd?: unknown;
-}
-
-interface PostData {
-  _id?: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: {
-    blocks: BlockData[];
-    rawHtml: string;
-  };
-  featuredImage: string;
-  author: string;
-  category: string;
-  tags: string[];
-  status: 'draft' | 'published' | 'archived';
-  publishedAt: string;
-  seo: SeoData;
-}
-
-interface PostEditorProps {
-  initialData?: Partial<PostData> | null;
-  onSave: (data: PostData) => Promise<void>;
-  isNew: boolean;
-}
-
-interface SeoCheck {
-  type: 'success' | 'warning' | 'error';
-  message: string;
-}
+import type { SeoData, PostData, PostEditorProps, SeoCheck } from '@/lib/types/post';
 
 // ── Slug generation helper ─────────────────────────────────────────────
 
@@ -511,7 +467,7 @@ export default function PostEditor({ initialData, onSave, isNew }: PostEditorPro
             size="small"
             variant="outlined"
             startIcon={<OpenInNewIcon />}
-            href={`/${post.slug}`}
+            href={`/blog/${post.slug}`}
             target="_blank"
             sx={{ borderColor: '#e0e0e0', color: '#555' }}
           >

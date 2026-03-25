@@ -20,18 +20,7 @@ import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import Tooltip from '@mui/material/Tooltip';
 import ContactMailIcon from '@mui/icons-material/ContactMail';
-
-interface ContactRequest {
-  _id: string;
-  name: string;
-  phone: string;
-  email?: string;
-  message?: string;
-  source: 'calculator_business' | 'landing_page' | 'appeal';
-  status: 'new' | 'contacted' | 'closed';
-  createdAt: string;
-  updatedAt: string;
-}
+import type { IContactRequestData } from '@/lib/types/contact-request';
 
 const statusColorMap: Record<string, 'error' | 'warning' | 'success'> = {
   new: 'error',
@@ -52,7 +41,7 @@ const sourceLabelMap: Record<string, string> = {
 };
 
 export default function ContactsPage() {
-  const [contacts, setContacts] = React.useState<ContactRequest[]>([]);
+  const [contacts, setContacts] = React.useState<IContactRequestData[]>([]);
   const [total, setTotal] = React.useState(0);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -100,7 +89,7 @@ export default function ContactsPage() {
       if (!res.ok) throw new Error('Failed to update status');
 
       setContacts((prev) =>
-        prev.map((c) => (c._id === id ? { ...c, status: newStatus as ContactRequest['status'] } : c))
+        prev.map((c) => (c._id === id ? { ...c, status: newStatus as IContactRequestData['status'] } : c))
       );
       setSnackbar({ open: true, message: 'סטטוס עודכן בהצלחה', severity: 'success' });
     } catch {

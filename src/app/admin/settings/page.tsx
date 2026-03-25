@@ -10,19 +10,9 @@ import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import SaveIcon from '@mui/icons-material/Save';
 import ImageIcon from '@mui/icons-material/Image';
+import type { ISettingsData } from '@/lib/types/settings';
 
-interface SettingsData {
-  siteName: string;
-  siteDescription: string;
-  defaultAuthor: string;
-  postsPerPage: number;
-  defaultOgImage: string;
-  googleAnalyticsId: string;
-  customHeadCode: string;
-  customCss: string;
-}
-
-const defaultSettings: SettingsData = {
+const defaultSettings: ISettingsData = {
   siteName: '',
   siteDescription: '',
   defaultAuthor: '',
@@ -34,7 +24,7 @@ const defaultSettings: SettingsData = {
 };
 
 export default function SettingsPage() {
-  const [settings, setSettings] = React.useState<SettingsData>(defaultSettings);
+  const [settings, setSettings] = React.useState<ISettingsData>(defaultSettings);
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState('');
@@ -72,7 +62,7 @@ export default function SettingsPage() {
     fetchSettings();
   }, []);
 
-  const updateField = <K extends keyof SettingsData>(field: K, value: SettingsData[K]) => {
+  const updateField = <K extends keyof ISettingsData>(field: K, value: ISettingsData[K]) => {
     setSettings((prev) => ({ ...prev, [field]: value }));
   };
 

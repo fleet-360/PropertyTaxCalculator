@@ -1,6 +1,6 @@
 'use client';
 
-import { useReducer, Dispatch } from 'react';
+import { useMemo, useReducer, Dispatch } from 'react';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import DocumentPreviewPopover from '@/components/common/DocumentPreviewPopover';
@@ -13,6 +13,19 @@ import ResultsGateStep from './steps/ResultsGateStep';
 import ResultsDisplayStep from './steps/ResultsDisplayStep';
 import AppealStep from './steps/AppealStep';
 import ContactRedirectStep from './steps/ContactRedirectStep';
+import { CalculatorFeaturesContext } from './CalculatorFeaturesContext';
+
+import type { ISelectedExemption } from '@/lib/types/customer';
+import {
+  DEFAULT_CALCULATOR_FEATURE_CONFIG,
+  type CalculatorFeatureConfig,
+} from '@/lib/types/system-config';
+import { priceAfterCoupon } from '@/lib/priceAfterCoupon';
+import type { AppliedWizardCoupon } from './wizardTypes';
+
+export type { CalculatorFeaturesContextValue } from './CalculatorFeaturesContext';
+export { CalculatorFeaturesContext, useCalculatorFeatures } from './CalculatorFeaturesContext';
+export type { AppliedWizardCoupon } from './wizardTypes';
 
 // ── State ──
 
@@ -23,10 +36,7 @@ export interface Designation {
   area: number;
 }
 
-export interface SelectedExemption {
-  sectionCode: string;
-  subSectionCode: string;
-}
+export type SelectedExemption = ISelectedExemption;
 
 export interface WizardState {
   currentStep: number;
@@ -71,6 +81,10 @@ export interface WizardState {
   isLoading: boolean;
   // Contact redirect reason (when calculation can't proceed)
   contactRedirectReason: 'area' | 'designations' | 'city' | 'other_city' | 'error' | null;
+  /** Draft input for coupon (shown alongside payment on results gate / appeal) */
+  couponCodeDraft: string;
+  /** Applied coupon — reused for calculator payment and appeal payment */
+  appliedCoupon: AppliedWizardCoupon | null;
 }
 
 export const initialState: WizardState = {
@@ -108,18 +122,19 @@ export const initialState: WizardState = {
   calculationResult: null,
   isLoading: false,
   contactRedirectReason: null,
+  couponCodeDraft: '',
+  appliedCoupon: null,
 };
 
 // ── Step definitions ──
-// Logical steps in the wizard flow:
-// 0: InitialInfoStep      — property type + city + document upload
-// 1: InitialWaiverStep    — initial waiver / consent
-// 2: DataEntryStep        — property details + error report (merged)
-// 3: ExemptionsStep       — discounts (SKIPPED for business)
-// 4: DisclaimerStep       — consent + triggers calculation
-// 5: ResultsGateStep      — shows outcome
-// 6: ResultsDisplayStep   — detailed results
-// 7: AppealStep           — appeal + waiver
+// 0: InitialInfoStep
+// 1: InitialWaiverStep
+// 2: DataEntryStep
+// 3: ExemptionsStep (skipped for business)
+// 4: DisclaimerStep
+// 5: ResultsGateStep (coupon UI inline when payment + under/overpay)
+// 6: ResultsDisplayStep
+// 7: AppealStep
 
 const EXEMPTIONS_STEP = 3;
 
@@ -153,7 +168,6 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return { ...state, currentStep: action.step };
     case 'NEXT_STEP': {
       let nextStep = state.currentStep + 1;
-      // Skip ExemptionsStep for business properties
       if (nextStep === EXEMPTIONS_STEP && shouldSkipExemptions(state)) {
         nextStep = EXEMPTIONS_STEP + 1;
       }
@@ -161,7 +175,6 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
     }
     case 'PREV_STEP': {
       let prevStep = Math.max(0, state.currentStep - 1);
-      // Skip ExemptionsStep backwards for business
       if (prevStep === EXEMPTIONS_STEP && shouldSkipExemptions(state)) {
         prevStep = EXEMPTIONS_STEP - 1;
       }
@@ -187,6 +200,8 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return { ...state, classificationError: action.payload };
     case 'SET_CALCULATION_RESULT':
       return { ...state, calculationResult: action.payload };
+    case 'SET_LOADING':
+      return { ...state, isLoading: action.payload };
     case 'RESET_CALCULATOR':
       return { ...initialState };
     case 'SET_CONTACT_REDIRECT':
@@ -206,10 +221,8 @@ export interface StepProps {
 // ── Validation checks ──
 
 export function getContactRedirectReason(state: WizardState): WizardState['contactRedirectReason'] {
-  // Check "עיר אחרת" (other city — not in database)
   if (state.citySlug === 'other') return 'other_city';
 
-  // Check total area > 1000
   const totalArea =
     (state.propertyArea || 0) +
     (state.coveredBalconyArea || 0) +
@@ -217,12 +230,10 @@ export function getContactRedirectReason(state: WizardState): WizardState['conta
     (state.parkingArea || 0);
   if (totalArea > 1000) return 'area';
 
-  // Check business with multiple designations
   if (state.propertyType === 'business' && state.designations.length > 1) {
     return 'designations';
   }
 
-  // Check city data availability
   if (!state.cityData || !state.cityData.types || state.cityData.types.length === 0) {
     return 'city';
   }
@@ -233,26 +244,45 @@ export function getContactRedirectReason(state: WizardState): WizardState['conta
 // ── Component ──
 
 const STEP_COMPONENTS = [
-  InitialInfoStep,     // 0 — property type + city + document upload
-  InitialWaiverStep,   // 1 — initial waiver
-  DataEntryStep,       // 2 — property details + error report (merged)
-  ExemptionsStep,      // 3 — exemptions (skipped for business)
-  DisclaimerStep,      // 4 — consent + calculation
-  ResultsGateStep,     // 5 — results gate
-  ResultsDisplayStep,  // 6 — detailed results
-  AppealStep,          // 7 — appeal + waiver
+  InitialInfoStep,
+  InitialWaiverStep,
+  DataEntryStep,
+  ExemptionsStep,
+  DisclaimerStep,
+  ResultsGateStep,
+  ResultsDisplayStep,
+  AppealStep,
 ];
 
-export default function CalculatorWizard() {
+function mergeFeatures(partial?: Partial<CalculatorFeatureConfig>): CalculatorFeatureConfig {
+  return { ...DEFAULT_CALCULATOR_FEATURE_CONFIG, ...partial };
+}
+
+export interface CalculatorWizardProps {
+  features?: Partial<CalculatorFeatureConfig>;
+}
+
+export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
+  const features = mergeFeatures(props.features);
   const [state, dispatch] = useReducer(wizardReducer, initialState);
 
-  // Check for contact redirect conditions after data entry (step 1 → step 2/3)
-  // This runs when entering the exemptions or disclaimer step
-  const redirectReason = (state.currentStep >= EXEMPTIONS_STEP && state.currentStep <= 4)
-    ? getContactRedirectReason(state)
-    : null;
+  const applied = state.appliedCoupon;
+  const featuresContextValue = useMemo(
+    () => ({
+      paymentEnabled: features.paymentEnabled,
+      calculatorPrice: features.calculatorPrice,
+      appealPrice: features.appealPrice,
+      calculatorChargeAmount: priceAfterCoupon(features.calculatorPrice, applied),
+      appealChargeAmount: priceAfterCoupon(features.appealPrice, applied),
+    }),
+    [features.paymentEnabled, features.calculatorPrice, features.appealPrice, applied]
+  );
 
-  // Show ContactRedirectStep if redirect needed
+  const redirectReason =
+    state.currentStep >= EXEMPTIONS_STEP && state.currentStep <= 4
+      ? getContactRedirectReason(state)
+      : null;
+
   if (redirectReason || state.contactRedirectReason) {
     return (
       <Container maxWidth="md">
@@ -273,19 +303,21 @@ export default function CalculatorWizard() {
       : 'צו הארנונה';
 
   return (
-    <Container maxWidth="md" sx={{ position: 'relative' }}>
-      {showOrdinanceLink && ordinanceUrl && (
-        <Box sx={{ textAlign: 'center', mb: 2, position: 'absolute', top: 0, left: 0 }}>
-          <DocumentPreviewPopover
-            documentUrl={ordinanceUrl}
-            title={ordinanceTitle}
-            triggerLabel="צפייה בצו הארנונה"
-            triggerAriaLabel="פתיחת תצוגה מקדימה של צו הארנונה"
-            downloadLabel="הורדת צו הארנונה (PDF)"
-          />
-        </Box>
-      )}
-      {StepComponent && <StepComponent key={state.currentStep} state={state} dispatch={dispatch} />}
-    </Container>
+    <CalculatorFeaturesContext.Provider value={featuresContextValue}>
+      <Container maxWidth="md" sx={{ position: 'relative' }}>
+        {showOrdinanceLink && ordinanceUrl && (
+          <Box sx={{ textAlign: 'center', mb: 2, position: 'absolute', top: 0, left: 0 }}>
+            <DocumentPreviewPopover
+              documentUrl={ordinanceUrl}
+              title={ordinanceTitle}
+              triggerLabel="צפייה בצו הארנונה"
+              triggerAriaLabel="פתיחת תצוגה מקדימה של צו הארנונה"
+              downloadLabel="הורדת צו הארנונה (PDF)"
+            />
+          </Box>
+        )}
+        {StepComponent && <StepComponent key={state.currentStep} state={state} dispatch={dispatch} />}
+      </Container>
+    </CalculatorFeaturesContext.Provider>
   );
 }

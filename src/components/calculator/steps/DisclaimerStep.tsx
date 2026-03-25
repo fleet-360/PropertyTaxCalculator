@@ -44,9 +44,8 @@ export default function DisclaimerStep({ state, dispatch }: StepProps) {
           variant="contained"
           disabled={!state.consentGiven}
           onClick={() => {
-            // Trigger calculation before advancing
             dispatch({ type: 'SET_LOADING', payload: true });
-            if(state.designations.length > 1){
+            if (state.designations.length > 1) {
               dispatch({ type: 'SET_LOADING', payload: false });
               dispatch({ type: 'SET_CONTACT_REDIRECT', payload: 'designations' });
               return;
@@ -70,14 +69,15 @@ export default function DisclaimerStep({ state, dispatch }: StepProps) {
                 householdSize: state.householdSize,
                 childrenCount: state.childrenCount,
                 correctedAreaSqm: state.measurementError?.claimed,
-                designations: state.propertyType === 'business'
-                  ? state.designations.map((d) => ({
-                      typeCode: d.type,
-                      subtypeCode: d.subtype,
-                      zone: d.zone,
-                      areaSqm: d.area,
-                    }))
-                  : undefined,
+                designations:
+                  state.propertyType === 'business'
+                    ? state.designations.map((d) => ({
+                        typeCode: d.type,
+                        subtypeCode: d.subtype,
+                        zone: d.zone,
+                        areaSqm: d.area,
+                      }))
+                    : undefined,
               }),
             })
               .then((r) => {
@@ -90,7 +90,6 @@ export default function DisclaimerStep({ state, dispatch }: StepProps) {
                 dispatch({ type: 'NEXT_STEP' });
               })
               .catch(() => {
-                // Route to contact redirect on any calculation error
                 dispatch({ type: 'SET_LOADING', payload: false });
                 dispatch({ type: 'SET_CONTACT_REDIRECT', payload: 'error' });
               });

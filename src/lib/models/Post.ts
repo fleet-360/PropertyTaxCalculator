@@ -1,34 +1,9 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 import slugify from 'slugify';
+import type { IBlock, ISeo, IContent, PostStatus } from '@/lib/types/post';
 
-// ── Block sub-document interface ──────────────────────────────────────
-export interface IBlock {
-  id: string;
-  type: string;
-  data: Record<string, unknown>;
-  order: number;
-}
-
-// ── SEO sub-document interface ────────────────────────────────────────
-export interface ISeo {
-  metaTitle?: string;
-  metaDescription?: string;
-  metaKeywords?: string[];
-  canonicalUrl?: string;
-  ogTitle?: string;
-  ogDescription?: string;
-  ogImage?: string;
-  twitterCard?: 'summary' | 'summary_large_image';
-  noIndex?: boolean;
-  noFollow?: boolean;
-  jsonLd?: unknown;
-}
-
-// ── Content sub-document interface ────────────────────────────────────
-export interface IContent {
-  blocks: IBlock[];
-  rawHtml?: string;
-}
+// Re-export shared types so existing consumers don't break
+export type { IBlock, ISeo, IContent } from '@/lib/types/post';
 
 // ── Post document interface ───────────────────────────────────────────
 export interface IPost extends Document {
@@ -40,7 +15,7 @@ export interface IPost extends Document {
   author: string;
   category: string;
   tags: string[];
-  status: 'draft' | 'published' | 'archived';
+  status: PostStatus;
   publishedAt?: Date;
   seo: ISeo;
   createdAt: Date;

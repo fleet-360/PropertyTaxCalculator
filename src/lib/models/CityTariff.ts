@@ -1,72 +1,28 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
+import type {
+  ISizeRange,
+  IZoneRate,
+  ISubType,
+  IPropertyType,
+  IExemptionRestrictions,
+  IExemptionSubSection,
+  IExemptionSection,
+  IAvailableZone,
+} from '@/lib/types/city-tariff';
 
 export { ALL_ZONES_TARIFF_CODE, ALL_ZONES_LABEL_HE } from '@/lib/tariff-constants';
 
-// ── Size range sub-document interface ────────────────────────────────
-export interface ISizeRange {
-  min: number;
-  max: number;
-  rate: number;
-  propertyCode?: string;
-}
-
-// ── Zone rate sub-document interface ─────────────────────────────────
-export interface IZoneRate {
-  zone: string;
-  zoneLabel: string;
-  rate?: number;
-  sizeRanges?: ISizeRange[];
-  propertyCode?: string;
-}
-
-// ── Sub-type sub-document interface ──────────────────────────────────
-export interface ISubType {
-  code: string;
-  label: string;
-  hasSizeRanges: boolean;
-  /** When true, size ranges use progressive (bracket/cumulative) pricing;
-   *  when false, a single flat rate applies to the entire area based on which range it falls into. */
-  isProgressiveRate: boolean;
-  zones: IZoneRate[];
-}
-
-// ── Property type sub-document interface ─────────────────────────────
-export interface IPropertyType {
-  category: "private" | "business";
-  code: string;
-  label: string;
-  subtypes: ISubType[];
-}
-
-// ── Exemption restrictions sub-document interface ────────────────────
-export interface IExemptionRestrictions {
-  maxAreaSqm?: number;
-  minChildren?: number;
-  minHouseholdSize?: number;
-}
-
-// ── Exemption sub-section sub-document interface ─────────────────────
-export interface IExemptionSubSection {
-  code: string;
-  description: string;
-  discountPercent: number;
-  restrictions: IExemptionRestrictions;
-  requiresDocuments: boolean;
-  documentTypes: string[];
-}
-
-// ── Exemption section sub-document interface ─────────────────────────
-export interface IExemptionSection {
-  sectionCode: string;
-  sectionLabel: string;
-  subSections: IExemptionSubSection[];
-}
-
-// ── Available zone sub-document interface ────────────────────────────
-export interface IAvailableZone {
-  code: string;
-  label: string;
-}
+// Re-export shared types so existing consumers don't break
+export type {
+  ISizeRange,
+  IZoneRate,
+  ISubType,
+  IPropertyType,
+  IExemptionRestrictions,
+  IExemptionSubSection,
+  IExemptionSection,
+  IAvailableZone,
+} from '@/lib/types/city-tariff';
 
 // ── City tariff document interface ───────────────────────────────────
 export interface ICityTariff extends Document {

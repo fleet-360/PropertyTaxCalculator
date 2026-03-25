@@ -39,84 +39,24 @@ import {
   validationIssuesToFieldMap,
   accordionSectionForValidationPath,
 } from '@/lib/validateCityTariffPayload';
-
-// ── Types ────────────────────────────────────────────────────────────
-interface SizeRange {
-  min: number;
-  max: number;
-  rate: number;
-  propertyCode?: string;
-}
-
-interface ZoneRate {
-  zone: string;
-  zoneLabel: string;
-  rate?: number;
-  sizeRanges?: SizeRange[];
-  propertyCode?: string;
-}
-
-interface SubType {
-  code: string;
-  label: string;
-  hasSizeRanges: boolean;
-  /** מצטבר (מדורג) מול קבוע לפי טווח — תואם ל־isProgressiveRate במודל */
-  isProgressiveRate?: boolean;
-  zones: ZoneRate[];
-}
-
-interface PropertyType {
-  category?: 'private' | 'business';
-  code: string;
-  label: string;
-  subtypes: SubType[];
-}
-
-interface ExemptionRestrictions {
-  maxAreaSqm?: number;
-  minChildren?: number;
-  minHouseholdSize?: number;
-}
-
-interface ExemptionSubSection {
-  code: string;
-  description: string;
-  discountPercent: number;
-  restrictions: ExemptionRestrictions;
-  requiresDocuments: boolean;
-  documentTypes: string[];
-}
-
-interface ExemptionSection {
-  sectionCode: string;
-  sectionLabel: string;
-  subSections: ExemptionSubSection[];
-}
-
-interface AvailableZone {
-  code: string;
-  label: string;
-}
-
-interface CityTariffData {
-  _id?: string;
-  cityName: string;
-  cityNameEn: string;
-  slug: string;
-  year: number;
-  isActive: boolean;
-  ordinanceUrl?: string;
-  types: PropertyType[];
-  exemptions: ExemptionSection[];
-  availableZones: AvailableZone[];
-}
+import type {
+  ISizeRange,
+  IZoneRate,
+  ISubType,
+  IPropertyType,
+  IExemptionRestrictions,
+  IExemptionSubSection,
+  IExemptionSection,
+  IAvailableZone,
+  ICityTariffData,
+} from '@/lib/types/city-tariff';
 
 interface CityTariffEditorProps {
-  city?: CityTariffData;
+  city?: ICityTariffData;
   isNew?: boolean;
 }
 
-const emptyCityData: CityTariffData = {
+const emptyCityData: ICityTariffData = {
   cityName: '',
   cityNameEn: '',
   slug: '',
@@ -131,7 +71,7 @@ const emptyCityData: CityTariffData = {
 // ── Component ────────────────────────────────────────────────────────
 export default function CityTariffEditor({ city, isNew = false }: CityTariffEditorProps) {
   const router = useRouter();
-  const [data, setData] = React.useState<CityTariffData>(city || emptyCityData);
+  const [data, setData] = React.useState<ICityTariffData>(city || emptyCityData);
   const [saving, setSaving] = React.useState(false);
   const [snackbar, setSnackbar] = React.useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
@@ -272,7 +212,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
     }));
   };
 
-  const updateZone = (index: number, field: keyof AvailableZone, value: string) => {
+  const updateZone = (index: number, field: keyof IAvailableZone, value: string) => {
     setData((prev) => {
       const zones = [...prev.availableZones];
       zones[index] = { ...zones[index], [field]: value };

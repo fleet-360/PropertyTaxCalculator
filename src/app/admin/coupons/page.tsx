@@ -32,28 +32,7 @@ import DialogActions from '@mui/material/DialogActions';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-
-interface Coupon {
-  _id: string;
-  code: string;
-  discountType: 'percentage' | 'fixed';
-  discountValue: number;
-  isOneTimeUse: boolean;
-  usedBy?: string;
-  usedAt?: string;
-  isActive: boolean;
-  expiresAt?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface CouponFormData {
-  code: string;
-  discountType: 'percentage' | 'fixed';
-  discountValue: string;
-  isOneTimeUse: boolean;
-  expiresAt: string;
-}
+import type { ICouponData, CouponFormData } from '@/lib/types/coupon';
 
 const defaultFormData: CouponFormData = {
   code: '',
@@ -63,7 +42,7 @@ const defaultFormData: CouponFormData = {
   expiresAt: '',
 };
 
-function getStatusChip(coupon: Coupon) {
+function getStatusChip(coupon: ICouponData) {
   if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
     return <Chip label="פג תוקף" color="error" size="small" variant="outlined" />;
   }
@@ -74,19 +53,19 @@ function getStatusChip(coupon: Coupon) {
 }
 
 export default function CouponsPage() {
-  const [coupons, setCoupons] = React.useState<Coupon[]>([]);
+  const [coupons, setCoupons] = React.useState<ICouponData[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
 
   // Dialog state
   const [formDialogOpen, setFormDialogOpen] = React.useState(false);
-  const [editingCoupon, setEditingCoupon] = React.useState<Coupon | null>(null);
+  const [editingCoupon, setEditingCoupon] = React.useState<ICouponData | null>(null);
   const [formData, setFormData] = React.useState<CouponFormData>(defaultFormData);
   const [formLoading, setFormLoading] = React.useState(false);
 
   // Delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [deleteTarget, setDeleteTarget] = React.useState<Coupon | null>(null);
+  const [deleteTarget, setDeleteTarget] = React.useState<ICouponData | null>(null);
 
   // Snackbar
   const [snackbar, setSnackbar] = React.useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
@@ -123,7 +102,7 @@ export default function CouponsPage() {
   };
 
   // Open form dialog for editing
-  const handleOpenEdit = (coupon: Coupon) => {
+  const handleOpenEdit = (coupon: ICouponData) => {
     setEditingCoupon(coupon);
     setFormData({
       code: coupon.code,
@@ -185,7 +164,7 @@ export default function CouponsPage() {
   };
 
   // Toggle active
-  const handleToggleActive = async (coupon: Coupon) => {
+  const handleToggleActive = async (coupon: ICouponData) => {
     try {
       const res = await fetch(`/api/coupons/${coupon._id}`, {
         method: 'PUT',
@@ -220,7 +199,7 @@ export default function CouponsPage() {
     }
   };
 
-  const formatDiscount = (coupon: Coupon) => {
+  const formatDiscount = (coupon: ICouponData) => {
     return coupon.discountType === 'percentage'
       ? `${coupon.discountValue}%`
       : `${coupon.discountValue}\u20AA`;
@@ -249,7 +228,7 @@ export default function CouponsPage() {
         </Alert>
       )}
 
-      {/* Coupons Table */}
+      {/* ICouponDatas Table */}
       <Paper>
         <TableContainer>
           <Table>

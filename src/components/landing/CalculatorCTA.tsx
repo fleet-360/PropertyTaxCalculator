@@ -3,13 +3,19 @@ import { Box, Container, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { CalculatorMiaSpeechBubbleTyping } from "@/components/common/TypingText";
+import CalculatorUnavailableMessage from "@/components/calculator/CalculatorUnavailableMessage";
+import type { CalculatorFeatureConfig } from "@/lib/types/system-config";
 
 const CalculatorWizard = dynamic(
   () => import("@/components/calculator/CalculatorWizard"),
   { ssr: false },
 );
 
-export default function CalculatorSection() {
+interface CalculatorCTAProps {
+  featureConfig: CalculatorFeatureConfig;
+}
+
+export default function CalculatorSection({ featureConfig }: CalculatorCTAProps) {
   return (
     <Box
       id="calculator-section"
@@ -205,7 +211,11 @@ export default function CalculatorSection() {
                   boxSizing: "border-box",
                 }}
               >
-                <CalculatorWizard />
+                {featureConfig.systemEnabled ? (
+                  <CalculatorWizard features={featureConfig} />
+                ) : (
+                  <CalculatorUnavailableMessage variant="embedded" />
+                )}
               </Box>
             </motion.div>
           </Box>

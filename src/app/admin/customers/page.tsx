@@ -28,41 +28,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import PeopleIcon from '@mui/icons-material/People';
-
-interface Customer {
-  _id: string;
-  fullName: string;
-  idNumber: string;
-  email?: string;
-  phone?: string;
-  propertyType: 'private' | 'business';
-  citySlug: string;
-  propertyNumber?: string;
-  propertyId?: string;
-  address?: string;
-  propertyArea: number;
-  coveredBalconyArea?: number;
-  storageArea?: number;
-  parkingArea?: number;
-  classificationCode?: string;
-  zone?: string;
-  bimonthlyPayment: number;
-  calculationResult?: {
-    ratePerSqm: number;
-    calculatedBimonthly: number;
-    calculatedAnnual: number;
-    savings: number;
-    savingsAnnual: number;
-    savings10Year: number;
-    outcome: string;
-  };
-  householdSize?: number;
-  childrenCount?: number;
-  paymentStatus: 'none' | 'calculator_paid' | 'appeal_paid';
-  status: 'in_progress' | 'match' | 'overpaying' | 'underpaying' | 'appeal_filed';
-  createdAt: string;
-  updatedAt: string;
-}
+import type { CustomerListItem } from '@/lib/types/admin';
 
 const statusColorMap: Record<string, 'default' | 'info' | 'success' | 'warning' | 'error'> = {
   in_progress: 'info',
@@ -92,7 +58,7 @@ const paymentColorMap: Record<string, 'default' | 'success' | 'info'> = {
   appeal_paid: 'success',
 };
 
-function ExpandableRow({ customer }: { customer: Customer }) {
+function ExpandableRow({ customer }: { customer: CustomerListItem }) {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -238,7 +204,7 @@ function ExpandableRow({ customer }: { customer: Customer }) {
 }
 
 export default function CustomersPage() {
-  const [customers, setCustomers] = React.useState<Customer[]>([]);
+  const [customers, setCustomers] = React.useState<CustomerListItem[]>([]);
   const [total, setTotal] = React.useState(0);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
