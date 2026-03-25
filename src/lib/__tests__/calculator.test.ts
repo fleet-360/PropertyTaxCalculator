@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import mongoose from 'mongoose';
 import CityTariff, { ICityTariff } from '@/lib/models/CityTariff';
-import { findRate, resolveExemption, calculatePropertyTax, calculateBusinessPropertyTax } from '@/lib/calculator';
+import { findRate, findByPropertyCode, resolveExemption, resolveBestExemption, calculatePropertyTax, calculateBusinessPropertyTax } from '@/lib/calculator';
 import { allScenarios, residentialScenarios, exemptionScenarios, businessScenarios } from '@/data/mock-city-scenarios';
 
 let mockCity: ICityTariff;
@@ -177,47 +177,245 @@ describe('calculateBusinessPropertyTax', () => {
     expect(result.outcome).toBe('match');
   });
 
-  it('multi-designation: manufacturing 200sqm + storage 300sqm + land 500sqm', () => {
+  it('multi-designation throws error — redirect to representative', () => {
     const designations = [
       { typeCode: 'industry', subtypeCode: 'manufacturing', zone: 'ד', areaSqm: 200 },
       { typeCode: 'industry', subtypeCode: 'storage', zone: 'ד', areaSqm: 300 },
-      { typeCode: 'industry', subtypeCode: 'land', zone: 'all', areaSqm: 500 },
     ];
-    // manufacturing 200 × 180 = 36000
-    // storage 300 × 80 = 24000
-    // land 500 × 22 = 11000
-    // total annual = 71000 / 6 = 11833.33
-    const expectedBimonthly = Math.round((71000 / 6) * 100) / 100;
+    expect(() => calculateBusinessPropertyTax(mockCity, designations, 15000))
+      .toThrow('מספר ייעודים — יש לפנות לנציג');
+  });
 
-    const result = calculateBusinessPropertyTax(mockCity, designations, expectedBimonthly);
-    expect(result.totalAreaSqm).toBe(1000);
-    expect(result.calculatedBimonthly).toBeCloseTo(expectedBimonthly, 0);
+  it('empty designations throws error', () => {
+    expect(() => calculateBusinessPropertyTax(mockCity, [], 15000))
+      .toThrow('לא ניתן לחשב ללא ייעודים');
+  });
+
+  it('area > 1000 throws error — redirect to representative', () => {
+    expect(() => calculateBusinessPropertyTax(
+      mockCity,
+      [{ typeCode: 'industry', subtypeCode: 'land', zone: 'all', areaSqm: 1500 }],
+      15000,
+    )).toThrow('שטח מעל 1000 מ"ר — יש לפנות לנציג');
+  });
+
+  it('bimonthlyPayment < 0 throws error', () => {
+    expect(() => calculateBusinessPropertyTax(
+      mockCity,
+      [{ typeCode: 'business', subtypeCode: 'retail', zone: 'א', areaSqm: 25 }],
+      -100,
+    )).toThrow('סכום התשלום חייב להיות גדול מ-0');
+  });
+});
+
+// ── Progressive rate calculation ────────────────────────────────────
+
+describe('Progressive rate calculation (size_based)', () => {
+  // Brackets: 0-60@40, 61-100@65, 101-150@85, 151+@110
+  // bracketEnd = max + 1, so bracket 1 covers 0..60 (61 sqm)
+
+  it('70 sqm — crosses bracket 1→2: 61×40 + 9×65 = 3025', () => {
+    const result = findRate(mockCity, 'residential', 'size_based', 'all', 70);
+    expect(result.annualTotal).toBe(61 * 40 + 9 * 65); // 2440 + 585 = 3025
+    expect(result.isProgressive).toBe(true);
+  });
+
+  it('120 sqm — crosses 3 brackets: 61×40 + 40×65 + 19×85 = 6655', () => {
+    const result = findRate(mockCity, 'residential', 'size_based', 'all', 120);
+    expect(result.annualTotal).toBe(61 * 40 + 40 * 65 + 19 * 85); // 2440 + 2600 + 1615 = 6655
+    expect(result.isProgressive).toBe(true);
+  });
+
+  it('60 sqm — exactly at bracket boundary: 61×40 = 2440', () => {
+    const result = findRate(mockCity, 'residential', 'size_based', 'all', 60);
+    expect(result.annualTotal).toBe(60 * 40); // 2400
+    expect(result.isProgressive).toBe(true);
+  });
+
+  it('61 sqm — one sqm: 61×40 = 2440', () => {
+    const result = findRate(mockCity, 'residential', 'size_based', 'all', 61);
+    expect(result.annualTotal).toBe(61 * 40); // 2440
+    expect(result.isProgressive).toBe(true);
+  });
+
+  it('200 sqm — hits unbounded bracket: 61×40 + 40×65 + 50×85 + 49×110', () => {
+    const result = findRate(mockCity, 'residential', 'size_based', 'all', 200);
+    const expected = 61 * 40 + 40 * 65 + 50 * 85 + 49 * 110; // 2440+2600+4250+5390=14680
+    expect(result.annualTotal).toBe(expected);
+    expect(result.isProgressive).toBe(true);
+  });
+
+  it('blended rate = annualTotal / area', () => {
+    const result = findRate(mockCity, 'residential', 'size_based', 'all', 70);
+    expect(result.rate).toBeCloseTo(result.annualTotal / 70, 2);
+  });
+});
+
+// ── findByPropertyCode ──────────────────────────────────────────────
+
+describe('findByPropertyCode', () => {
+  it('"120" → size_based range → residential/size_based/all/rate 40', () => {
+    const result = findByPropertyCode(mockCity, '120');
+    expect(result).not.toBeNull();
+    expect(result!.typeCode).toBe('residential');
+    expect(result!.subtypeCode).toBe('size_based');
+    expect(result!.zoneCode).toBe('all');
+    expect(result!.rate).toBe(40);
+  });
+
+  it('"101" → zone direct → residential/standard/א/rate 95', () => {
+    const result = findByPropertyCode(mockCity, '101');
+    expect(result).not.toBeNull();
+    expect(result!.typeCode).toBe('residential');
+    expect(result!.subtypeCode).toBe('standard');
+    expect(result!.zoneCode).toBe('א');
+    expect(result!.rate).toBe(95);
+  });
+
+  it('"999" → null (not found)', () => {
+    const result = findByPropertyCode(mockCity, '999');
+    expect(result).toBeNull();
+  });
+
+  it('"301" → business/retail/א/rate 400', () => {
+    const result = findByPropertyCode(mockCity, '301');
+    expect(result).not.toBeNull();
+    expect(result!.typeCode).toBe('business');
+    expect(result!.subtypeCode).toBe('retail');
+    expect(result!.zoneCode).toBe('א');
+    expect(result!.rate).toBe(400);
+  });
+});
+
+// ── resolveBestExemption ────────────────────────────────────────────
+
+describe('resolveBestExemption', () => {
+  it('picks highest discount from multiple codes', () => {
+    const result = resolveBestExemption(mockCity, ['senior_25', 'disabled_80']);
+    expect(result).not.toBeNull();
+    expect(result!.subSectionCode).toBe('disabled_80');
+    expect(result!.discountPercent).toBe(80);
+  });
+
+  it('returns null when only code is ineligible', () => {
+    const result = resolveBestExemption(mockCity, ['income_80_large'], 3);
+    expect(result).toBeNull();
+  });
+
+  it('picks only eligible code when some are ineligible', () => {
+    const result = resolveBestExemption(mockCity, ['income_80_large', 'senior_25'], 3);
+    expect(result).not.toBeNull();
+    expect(result!.subSectionCode).toBe('senior_25');
+    expect(result!.discountPercent).toBe(25);
+  });
+
+  it('returns null for empty array', () => {
+    const result = resolveBestExemption(mockCity, []);
+    expect(result).toBeNull();
+  });
+});
+
+// ── Validation edge cases ───────────────────────────────────────────
+
+describe('Validation edge cases', () => {
+  it('propertyAreaSqm = 0 → throws', () => {
+    expect(() => calculatePropertyTax(mockCity, {
+      propertyType: 'residential', subType: 'standard', zone: 'א',
+      propertyAreaSqm: 0, bimonthlyPayment: 100,
+    })).toThrow('שטח הנכס חייב להיות גדול מ-0');
+  });
+
+  it('propertyAreaSqm negative → throws', () => {
+    expect(() => calculatePropertyTax(mockCity, {
+      propertyType: 'residential', subType: 'standard', zone: 'א',
+      propertyAreaSqm: -10, bimonthlyPayment: 100,
+    })).toThrow('שטח הנכס חייב להיות גדול מ-0');
+  });
+
+  it('bimonthlyPayment negative → throws', () => {
+    expect(() => calculatePropertyTax(mockCity, {
+      propertyType: 'residential', subType: 'standard', zone: 'א',
+      propertyAreaSqm: 80, bimonthlyPayment: -50,
+    })).toThrow('סכום התשלום חייב להיות גדול מ-0');
+  });
+
+  it('correctedAreaSqm = 0 → throws', () => {
+    expect(() => calculatePropertyTax(mockCity, {
+      propertyType: 'residential', subType: 'standard', zone: 'א',
+      propertyAreaSqm: 100, correctedAreaSqm: 0, bimonthlyPayment: 100,
+    })).toThrow('שטח הנכס חייב להיות גדול מ-0');
+  });
+
+  it('correctedAreaSqm + extras = correct totalArea', () => {
+    const result = calculatePropertyTax(mockCity, {
+      propertyType: 'residential', subType: 'standard', zone: 'א',
+      propertyAreaSqm: 100, correctedAreaSqm: 60,
+      coveredBalconySqm: 10, storageSqm: 5,
+      bimonthlyPayment: 1187.5, // 75×95/6
+    });
+    expect(result.totalAreaSqm).toBe(75); // 60 + 10 + 5
+  });
+});
+
+// ── Tolerance boundary (10₪) ────────────────────────────────────────
+
+describe('Tolerance boundary (±10₪)', () => {
+  // calculated bimonthly for 80sqm zone א = 1266.67
+
+  it('diff = +10₪ exactly → match', () => {
+    const result = calculatePropertyTax(mockCity, {
+      propertyType: 'residential', subType: 'standard', zone: 'א',
+      propertyAreaSqm: 80, bimonthlyPayment: 1276.67,
+    });
     expect(result.outcome).toBe('match');
   });
 
-  it('multi-designation with disabled_40 exemption: verify discount applied', () => {
-    const designations = [
-      { typeCode: 'industry', subtypeCode: 'manufacturing', zone: 'ד', areaSqm: 200 },
-      { typeCode: 'industry', subtypeCode: 'storage', zone: 'ד', areaSqm: 300 },
-    ];
-    // manufacturing 200 × 180 = 36000
-    // storage 300 × 80 = 24000
-    // total annual before = 60000
-    // disabled_40: 40% discount, maxAreaSqm 100
-    // eligibleArea = min(500, 100) = 100
-    // discountRatio = 100 / 500 = 0.2
-    // annualAfter = 60000 × (1 - 0.40 × 0.2) = 60000 × 0.92 = 55200
-    // bimonthly = 55200 / 6 = 9200
-    const result = calculateBusinessPropertyTax(
-      mockCity,
-      designations,
-      15000, // overpaying
-      'disabled_40',
-    );
-    expect(result.appliedExemption).toBeDefined();
-    expect(result.appliedExemption!.discountPercent).toBe(40);
-    expect(result.appliedExemption!.eligibleAreaSqm).toBe(100);
-    expect(result.calculatedBimonthly).toBeCloseTo(9200, 0);
+  it('diff = +10.01₪ → overpaying', () => {
+    const result = calculatePropertyTax(mockCity, {
+      propertyType: 'residential', subType: 'standard', zone: 'א',
+      propertyAreaSqm: 80, bimonthlyPayment: 1276.68,
+    });
     expect(result.outcome).toBe('overpaying');
+  });
+
+  it('diff = -10₪ exactly → match', () => {
+    const result = calculatePropertyTax(mockCity, {
+      propertyType: 'residential', subType: 'standard', zone: 'א',
+      propertyAreaSqm: 80, bimonthlyPayment: 1256.67,
+    });
+    expect(result.outcome).toBe('match');
+  });
+
+  it('diff = -10.01₪ → underpaying', () => {
+    const result = calculatePropertyTax(mockCity, {
+      propertyType: 'residential', subType: 'standard', zone: 'א',
+      propertyAreaSqm: 80, bimonthlyPayment: 1256.66,
+    });
+    expect(result.outcome).toBe('underpaying');
+  });
+});
+
+// ── selectedExemptionCodes backward compat ──────────────────────────
+
+describe('selectedExemptionCodes backward compat', () => {
+  it('array picks best: [senior_25, disabled_80] → disabled_80', () => {
+    const result = calculatePropertyTax(mockCity, {
+      propertyType: 'residential', subType: 'standard', zone: 'א',
+      propertyAreaSqm: 80, bimonthlyPayment: 1266.67,
+      selectedExemptionCodes: ['senior_25', 'disabled_80'],
+    });
+    expect(result.appliedExemption).toBeDefined();
+    expect(result.appliedExemption!.subSectionCode).toBe('disabled_80');
+    expect(result.appliedExemption!.discountPercent).toBe(80);
+  });
+
+  it('single code (backward compat) still works', () => {
+    const result = calculatePropertyTax(mockCity, {
+      propertyType: 'residential', subType: 'standard', zone: 'א',
+      propertyAreaSqm: 80, bimonthlyPayment: 1266.67,
+      selectedExemptionCode: 'senior_25',
+    });
+    expect(result.appliedExemption).toBeDefined();
+    expect(result.appliedExemption!.subSectionCode).toBe('senior_25');
   });
 });

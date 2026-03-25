@@ -73,7 +73,7 @@ export interface WizardState {
   contactRedirectReason: 'area' | 'designations' | 'city' | 'other_city' | 'error' | null;
 }
 
-const initialState: WizardState = {
+export const initialState: WizardState = {
   currentStep: 0,
   propertyType: null,
   citySlug: '',
@@ -143,11 +143,11 @@ export type WizardAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_CONTACT_REDIRECT'; payload: WizardState['contactRedirectReason'] };
 
-function shouldSkipExemptions(state: WizardState): boolean {
+export function shouldSkipExemptions(state: WizardState): boolean {
   return state.propertyType === 'business';
 }
 
-function wizardReducer(state: WizardState, action: WizardAction): WizardState {
+export function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   switch (action.type) {
     case 'SET_STEP':
       return { ...state, currentStep: action.step };
@@ -205,7 +205,7 @@ export interface StepProps {
 
 // ── Validation checks ──
 
-function getContactRedirectReason(state: WizardState): WizardState['contactRedirectReason'] {
+export function getContactRedirectReason(state: WizardState): WizardState['contactRedirectReason'] {
   // Check "עיר אחרת" (other city — not in database)
   if (state.citySlug === 'other') return 'other_city';
 

@@ -318,6 +318,15 @@ export function calculatePropertyTax(
   tariff: ICityTariff,
   input: TaxCalculationInput
 ): TaxCalculationResult {
+  // Validation
+  const effectiveArea = input.correctedAreaSqm ?? input.propertyAreaSqm;
+  if (effectiveArea <= 0) {
+    throw new Error('שטח הנכס חייב להיות גדול מ-0');
+  }
+  if (input.bimonthlyPayment < 0) {
+    throw new Error('סכום התשלום חייב להיות גדול מ-0');
+  }
+
   // Use corrected area if provided (measurement error)
   const mainArea = input.correctedAreaSqm ?? input.propertyAreaSqm;
   const totalArea =
@@ -379,8 +388,8 @@ export function calculatePropertyTax(
   const calculatedBimonthly = Math.round((annualAfterExemption / 6) * 100) / 100;
   const reportedBimonthly = input.bimonthlyPayment;
 
-  // Determine outcome (5₪ tolerance)
-  const TOLERANCE = 5;
+  // Determine outcome (10₪ tolerance)
+  const TOLERANCE = 10;
   const diff = reportedBimonthly - calculatedBimonthly;
   let outcome: 'match' | 'overpaying' | 'underpaying';
   if (Math.abs(diff) <= TOLERANCE) {
@@ -424,6 +433,17 @@ export function calculateBusinessPropertyTax(
   householdSize?: number,
   childrenCount?: number
 ): TaxCalculationResult {
+  // Validation
+  if (designations.length === 0) {
+    throw new Error('לא ניתן לחשב ללא ייעודים');
+  }
+  if (designations.length > 1) {
+    throw new Error('מספר ייעודים — יש לפנות לנציג');
+  }
+  if (bimonthlyPayment < 0) {
+    throw new Error('סכום התשלום חייב להיות גדול מ-0');
+  }
+
   let totalAnnual = 0;
   let totalArea = 0;
   let lastRate = 0;
@@ -435,6 +455,11 @@ export function calculateBusinessPropertyTax(
     totalArea += d.areaSqm;
     lastRate = rate;
     lastPropertyCode = propertyCode;
+  }
+
+  // Validate total area
+  if (totalArea > 1000) {
+    throw new Error('שטח מעל 1000 מ"ר — יש לפנות לנציג');
   }
 
   const annualBeforeExemption = totalAnnual;
@@ -464,7 +489,7 @@ export function calculateBusinessPropertyTax(
 
   const calculatedBimonthly = Math.round((annualAfterExemption / 6) * 100) / 100;
   const diff = bimonthlyPayment - calculatedBimonthly;
-  const TOLERANCE = 5;
+  const TOLERANCE = 10;
 
   let outcome: 'match' | 'overpaying' | 'underpaying';
   if (Math.abs(diff) <= TOLERANCE) {
