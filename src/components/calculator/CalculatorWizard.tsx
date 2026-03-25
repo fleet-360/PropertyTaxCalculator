@@ -286,7 +286,7 @@ export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
   if (redirectReason || state.contactRedirectReason) {
     return (
       <Container maxWidth="md">
-        <ContactRedirectStep reason={redirectReason ?? state.contactRedirectReason!} />
+        <ContactRedirectStep reason={redirectReason ?? state.contactRedirectReason!} dispatch={dispatch} />
       </Container>
     );
   }

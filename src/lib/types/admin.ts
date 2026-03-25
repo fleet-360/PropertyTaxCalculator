@@ -55,10 +55,11 @@ export interface CustomerListItem {
 }
 
 // ── Stat card props (admin dashboard) ───────────────────────────────
+export type StatPaletteColor = 'primary' | 'secondary' | 'success' | 'warning' | 'error';
+
 export interface StatCardProps {
   title: string;
   value: number | string;
   icon: ReactNode;
-  color: string;
-  loading: boolean;
+  color: StatPaletteColor;
 }

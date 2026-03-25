@@ -6,9 +6,12 @@ import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
+import { WizardAction } from '../CalculatorWizard';
+import { Dispatch } from 'react';
 
 interface ContactRedirectStepProps {
   reason: 'area' | 'designations' | 'city' | 'other_city' | 'error';
+  dispatch: Dispatch<WizardAction> ;
 }
 
 const MESSAGES: Record<ContactRedirectStepProps['reason'], { title: string; body: string }> = {
@@ -34,7 +37,7 @@ const MESSAGES: Record<ContactRedirectStepProps['reason'], { title: string; body
   },
 };
 
-export default function ContactRedirectStep({ reason }: ContactRedirectStepProps) {
+export default function ContactRedirectStep({ reason, dispatch }: ContactRedirectStepProps) {
   const msg = MESSAGES[reason];
 
   return (
@@ -67,8 +70,8 @@ export default function ContactRedirectStep({ reason }: ContactRedirectStepProps
       </Box>
 
       <Box textAlign="center">
-        <Button variant="text" href="/#hero">
-          חזרה לדף הבית
+        <Button variant="text" onClick={() => dispatch({ type: 'RESET_CALCULATOR' })}>
+          חזרה להתחלה
         </Button>
       </Box>
     </Box>
