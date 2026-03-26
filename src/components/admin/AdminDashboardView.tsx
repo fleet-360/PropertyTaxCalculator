@@ -98,8 +98,8 @@ export default function AdminDashboardView({ posts, stats }: AdminDashboardViewP
     { title: 'מפורסמים', value: stats.published, icon: <PublishIcon />, color: 'success' },
     { title: 'ערים', value: stats.cities, icon: <LocationCityIcon />, color: 'secondary' },
     { title: 'קופונים פעילים', value: stats.activeCoupons, icon: <LocalOfferIcon />, color: 'warning' },
-    { title: 'לקוחות', value: stats.totalCustomers, icon: <PeopleIcon />, color: 'primary' },
-    { title: 'פניות חדשות', value: stats.newContacts, icon: <ContactMailIcon />, color: 'error' },
+    { title: 'לידים', value: stats.totalLeads, icon: <PeopleIcon />, color: 'primary' },
+    { title: 'לידים חדשים', value: stats.newLeads, icon: <ContactMailIcon />, color: 'error' },
     {
       title: 'סטטוס מערכת',
       value: stats.systemEnabled ? 'פעיל' : 'מושבת',

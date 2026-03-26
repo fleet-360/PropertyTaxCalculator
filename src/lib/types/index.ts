@@ -51,10 +51,13 @@ export type {
 } from './post';
 
 export type {
-  ContactSource,
-  ContactStatus,
-  IContactRequestData,
-} from './contact-request';
+  LeadSource,
+  LeadStatus,
+  CalculationStatus,
+  AbandonmentStage,
+  ICalculationEntry,
+  ILeadData,
+} from './lead';
 
 export type {
   DiscountType,
@@ -76,8 +79,7 @@ export type {
 
 export type {
   CitySummary,
-  CustomerStatus,
   PaymentStatus,
-  CustomerListItem,
+  LeadListItem,
   StatCardProps,
 } from './admin';

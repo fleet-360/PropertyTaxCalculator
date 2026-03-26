@@ -1,16 +1,14 @@
 import mongoose from 'mongoose';
 import dbConnect from '@/lib/mongodb';
 import CityTariff from '@/lib/models/CityTariff';
-import Customer from '@/lib/models/Customer';
-import ContactRequest from '@/lib/models/ContactRequest';
+import Lead from '@/lib/models/Lead';
 import Coupon from '@/lib/models/Coupon';
 import Post from '@/lib/models/Post';
 import SystemConfig from '@/lib/models/SystemConfig';
 import Settings from '@/lib/models/Settings';
 import { requireAdminSession } from '@/lib/admin/requireAdminSession';
-import type { CitySummary, CustomerListItem } from '@/lib/types/admin';
+import type { CitySummary, LeadListItem } from '@/lib/types/admin';
 import type { ICouponData } from '@/lib/types/coupon';
-import type { IContactRequestData } from '@/lib/types/contact-request';
 import type { PostListItem, PostSortField, SortDirection } from '@/lib/types/post';
 import type { ISystemConfigData } from '@/lib/types/system-config';
 import type { ISettingsData } from '@/lib/types/settings';
@@ -134,20 +132,24 @@ export async function loadPostLeanForEditor(id: string): Promise<Record<string, 
   return JSON.parse(JSON.stringify(post)) as Record<string, unknown>;
 }
 
-export type CustomersAdminListResult = {
-  customers: CustomerListItem[];
+// ── Leads (unified customers + contacts) ─────────────────────────────
+
+export type LeadsAdminListResult = {
+  leads: LeadListItem[];
   total: number;
   page: number;
   totalPages: number;
 };
 
-export async function loadCustomersAdminList(opts: {
+export async function loadLeadsAdminList(opts: {
   page: number;
   limit: number;
   search: string;
   status: string;
+  source: string;
+  abandonmentStage: string;
   city: string;
-}): Promise<CustomersAdminListResult> {
+}): Promise<LeadsAdminListResult> {
   await requireAdminSession();
   await dbConnect();
 
@@ -158,8 +160,14 @@ export async function loadCustomersAdminList(opts: {
   if (opts.status) {
     filter.status = opts.status;
   }
+  if (opts.source) {
+    filter.source = opts.source;
+  }
+  if (opts.abandonmentStage) {
+    filter['calculations.abandonmentStage'] = opts.abandonmentStage;
+  }
   if (opts.city) {
-    filter.citySlug = opts.city;
+    filter['calculations.citySlug'] = opts.city;
   }
   if (opts.search) {
     filter.$or = [
@@ -172,88 +180,40 @@ export async function loadCustomersAdminList(opts: {
 
   const skip = (page - 1) * limit;
 
-  const [customers, total] = await Promise.all([
-    Customer.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-    Customer.countDocuments(filter),
+  const [leads, total] = await Promise.all([
+    Lead.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+    Lead.countDocuments(filter),
   ]);
 
   const totalPages = Math.ceil(total / limit);
 
-  const mapped: CustomerListItem[] = customers.map((c) => ({
-    _id: String(c._id),
-    fullName: c.fullName,
-    idNumber: c.idNumber,
-    email: c.email,
-    phone: c.phone,
-    propertyType: c.propertyType,
-    citySlug: c.citySlug,
-    propertyNumber: c.propertyNumber,
-    propertyId: c.propertyId,
-    address: c.address,
-    propertyArea: c.propertyArea,
-    coveredBalconyArea: c.coveredBalconyArea,
-    storageArea: c.storageArea,
-    parkingArea: c.parkingArea,
-    classificationCode: c.classificationCode,
-    zone: c.zone,
-    bimonthlyPayment: c.bimonthlyPayment,
-    calculationResult: c.calculationResult,
-    householdSize: c.householdSize,
-    childrenCount: c.childrenCount,
-    paymentStatus: c.paymentStatus,
-    status: c.status,
-    createdAt: toIso(c.createdAt),
-    updatedAt: toIso(c.updatedAt),
+  const mapped: LeadListItem[] = leads.map((l) => ({
+    _id: String(l._id),
+    fullName: l.fullName,
+    phone: l.phone,
+    email: l.email,
+    idNumber: l.idNumber,
+    source: l.source,
+    status: l.status,
+    message: l.message,
+    paymentStatus: l.paymentStatus,
+    calculations: (l.calculations || []).map((c) => {
+      // Deep-serialize to plain object — strips Mongoose ObjectId buffers
+      const plain = JSON.parse(JSON.stringify(c));
+      delete plain._id;
+      return {
+        ...plain,
+        createdAt: c.createdAt ? toIso(c.createdAt) : new Date().toISOString(),
+      };
+    }),
+    createdAt: toIso(l.createdAt),
+    updatedAt: toIso(l.updatedAt),
   }));
 
-  return { customers: mapped, total, page, totalPages };
+  return { leads: mapped, total, page, totalPages };
 }
 
-export type ContactsAdminListResult = {
-  contacts: IContactRequestData[];
-  total: number;
-  page: number;
-  totalPages: number;
-};
-
-export async function loadContactsAdminList(opts: {
-  page: number;
-  limit: number;
-  status: string;
-}): Promise<ContactsAdminListResult> {
-  await requireAdminSession();
-  await dbConnect();
-
-  const page = Math.max(1, opts.page);
-  const limit = Math.max(1, Math.min(100, opts.limit));
-  const filter: Record<string, unknown> = {};
-  if (opts.status) {
-    filter.status = opts.status;
-  }
-
-  const skip = (page - 1) * limit;
-
-  const [contacts, total] = await Promise.all([
-    ContactRequest.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-    ContactRequest.countDocuments(filter),
-  ]);
-
-  const totalPages = Math.ceil(total / limit);
-
-  const mapped: IContactRequestData[] = contacts.map((c) => ({
-    _id: String(c._id),
-    name: c.name,
-    phone: c.phone,
-    email: c.email,
-    message: c.message,
-    source: c.source,
-    status: c.status,
-    createdAt: toIso(c.createdAt),
-    updatedAt: toIso(c.updatedAt),
-  }));
-
-  return { contacts: mapped, total, page, totalPages };
-}
+// ── Posts ─────────────────────────────────────────────────────────────
 
 const POST_SORT_FIELDS: PostSortField[] = [
   'title',
@@ -303,9 +263,8 @@ export async function loadPostsAdminList(opts: {
   }
 
   const sortField = normalizePostSortField(opts.sortField);
-  const sortPrefix = opts.sortDirection === 'desc' ? '-' : '';
   const sortObj: Record<string, 1 | -1> = {};
-  if (sortPrefix === '-') {
+  if (opts.sortDirection === 'desc') {
     sortObj[sortField] = -1;
   } else {
     sortObj[sortField] = 1;

@@ -158,13 +158,14 @@ export default function Navbar({ variant = "landing" }: { variant?: NavbarVarian
             <Toolbar disableGutters sx={{ gap: "43px" }}>
               {/* Right side — Logo */}
               <Box
-                component={"a"}
+                component={Link}
                 href="/"
                 sx={{
                   display: {xs:"none","md":"flex"},
                   alignItems: "center",
                   gap: 1.5,
                   textDecoration: "none",
+                  cursor: "pointer",
                 }}
               >
                 {/* TODO: Replace with actual logo image */}

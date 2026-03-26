@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   useForm,
   Controller,
@@ -79,7 +79,7 @@ function createDataEntrySchema(isBusiness: boolean) {
   return z
     .object({
       fullName: z.string().min(1, "שדה חובה"),
-      idNumber: z.string().regex(/^\d+$/, "יש להזין ספרות בלבד"),
+      idNumber: z.string().regex(/^\d+$/, "יש להזין ספרות בלבד").or(z.literal("")).optional(),
       email: z.string().email("כתובת מייל לא תקינה").or(z.literal("")),
       phone: z.string(),
       propertyPurpose: z.string(),
@@ -507,7 +507,61 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
   const [suggestedClass, setSuggestedClass] = useState(state.classificationError?.suggested ?? '');
   const allSubtypes: ISubType[] = cityData?.types.flatMap((t: IPropertyType) => t.subtypes) ?? [];
 
-  const onSubmit = (data: FormData) => {
+  // ── Auto-save lead when name + phone are filled ──
+  const watchedFullName = useWatch({ control, name: "fullName" });
+  const watchedPhone = useWatch({ control, name: "phone" });
+  const watchedEmail = useWatch({ control, name: "email" });
+  const watchedIdNumber = useWatch({ control, name: "idNumber" });
+  const leadSavedRef = useRef(false);
+
+  const saveLeadEarly = useCallback(async (fullName: string, phone: string, email: string, idNumber: string) => {
+    if (state.leadId) return; // Already saved
+    if (leadSavedRef.current) return;
+    leadSavedRef.current = true;
+
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName,
+          phone,
+          email: email || undefined,
+          idNumber: idNumber || undefined,
+          source: 'calculator',
+          calculation: {
+            abandonmentStage: 'data_entry',
+            propertyType: state.propertyType,
+            citySlug: state.citySlug,
+          },
+        }),
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        dispatch({ type: 'SET_LEAD_ID', payload: String(result.lead._id) });
+        dispatch({ type: 'SET_CALCULATION_INDEX', payload: result.calculationIndex });
+      } else {
+        leadSavedRef.current = false; // Allow retry on failure
+      }
+    } catch {
+      leadSavedRef.current = false; // Allow retry on failure
+    }
+  }, [state.leadId, state.propertyType, state.citySlug, dispatch]);
+
+  useEffect(() => {
+    const name = watchedFullName?.trim();
+    const phone = watchedPhone?.trim();
+    if (!name || !phone || name.length < 2 || phone.length < 9) return;
+
+    const timeout = setTimeout(() => {
+      saveLeadEarly(name, phone, watchedEmail || '', watchedIdNumber || '');
+    }, 800);
+
+    return () => clearTimeout(timeout);
+  }, [watchedFullName, watchedPhone, watchedEmail, watchedIdNumber, saveLeadEarly]);
+
+  const onSubmit = async (data: FormData) => {
     const fieldKeys = Object.keys(data) as (keyof FormData)[];
     for (const key of fieldKeys) {
       if (key === "designations") {
@@ -546,6 +600,80 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
     } else {
       dispatch({ type: 'SET_CLASSIFICATION_ERROR', payload: null });
     }
+
+    // Update lead with full property details
+    if (data.phone && data.fullName) {
+      try {
+        if (state.leadId) {
+          // Lead already exists (created by auto-save) — update with property details
+          await fetch(`/api/leads/${state.leadId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fullName: data.fullName,
+              email: data.email || undefined,
+              idNumber: data.idNumber || undefined,
+              calculationIndex: state.calculationIndex,
+              calculationUpdate: {
+                propertyType: state.propertyType,
+                citySlug: state.citySlug,
+                propertyNumber: data.propertyNumber || undefined,
+                propertyId: data.propertyId || undefined,
+                address: data.address || undefined,
+                blockParcel: data.block && data.parcel ? { block: data.block, parcel: data.parcel } : undefined,
+                propertyArea: data.propertyArea || undefined,
+                coveredBalconyArea: data.coveredBalconyArea || undefined,
+                storageArea: data.storageArea || undefined,
+                parkingArea: data.parkingArea || undefined,
+                classificationCode: data.classificationCode || undefined,
+                zone: isBusiness ? undefined : data.zone || undefined,
+                bimonthlyPayment: bimonthly || undefined,
+                designations: isBusiness ? data.designations : undefined,
+              },
+            }),
+          });
+        } else {
+          // Lead not yet created (auto-save didn't fire) — create now with full data
+          const res = await fetch('/api/leads', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fullName: data.fullName,
+              phone: data.phone,
+              email: data.email || undefined,
+              idNumber: data.idNumber || undefined,
+              source: 'calculator',
+              calculation: {
+                abandonmentStage: 'data_entry',
+                propertyType: state.propertyType,
+                citySlug: state.citySlug,
+                propertyNumber: data.propertyNumber || undefined,
+                propertyId: data.propertyId || undefined,
+                address: data.address || undefined,
+                blockParcel: data.block && data.parcel ? { block: data.block, parcel: data.parcel } : undefined,
+                propertyArea: data.propertyArea || undefined,
+                coveredBalconyArea: data.coveredBalconyArea || undefined,
+                storageArea: data.storageArea || undefined,
+                parkingArea: data.parkingArea || undefined,
+                classificationCode: data.classificationCode || undefined,
+                zone: isBusiness ? undefined : data.zone || undefined,
+                bimonthlyPayment: bimonthly || undefined,
+                designations: isBusiness ? data.designations : undefined,
+              },
+            }),
+          });
+
+          if (res.ok) {
+            const result = await res.json();
+            dispatch({ type: 'SET_LEAD_ID', payload: String(result.lead._id) });
+            dispatch({ type: 'SET_CALCULATION_INDEX', payload: result.calculationIndex });
+          }
+        }
+      } catch {
+        // Non-blocking: continue even if save fails
+      }
+    }
+
     dispatch({ type: "NEXT_STEP" });
   };
 
@@ -602,12 +730,21 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
         </Box>
         <Box sx={{ minWidth: 0 }}>
           <Controller
+            name="phone"
+            control={control}
+            render={({ field }) => (
+              <TextField {...field} label="טלפון *" fullWidth size="small" />
+            )}
+          />
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
+          <Controller
             name="idNumber"
             control={control}
             render={({ field }) => (
               <TextField
                 {...field}
-                label="ת.ז./ח.פ *"
+                label="ת.ז./ח.פ"
                 fullWidth
                 size="small"
                 error={!!errors.idNumber}
@@ -632,15 +769,7 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
             )}
           />
         </Box>
-        <Box sx={{ minWidth: 0 }}>
-          <Controller
-            name="phone"
-            control={control}
-            render={({ field }) => (
-              <TextField {...field} label="טלפון" fullWidth size="small" />
-            )}
-          />
-        </Box>
+   
 
         {/* Business designations */}
         {isBusiness && (
