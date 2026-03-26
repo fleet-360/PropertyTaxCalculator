@@ -1,71 +1,138 @@
-'use client';
+"use client";
 
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import Button from '@mui/material/Button';
-import PrintIcon from '@mui/icons-material/Print';
-import GavelIcon from '@mui/icons-material/Gavel';
-import type { StepProps } from '../CalculatorWizard';
+import { useState } from "react";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
+import Button from "@mui/material/Button";
+import PrintIcon from "@mui/icons-material/Print";
+import EmailIcon from "@mui/icons-material/Email";
+import GavelIcon from "@mui/icons-material/Gavel";
+import type { StepProps } from "../CalculatorWizard";
+import { usePrint } from "@/hooks/usePrint";
+import { useEmailSend } from "@/hooks/useEmailSend";
+import EmailSendDialog from "@/components/common/EmailSendDialog";
 
 export default function ResultsDisplayStep({ state, dispatch }: StepProps) {
   const result = state.calculationResult ?? {};
   const reported = state.bimonthlyPayment;
-  const calculated = result.calculatedBimonthly ?? result.calculated ?? reported;
+  const calculated =
+    result.calculatedBimonthly ?? result.calculated ?? reported;
   const biMonthlySavings = reported - calculated;
   const annualSavings = biMonthlySavings * 6;
   const tenYearSavings = annualSavings * 10;
 
+  const { print } = usePrint();
+  const { sendEmail } = useEmailSend();
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+
   const rows = [
-    { label: 'סכום לחודשיים (מדווח)', value: `${reported.toLocaleString()} ₪` },
-    { label: 'סכום לחודשיים (לפי המחשבון)', value: `${calculated.toLocaleString()} ₪` },
-    { label: 'הנחה לחודשיים', value: `${biMonthlySavings.toLocaleString()} ₪` },
-    { label: 'חיסכון שנתי', value: `${annualSavings.toLocaleString()} ₪` },
-    { label: 'חיסכון ל-10 שנים', value: `${tenYearSavings.toLocaleString()} ₪` },
+    { label: "סכום לחודשיים (מדווח)", value: `${reported.toLocaleString()} ₪` },
+    {
+      label: "סכום לחודשיים (לפי המחשבון)",
+      value: `${calculated.toLocaleString()} ₪`,
+    },
+    { label: "הנחה לחודשיים", value: `${biMonthlySavings.toLocaleString()} ₪` },
+    { label: "חיסכון שנתי", value: `${annualSavings.toLocaleString()} ₪` },
+    {
+      label: "חיסכון ל-10 שנים",
+      value: `${tenYearSavings.toLocaleString()} ₪`,
+    },
   ];
+
+  const handleSendResultsEmail = async (email: string) => {
+    const result = await sendEmail({
+      type: 'results',
+      to: email,
+      payload: {
+        fullName: state.fullName,
+        cityName: state.cityData?.cityName ?? '',
+        reported,
+        calculated,
+        biMonthlySavings,
+        annualSavings,
+        tenYearSavings,
+      },
+    });
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+  };
 
   return (
     <Box>
-      <Typography variant="h5" textAlign="center" mb={4}>
-        תוצאות מפורטות
-      </Typography>
+      <Box id="results-printable">
+        <Typography variant="h5" textAlign="center" mb={4}>
+          תוצאות מפורטות
+        </Typography>
 
-      <TableContainer component={Paper} variant="outlined" sx={{ mb: 4 }}>
-        <Table>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow key={row.label}>
-                <TableCell sx={{ fontWeight: 600 }}>{row.label}</TableCell>
-                <TableCell align="left">{row.value}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+        <TableContainer component={Paper} variant="outlined" sx={{ mb: 4 }}>
+          <Table>
+            <TableBody>
+              {rows.map((row) => (
+                <TableRow key={row.label}>
+                  <TableCell sx={{ fontWeight: 600 }}>{row.label}</TableCell>
+                  <TableCell align="left">{row.value}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
 
-      <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-        <Button variant="outlined" startIcon={<PrintIcon />} onClick={() => window.print()}>
+      <Box
+        sx={{
+          display: "flex",
+          gap: 2,
+          justifyContent: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <Button
+          variant="outlined"
+          startIcon={<PrintIcon />}
+          onClick={() => print({ id: "results-printable" })}
+        >
           הדפס תוצאות
+        </Button>
+        <Button
+          variant="outlined"
+          startIcon={<EmailIcon />}
+          onClick={() => setEmailDialogOpen(true)}
+        >
+          שלח למייל
         </Button>
         <Button
           variant="contained"
           startIcon={<GavelIcon />}
-          onClick={() => dispatch({ type: 'NEXT_STEP' })}
+          onClick={() => dispatch({ type: "NEXT_STEP" })}
         >
           הגש השגה לעירייה
         </Button>
       </Box>
 
-      <Box sx={{ display: 'flex', justifyContent: 'flex-start', mt: 4 }}>
-        <Button variant="outlined" onClick={() => dispatch({ type: 'PREV_STEP' })}>
+      <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 4 }}>
+        <Button
+          variant="outlined"
+          onClick={() => dispatch({ type: "PREV_STEP" })}
+        >
           חזרה
         </Button>
       </Box>
+
+      <EmailSendDialog
+        open={emailDialogOpen}
+        onClose={() => setEmailDialogOpen(false)}
+        onSend={handleSendResultsEmail}
+        defaultEmail={state.email}
+        title="שליחת תוצאות למייל"
+        description="התוצאות יישלחו לכתובת המייל שלך."
+      />
     </Box>
   );
 }

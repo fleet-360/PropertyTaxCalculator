@@ -80,7 +80,7 @@ function createDataEntrySchema(isBusiness: boolean) {
     .object({
       fullName: z.string().min(1, "שדה חובה"),
       idNumber: z.string().regex(/^\d+$/, "יש להזין ספרות בלבד").or(z.literal("")).optional(),
-      email: z.string().email("כתובת מייל לא תקינה").or(z.literal("")),
+      email: z.string().min(1, "שדה חובה").email("כתובת מייל לא תקינה"),
       phone: z.string(),
       propertyPurpose: z.string(),
       propertyNumber: z.string(),
