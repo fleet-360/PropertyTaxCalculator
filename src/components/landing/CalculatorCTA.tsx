@@ -1,10 +1,12 @@
 "use client";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Container, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { CalculatorMiaSpeechBubbleTyping } from "@/components/common/TypingText";
 import CalculatorUnavailableMessage from "@/components/calculator/CalculatorUnavailableMessage";
 import type { CalculatorFeatureConfig } from "@/lib/types/system-config";
+import type { IMiaMessageData } from "@/lib/types/mia-message";
 
 const CalculatorWizard = dynamic(
   () => import("@/components/calculator/CalculatorWizard"),
@@ -16,6 +18,35 @@ interface CalculatorCTAProps {
 }
 
 export default function CalculatorSection({ featureConfig }: CalculatorCTAProps) {
+  // ── Mia messages from DB ──
+  const [miaMessages, setMiaMessages] = useState<Record<string, IMiaMessageData>>({});
+  const [miaMessageId, setMiaMessageId] = useState("step-0-default");
+
+  useEffect(() => {
+    fetch("/api/mia-messages")
+      .then((r) => r.json())
+      .then((data) => {
+        const msgs: IMiaMessageData[] = data.messages ?? [];
+        const map: Record<string, IMiaMessageData> = {};
+        for (const m of msgs) {
+          map[m.messageId] = m;
+        }
+        setMiaMessages(map);
+      })
+      .catch(() => {
+        // Fallback: empty map — component will use hardcoded defaults
+      });
+  }, []);
+
+  const handleMiaMessage = useCallback((messageId: string) => {
+    setMiaMessageId(messageId);
+  }, []);
+
+  const currentMiaMessage = useMemo(
+    () => miaMessages[miaMessageId],
+    [miaMessages, miaMessageId],
+  );
+
   return (
     <Box
       id="calculator-section"
@@ -160,7 +191,10 @@ export default function CalculatorSection({ featureConfig }: CalculatorCTAProps)
                       overflowWrap: "break-word",
                     }}
                   >
-                    <CalculatorMiaSpeechBubbleTyping />
+                    <CalculatorMiaSpeechBubbleTyping
+                      title={currentMiaMessage?.title}
+                      description={currentMiaMessage?.description}
+                    />
                   </Box>
 
                   {/* Triangle pointer */}
@@ -212,7 +246,7 @@ export default function CalculatorSection({ featureConfig }: CalculatorCTAProps)
                 }}
               >
                 {featureConfig.systemEnabled ? (
-                  <CalculatorWizard features={featureConfig} />
+                  <CalculatorWizard features={featureConfig} onMiaMessage={handleMiaMessage} />
                 ) : (
                   <CalculatorUnavailableMessage variant="embedded" />
                 )}

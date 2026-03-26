@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Table from "@mui/material/Table";
@@ -19,6 +19,10 @@ import { useEmailSend } from "@/hooks/useEmailSend";
 import EmailSendDialog from "@/components/common/EmailSendDialog";
 
 export default function ResultsDisplayStep({ state, dispatch }: StepProps) {
+  useEffect(() => {
+    dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-6-default' });
+  }, [dispatch]);
+
   const result = state.calculationResult ?? {};
   const reported = state.bimonthlyPayment;
   const calculated =

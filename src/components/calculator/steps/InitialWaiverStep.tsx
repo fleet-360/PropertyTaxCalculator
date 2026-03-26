@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
@@ -13,6 +13,10 @@ const INITIAL_WAIVER_TEXT = `הנני מצהיר/ה ומאשר/ת כי מחשב�
 
 export default function InitialWaiverStep({ dispatch }: StepProps) {
   const [accepted, setAccepted] = useState(false);
+
+  useEffect(() => {
+    dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-1-default' });
+  }, [dispatch]);
 
   return (
     <Box>

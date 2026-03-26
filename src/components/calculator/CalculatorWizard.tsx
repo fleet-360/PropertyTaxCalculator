@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useReducer, Dispatch } from 'react';
+import { useEffect, useMemo, useReducer, Dispatch } from 'react';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import DocumentPreviewPopover from '@/components/common/DocumentPreviewPopover';
@@ -88,6 +88,8 @@ export interface WizardState {
   // Lead tracking
   leadId: string | null;
   calculationIndex: number;
+  // Mia speech bubble
+  miaMessageId: string;
 }
 
 export const initialState: WizardState = {
@@ -129,6 +131,7 @@ export const initialState: WizardState = {
   appliedCoupon: null,
   leadId: null,
   calculationIndex: 0,
+  miaMessageId: 'step-0-default',
 };
 
 // ── Step definitions ──
@@ -163,7 +166,8 @@ export type WizardAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_CONTACT_REDIRECT'; payload: WizardState['contactRedirectReason'] }
   | { type: 'SET_LEAD_ID'; payload: string }
-  | { type: 'SET_CALCULATION_INDEX'; payload: number };
+  | { type: 'SET_CALCULATION_INDEX'; payload: number }
+  | { type: 'SET_MIA_MESSAGE'; payload: string };
 
 export function shouldSkipExemptions(state: WizardState): boolean {
   return state.propertyType === 'business';
@@ -217,6 +221,8 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return { ...state, leadId: action.payload };
     case 'SET_CALCULATION_INDEX':
       return { ...state, calculationIndex: action.payload };
+    case 'SET_MIA_MESSAGE':
+      return { ...state, miaMessageId: action.payload };
     default:
       return state;
   }
@@ -271,11 +277,18 @@ function mergeFeatures(partial?: Partial<CalculatorFeatureConfig>): CalculatorFe
 
 export interface CalculatorWizardProps {
   features?: Partial<CalculatorFeatureConfig>;
+  onMiaMessage?: (messageId: string) => void;
 }
 
 export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
   const features = mergeFeatures(props.features);
+  const { onMiaMessage } = props;
   const [state, dispatch] = useReducer(wizardReducer, initialState);
+
+  // Notify parent whenever miaMessageId changes
+  useEffect(() => {
+    onMiaMessage?.(state.miaMessageId);
+  }, [state.miaMessageId, onMiaMessage]);
 
   const applied = state.appliedCoupon;
   const featuresContextValue = useMemo(
