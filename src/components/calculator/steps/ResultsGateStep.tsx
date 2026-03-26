@@ -9,10 +9,12 @@ import CircularProgress from '@mui/material/CircularProgress';
 import DummyPaymentDialog from '@/components/calculator/DummyPaymentDialog';
 import CouponPaymentSection from '@/components/calculator/CouponPaymentSection';
 import { useCalculatorFeatures } from '../CalculatorFeaturesContext';
+import { useEmailSend } from '@/hooks/useEmailSend';
 import type { StepProps } from '../CalculatorWizard';
 
 export default function ResultsGateStep({ state, dispatch }: StepProps) {
   const { paymentEnabled, calculatorChargeAmount } = useCalculatorFeatures();
+  const { sendEmail } = useEmailSend();
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const result = state.calculationResult;
 
@@ -38,7 +40,24 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
     goToDetailedResults();
   };
 
+  const sendInvoice = () => {
+    if (!state.email) return;
+    sendEmail({
+      type: 'invoice',
+      to: state.email,
+      payload: {
+        fullName: state.fullName,
+        itemDescription: 'צפייה בתוצאות מפורטות — מחשבון הארנונה',
+        amountNis: calculatorChargeAmount,
+        date: new Date().toISOString(),
+      },
+    }).catch(() => {
+      // Invoice sending is non-blocking
+    });
+  };
+
   const handlePaymentConfirm = () => {
+    sendInvoice();
     goToDetailedResults();
   };
 

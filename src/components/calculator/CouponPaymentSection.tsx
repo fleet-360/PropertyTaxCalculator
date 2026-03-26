@@ -94,6 +94,15 @@ export default function CouponPaymentSection({ state, dispatch, context }: Coupo
     });
   };
 
+  if(state.appliedCoupon) {
+    return <>
+    {state.appliedCoupon && !error && (
+          <Alert severity="success" sx={{ mt: 2 }}>
+            קופון <strong>{state.appliedCoupon.code}</strong> הוחל — הנחה {formatDiscount(state.appliedCoupon)}
+          </Alert>
+        )}</>;
+  }
+
   return (
     <Box sx={{ mb: 3 }}>
       <Typography variant="subtitle1" fontWeight={600} textAlign="center" mb={1}>
@@ -128,11 +137,7 @@ export default function CouponPaymentSection({ state, dispatch, context }: Coupo
             {error}
           </Alert>
         )}
-        {state.appliedCoupon && !error && (
-          <Alert severity="success" sx={{ mt: 2 }}>
-            קופון <strong>{state.appliedCoupon.code}</strong> הוחל — הנחה {formatDiscount(state.appliedCoupon)}
-          </Alert>
-        )}
+        
       </Box>
     </Box>
   );
