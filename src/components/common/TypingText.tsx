@@ -157,13 +157,32 @@ export const CALCULATOR_MIA_SPEECH_STEPS = [
   "3️⃣ קבל חישוב מיידי",
 ] as const;
 
-export function CalculatorMiaSpeechBubbleTyping() {
+export interface CalculatorMiaSpeechBubbleTypingProps {
+  title?: string;
+  description?: string;
+}
+
+export function CalculatorMiaSpeechBubbleTyping({
+  title,
+  description,
+}: CalculatorMiaSpeechBubbleTypingProps = {}) {
+  const displayTitle = title ?? CALCULATOR_MIA_SPEECH_TITLE;
+  const displayDescription = description ?? CALCULATOR_MIA_SPEECH_DESCRIPTION;
   const [phase, setPhase] = useState(0);
+
+  // Reset animation phase when content changes
+  useEffect(() => {
+    setPhase(0);
+  }, [displayTitle, displayDescription]);
+
+  // Use a key based on content to force re-mount of TypingText and restart animation
+  const contentKey = `${displayTitle}::${displayDescription}`;
 
   return (
     <>
       <TypingText
-        text={CALCULATOR_MIA_SPEECH_TITLE}
+        key={`title-${contentKey}`}
+        text={displayTitle}
         component="div"
         variant="body1"
         speed={50}
@@ -183,7 +202,8 @@ export function CalculatorMiaSpeechBubbleTyping() {
         <>
           <Box sx={{ height: 1, bgcolor: "#e5ebf7", mb: 1.5 }} />
           <TypingText
-            text={CALCULATOR_MIA_SPEECH_DESCRIPTION}
+            key={`desc-${contentKey}`}
+            text={displayDescription}
             component="div"
             variant="body1"
             speed={22}
@@ -192,30 +212,12 @@ export function CalculatorMiaSpeechBubbleTyping() {
               color: "#4d668c",
               textAlign: "left",
               lineHeight: 1.6,
-              mb: 1.5,
+              mb: 0,
               display: "block",
             }}
-            onComplete={() => setPhase(2)}
-            noAnimation={phase > 1} 
+            noAnimation={phase > 1}
           />
         </>
-      )}
-
-      {phase >= 2 && (
-        <TypingText
-          text={CALCULATOR_MIA_SPEECH_STEPS.join("\n\n")}
-          component="div"
-          variant="body1"
-          speed={22}
-          sx={{
-            fontSize: "12px",
-            fontWeight: 500,
-            color: "#2659cc",
-            display: "block",
-            mt: 0,
-            textAlign: "left",
-          }}
-        />
       )}
     </>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
@@ -20,6 +20,11 @@ const MAX_ROWS = 3;
 export default function ExemptionsStep({ state, dispatch }: StepProps) {
   const { updateLead } = useLeadUpdate();
   const exemptionSections: IExemptionSection[] = state.cityData?.exemptions ?? [];
+
+  // ── Mia message on mount ──
+  useEffect(() => {
+    dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-3-default' });
+  }, [dispatch]);
   const rows = state.selectedExemptions.length > 0
     ? state.selectedExemptions
     : [{ sectionCode: '', subSectionCode: '' }];

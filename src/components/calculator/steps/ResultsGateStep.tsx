@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
@@ -29,6 +29,17 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
 
   const outcome: string = result.outcome ?? 'match';
   const showPaymentBlock = paymentEnabled && (outcome === 'underpaying' || outcome === 'overpaying');
+
+  // ── Mia message based on outcome ──
+  useEffect(() => {
+    const miaId =
+      outcome === 'overpaying'
+        ? 'step-5-overpaying'
+        : outcome === 'underpaying'
+          ? 'step-5-underpaying'
+          : 'step-5-match';
+    dispatch({ type: 'SET_MIA_MESSAGE', payload: miaId });
+  }, [outcome, dispatch]);
 
   const goToDetailedResults = () => dispatch({ type: 'NEXT_STEP' });
 

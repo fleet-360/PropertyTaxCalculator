@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
@@ -22,6 +22,10 @@ export default function AppealStep({ state, dispatch }: StepProps) {
   const { paymentEnabled, appealChargeAmount } = useCalculatorFeatures();
   const { sendEmail } = useEmailSend();
   const [appealWaiverAccepted, setAppealWaiverAccepted] = useState(false);
+
+  useEffect(() => {
+    dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-7-default' });
+  }, [dispatch]);
   const [submitted, setSubmitted] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);

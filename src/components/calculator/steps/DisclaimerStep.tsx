@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
@@ -13,6 +14,10 @@ const DISCLAIMER_TEXT = `הנני מצהיר/ה ומאשר/ת כי מחשבון 
 
 export default function DisclaimerStep({ state, dispatch }: StepProps) {
   const { updateLead } = useLeadUpdate();
+
+  useEffect(() => {
+    dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-4-default' });
+  }, [dispatch]);
 
   return (
     <Box>

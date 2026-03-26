@@ -29,6 +29,11 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
 
+  // ── Mia message on mount ──
+  useEffect(() => {
+    dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-0-default' });
+  }, [dispatch]);
+
   useEffect(() => {
     fetch('/api/cities')
       .then((r) => r.json())
@@ -40,6 +45,10 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
   // ── Property type selection ──
   const handleSelectType = (value: 'private' | 'business') => {
     dispatch({ type: 'SET_PROPERTY_TYPE', payload: value });
+    dispatch({
+      type: 'SET_MIA_MESSAGE',
+      payload: value === 'private' ? 'step-0-private' : 'step-0-business',
+    });
   };
 
   // ── City selection ──

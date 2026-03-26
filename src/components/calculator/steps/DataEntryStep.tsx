@@ -330,6 +330,11 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
   const cityData = state.cityData;
   const isBusiness = state.propertyType === "business";
 
+  // ── Mia message on mount ──
+  useEffect(() => {
+    dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-2-default' });
+  }, [dispatch]);
+
   // Extract types from city data
   const types: IPropertyType[] =
     cityData?.types.filter(
