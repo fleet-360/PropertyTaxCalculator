@@ -7,6 +7,13 @@
 
 import type { ReactNode } from 'react';
 import type { ICalculationResult } from './customer';
+import type {
+  LeadSource,
+  LeadStatus,
+  CalculationStatus,
+  AbandonmentStage,
+  ICalculationEntry,
+} from './lead';
 
 // ── City summary (admin list view) ──────────────────────────────────
 export interface CitySummary {
@@ -23,36 +30,36 @@ export interface CitySummary {
   updatedAt: string;
 }
 
-// ── Customer list item (admin list view) ────────────────────────────
-export type CustomerStatus = 'in_progress' | 'match' | 'overpaying' | 'underpaying' | 'appeal_filed';
+// ── Lead list item (admin list view) ─────────────────────────────────
 export type PaymentStatus = 'none' | 'calculator_paid' | 'appeal_paid';
 
-export interface CustomerListItem {
+export interface LeadListItem {
   _id: string;
+
+  // Personal details
   fullName: string;
-  idNumber: string;
+  phone: string;
   email?: string;
-  phone?: string;
-  propertyType: 'private' | 'business';
-  citySlug: string;
-  propertyNumber?: string;
-  propertyId?: string;
-  address?: string;
-  propertyArea: number;
-  coveredBalconyArea?: number;
-  storageArea?: number;
-  parkingArea?: number;
-  classificationCode?: string;
-  zone?: string;
-  bimonthlyPayment: number;
-  calculationResult?: ICalculationResult;
-  householdSize?: number;
-  childrenCount?: number;
+  idNumber?: string;
+
+  // Lead management
+  source: LeadSource;
+  status: LeadStatus;
+  message?: string;
+
+  // Payment
   paymentStatus: PaymentStatus;
-  status: CustomerStatus;
+
+  // Calculations history
+  calculations: ICalculationEntry[];
+
+  // Timestamps
   createdAt: string;
   updatedAt: string;
 }
+
+// Re-export lead types for admin consumers
+export type { LeadSource, LeadStatus, CalculationStatus, AbandonmentStage };
 
 // ── Stat card props (admin dashboard) ───────────────────────────────
 export type StatPaletteColor = 'primary' | 'secondary' | 'success' | 'warning' | 'error';

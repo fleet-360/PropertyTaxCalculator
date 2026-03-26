@@ -15,7 +15,7 @@ import AppealStep from './steps/AppealStep';
 import ContactRedirectStep from './steps/ContactRedirectStep';
 import { CalculatorFeaturesContext } from './CalculatorFeaturesContext';
 
-import type { ISelectedExemption } from '@/lib/types/customer';
+import type { ISelectedExemption } from '@/lib/types/lead';
 import {
   DEFAULT_CALCULATOR_FEATURE_CONFIG,
   type CalculatorFeatureConfig,
@@ -85,6 +85,9 @@ export interface WizardState {
   couponCodeDraft: string;
   /** Applied coupon — reused for calculator payment and appeal payment */
   appliedCoupon: AppliedWizardCoupon | null;
+  // Lead tracking
+  leadId: string | null;
+  calculationIndex: number;
 }
 
 export const initialState: WizardState = {
@@ -124,6 +127,8 @@ export const initialState: WizardState = {
   contactRedirectReason: null,
   couponCodeDraft: '',
   appliedCoupon: null,
+  leadId: null,
+  calculationIndex: 0,
 };
 
 // ── Step definitions ──
@@ -156,7 +161,9 @@ export type WizardAction =
   | { type: 'SET_CLASSIFICATION_ERROR'; payload: WizardState['classificationError'] }
   | { type: 'SET_CALCULATION_RESULT'; payload: any }
   | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_CONTACT_REDIRECT'; payload: WizardState['contactRedirectReason'] };
+  | { type: 'SET_CONTACT_REDIRECT'; payload: WizardState['contactRedirectReason'] }
+  | { type: 'SET_LEAD_ID'; payload: string }
+  | { type: 'SET_CALCULATION_INDEX'; payload: number };
 
 export function shouldSkipExemptions(state: WizardState): boolean {
   return state.propertyType === 'business';
@@ -206,6 +213,10 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return { ...initialState };
     case 'SET_CONTACT_REDIRECT':
       return { ...state, contactRedirectReason: action.payload };
+    case 'SET_LEAD_ID':
+      return { ...state, leadId: action.payload };
+    case 'SET_CALCULATION_INDEX':
+      return { ...state, calculationIndex: action.payload };
     default:
       return state;
   }
@@ -286,7 +297,7 @@ export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
   if (redirectReason || state.contactRedirectReason) {
     return (
       <Container maxWidth="md">
-        <ContactRedirectStep reason={redirectReason ?? state.contactRedirectReason!} dispatch={dispatch} />
+        <ContactRedirectStep reason={redirectReason ?? state.contactRedirectReason!} dispatch={dispatch} state={state} />
       </Container>
     );
   }

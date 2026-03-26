@@ -21,7 +21,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import PeopleIcon from '@mui/icons-material/People';
-import ContactMailIcon from '@mui/icons-material/ContactMail';
+
 import ArticleIcon from '@mui/icons-material/Article';
 import TuneIcon from '@mui/icons-material/Tune';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -40,8 +40,7 @@ const navItems: NavItem[] = [
   { label: 'לוח בקרה', href: '/admin', icon: <DashboardIcon /> },
   { label: 'מחשבונים', href: '/admin/cities', icon: <CalculateIcon /> },
   { label: 'קופונים', href: '/admin/coupons', icon: <ConfirmationNumberIcon /> },
-  { label: 'לקוחות', href: '/admin/customers', icon: <PeopleIcon /> },
-  { label: 'פניות', href: '/admin/contacts', icon: <ContactMailIcon /> },
+  { label: 'לידים', href: '/admin/leads', icon: <PeopleIcon /> },
   { label: 'מאמרים', href: '/admin/posts', icon: <ArticleIcon /> },
   { label: 'הגדרות מערכת', href: '/admin/system-config', icon: <TuneIcon /> },
   { label: 'הגדרות בלוג', href: '/admin/settings', icon: <SettingsIcon /> },

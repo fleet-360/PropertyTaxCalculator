@@ -102,16 +102,15 @@ export default function CouponPaymentSection({ state, dispatch, context }: Coupo
       <Typography variant="body2" color="text.secondary" textAlign="center" mb={2}>
         {hint}
       </Typography>
-      <Paper variant="outlined" sx={{ p: 2 }}>
+      <Box sx={{ p: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
         <TextField
-          fullWidth
           label="קוד קופון"
           value={state.couponCodeDraft}
           onChange={(e) =>
             dispatch({ type: 'UPDATE_FIELD', field: 'couponCodeDraft', value: e.target.value })
           }
+          size="small"
           disabled={validating}
-          sx={{ mb: 2 }}
           inputProps={{ 'aria-label': 'קוד קופון' }}
         />
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -134,7 +133,7 @@ export default function CouponPaymentSection({ state, dispatch, context }: Coupo
             קופון <strong>{state.appliedCoupon.code}</strong> הוחל — הנחה {formatDiscount(state.appliedCoupon)}
           </Alert>
         )}
-      </Paper>
+      </Box>
     </Box>
   );
 }

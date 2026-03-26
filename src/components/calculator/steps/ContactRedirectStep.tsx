@@ -1,17 +1,20 @@
 'use client';
 
+import { useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
-import { WizardAction } from '../CalculatorWizard';
+import { WizardAction, WizardState } from '../CalculatorWizard';
 import { Dispatch } from 'react';
+import { useLeadUpdate } from '@/hooks/useLeadUpdate';
 
 interface ContactRedirectStepProps {
   reason: 'area' | 'designations' | 'city' | 'other_city' | 'error';
-  dispatch: Dispatch<WizardAction> ;
+  dispatch: Dispatch<WizardAction>;
+  state: WizardState;
 }
 
 const MESSAGES: Record<ContactRedirectStepProps['reason'], { title: string; body: string }> = {
@@ -37,8 +40,16 @@ const MESSAGES: Record<ContactRedirectStepProps['reason'], { title: string; body
   },
 };
 
-export default function ContactRedirectStep({ reason, dispatch }: ContactRedirectStepProps) {
+export default function ContactRedirectStep({ reason, dispatch, state }: ContactRedirectStepProps) {
+  const { updateLead } = useLeadUpdate();
   const msg = MESSAGES[reason];
+
+  // Update abandonment stage when redirected to contact
+  useEffect(() => {
+    updateLead(state.leadId, state.calculationIndex, {
+      abandonmentStage: 'contact_redirect',
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Box>

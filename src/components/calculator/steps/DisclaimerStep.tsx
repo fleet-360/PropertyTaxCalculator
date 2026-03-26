@@ -7,10 +7,13 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import Button from '@mui/material/Button';
 import type { StepProps } from '../CalculatorWizard';
+import { useLeadUpdate } from '@/hooks/useLeadUpdate';
 
 const DISCLAIMER_TEXT = `הנני מצהיר/ה ומאשר/ת כי מחשבון הארנונה אינו מהווה ייעוץ משפטי ו/או תחליף לייעוץ משפטי, וכי תוצאות החישוב מבוססות על הנתונים שהזנתי במחשבון ולצורך התמצאות בלבד. לאחר שעיינתי בתקנון האתר ובמדיניות הפרטיות, הנני מצהיר/ה כי לא אעלה באופן אישי ו/או באמצעות מי מטעמי כל טענה ו/או תלונה ו/או תביעה כנגד מחשבון הארנונה ומנהליו בכל מקרה של שימוש במחשבון הארנונה ובמקרה של סטייה מהתוצאה המופיעה בצו הארנונה.`;
 
 export default function DisclaimerStep({ state, dispatch }: StepProps) {
+  const { updateLead } = useLeadUpdate();
+
   return (
     <Box>
       <Typography variant="h5" textAlign="center" mb={3}>
@@ -44,6 +47,9 @@ export default function DisclaimerStep({ state, dispatch }: StepProps) {
           variant="contained"
           disabled={!state.consentGiven}
           onClick={() => {
+            updateLead(state.leadId, state.calculationIndex, {
+              abandonmentStage: 'disclaimer',
+            }, { consentTimestamp: new Date().toISOString() });
             dispatch({ type: 'SET_LOADING', payload: true });
             if (state.designations.length > 1) {
               dispatch({ type: 'SET_LOADING', payload: false });
@@ -87,6 +93,12 @@ export default function DisclaimerStep({ state, dispatch }: StepProps) {
               .then((data) => {
                 dispatch({ type: 'SET_CALCULATION_RESULT', payload: data });
                 dispatch({ type: 'SET_LOADING', payload: false });
+                // Save calculation result to lead
+                updateLead(state.leadId, state.calculationIndex, {
+                  abandonmentStage: 'results_gate',
+                  calculationResult: data,
+                  calculationStatus: data.outcome,
+                });
                 dispatch({ type: 'NEXT_STEP' });
               })
               .catch(() => {

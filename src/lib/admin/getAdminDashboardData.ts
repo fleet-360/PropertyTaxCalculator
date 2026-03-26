@@ -2,8 +2,7 @@ import dbConnect from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
 import CityTariff from '@/lib/models/CityTariff';
 import Coupon from '@/lib/models/Coupon';
-import Customer from '@/lib/models/Customer';
-import ContactRequest from '@/lib/models/ContactRequest';
+import Lead from '@/lib/models/Lead';
 import SystemConfig from '@/lib/models/SystemConfig';
 import type { PostListItem } from '@/lib/types/post';
 import { requireAdminSession } from '@/lib/admin/requireAdminSession';
@@ -13,8 +12,8 @@ export type DashboardStats = {
   published: number;
   cities: number;
   activeCoupons: number;
-  totalCustomers: number;
-  newContacts: number;
+  totalLeads: number;
+  newLeads: number;
   systemEnabled: boolean;
   paymentEnabled: boolean;
 };
@@ -62,8 +61,8 @@ export async function getAdminDashboardData(): Promise<{
     publishedPosts,
     citiesCount,
     activeCoupons,
-    totalCustomers,
-    newContacts,
+    totalLeads,
+    newLeads,
     config,
   ] = await Promise.all([
     Post.find()
@@ -75,8 +74,8 @@ export async function getAdminDashboardData(): Promise<{
     Post.countDocuments({ status: 'published' }),
     CityTariff.countDocuments(),
     Coupon.countDocuments({ isActive: true }),
-    Customer.countDocuments(),
-    ContactRequest.countDocuments({ status: 'new' }),
+    Lead.countDocuments(),
+    Lead.countDocuments({ status: 'new' }),
     SystemConfig.getConfig(),
   ]);
 
@@ -91,8 +90,8 @@ export async function getAdminDashboardData(): Promise<{
       published: publishedPosts,
       cities: citiesCount,
       activeCoupons,
-      totalCustomers,
-      newContacts,
+      totalLeads,
+      newLeads,
       systemEnabled: Boolean(config.systemEnabled),
       paymentEnabled: Boolean(config.paymentEnabled),
     },

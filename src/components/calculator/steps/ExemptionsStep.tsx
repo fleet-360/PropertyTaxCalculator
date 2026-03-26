@@ -13,10 +13,12 @@ import AddIcon from '@mui/icons-material/Add';
 import type { StepProps } from '../CalculatorWizard';
 import type { SelectedExemption } from '../CalculatorWizard';
 import type { IExemptionSubSection, IExemptionSection } from '@/lib/types/city-tariff';
+import { useLeadUpdate } from '@/hooks/useLeadUpdate';
 
 const MAX_ROWS = 3;
 
 export default function ExemptionsStep({ state, dispatch }: StepProps) {
+  const { updateLead } = useLeadUpdate();
   const exemptionSections: IExemptionSection[] = state.cityData?.exemptions ?? [];
   const rows = state.selectedExemptions.length > 0
     ? state.selectedExemptions
@@ -207,7 +209,15 @@ export default function ExemptionsStep({ state, dispatch }: StepProps) {
         <Button variant="outlined" onClick={() => dispatch({ type: 'PREV_STEP' })}>
           חזרה
         </Button>
-        <Button variant="contained" onClick={() => dispatch({ type: 'NEXT_STEP' })}>
+        <Button variant="contained" onClick={() => {
+          updateLead(state.leadId, state.calculationIndex, {
+            abandonmentStage: 'exemptions',
+            selectedExemptions: state.selectedExemptions,
+            householdSize: state.householdSize,
+            childrenCount: state.childrenCount,
+          });
+          dispatch({ type: 'NEXT_STEP' });
+        }}>
           {hasAnySelection ? 'הבא' : 'דלג'}
         </Button>
       </Box>
