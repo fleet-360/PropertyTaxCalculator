@@ -36,7 +36,7 @@ async function dbConnect(): Promise<typeof mongoose> {
   }
 
   try {
-    cached.conn = await cached.promise;
+    cached.conn = await cached?.promise;
   } catch (e) {
     cached.promise = null;
     throw e;
