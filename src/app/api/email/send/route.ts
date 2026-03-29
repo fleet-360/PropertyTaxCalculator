@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   sendResultsEmail,
   sendAppealEmail,
+  sendAppealPdfEmail,
   sendInvoiceEmail,
 } from '@/lib/services/emailService';
 
@@ -21,6 +22,10 @@ function requiredString(val: unknown): val is string {
 
 function requiredNumber(val: unknown): val is number {
   return typeof val === 'number' && !Number.isNaN(val);
+}
+
+function validAppealPdfBase64(val: unknown): val is string {
+  return typeof val === 'string' && val.length >= 200 && val.length <= 14_000_000;
 }
 
 /* ------------------------------------------------------------------ */
@@ -79,6 +84,29 @@ export async function POST(req: NextRequest) {
           reported: reported ?? 0,
           calculated: calculated ?? 0,
           annualSavings: annualSavings ?? 0,
+        });
+        if (!result.success) {
+          return NextResponse.json({ error: result.error ?? 'שליחת המייל נכשלה' }, { status: 500 });
+        }
+        return NextResponse.json({ success: true, messageId: result.messageId });
+      }
+
+      case 'appeal_pdf': {
+        const { fullName, cityName, reported, calculated, annualSavings, pdfBase64 } = payload;
+        if (!requiredString(fullName) || !requiredString(cityName)) {
+          return NextResponse.json({ error: 'חסרים שדות חובה ב-payload' }, { status: 400 });
+        }
+        if (!validAppealPdfBase64(pdfBase64)) {
+          return NextResponse.json({ error: 'חסר קובץ PDF חתום או שהקובץ אינו תקין' }, { status: 400 });
+        }
+        const result = await sendAppealPdfEmail({
+          to,
+          fullName,
+          cityName,
+          reported: reported ?? 0,
+          calculated: calculated ?? 0,
+          annualSavings: annualSavings ?? 0,
+          pdfBase64,
         });
         if (!result.success) {
           return NextResponse.json({ error: result.error ?? 'שליחת המייל נכשלה' }, { status: 500 });
