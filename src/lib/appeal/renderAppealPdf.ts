@@ -1,13 +1,15 @@
 import fs from 'fs';
 import PDFDocument from 'pdfkit';
 import { getAppealHebrewFontPath } from './hebrewFontPath';
-import { logicalToVisualRtlForPdf } from './logicalToVisualRtlForPdf';
 
 const PAGE_MARGIN = 56;
 
+/** Truthy `features` makes PDFKit lay out each line in one fontkit pass; default code splits on spaces and breaks RTL word order. */
+const PDF_HEBREW_LINE_FEATURES: [] = [];
+
 /**
  * Render Hebrew appeal letter as PDF (right-aligned text, Hebrew font).
- * Footer lines reserve space; signature image is merged server-side afterward.
+ * Pass logical-order Unicode from the model. Footer reserves space; signature is merged server-side.
  */
 export async function renderAppealLetterPdf(hebrewBody: string): Promise<Buffer> {
   const fontPath = getAppealHebrewFontPath();
@@ -34,22 +36,24 @@ export async function renderAppealLetterPdf(hebrewBody: string): Promise<Buffer>
     doc.y = PAGE_MARGIN;
     doc.font('Hebrew').fontSize(11).fillColor('#000000');
 
-    const visualBody = logicalToVisualRtlForPdf(hebrewBody);
-    doc.text(visualBody, {
+    doc.text(hebrewBody, {
       width: textWidth,
       align: 'right',
+      features: PDF_HEBREW_LINE_FEATURES,
     });
 
     doc.moveDown(2);
     doc.fontSize(10);
-    doc.text(logicalToVisualRtlForPdf('חתימת המגיש:'), {
+    doc.text('חתימת המגיש:', {
       width: textWidth,
       align: 'right',
+      features: PDF_HEBREW_LINE_FEATURES,
     });
     doc.moveDown(0.5);
     doc.text('__________________________', {
       width: textWidth,
       align: 'right',
+      features: PDF_HEBREW_LINE_FEATURES,
     });
 
     doc.end();
