@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
@@ -8,38 +8,52 @@ import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
+import CircularProgress from '@mui/material/CircularProgress';
+import DownloadIcon from '@mui/icons-material/Download';
 import EmailIcon from '@mui/icons-material/Email';
 import DummyPaymentDialog from '@/components/calculator/DummyPaymentDialog';
 import CouponPaymentSection from '@/components/calculator/CouponPaymentSection';
-import EmailSendDialog from '@/components/common/EmailSendDialog';
+import AppealSignaturePad from '@/components/calculator/AppealSignaturePad';
+import {
+  buildAppealGeneratePayload,
+  isValidAppealEmail,
+} from '@/components/calculator/appealGeneratePayload';
 import { useCalculatorFeatures } from '../CalculatorFeaturesContext';
 import { useEmailSend } from '@/hooks/useEmailSend';
 import type { StepProps } from '../CalculatorWizard';
 
 const APPEAL_WAIVER_TEXT = `הנני מצהיר/ה ומאשר/ת כי ידוע לי שהגשת השגה באמצעות מחשבון הארנונה אינה מהווה ייעוץ משפטי. הנני מוותר/ת על כל טענה כלפי מפעילי המחשבון בנוגע לתוצאות ההשגה ו/או לכל נזק שעלול להיגרם כתוצאה מהגשתה. ידוע לי כי ההשגה מוגשת על בסיס הנתונים שהזנתי במחשבון ועל אחריותי בלבד.`;
 
+type FlowPhase = 'intro' | 'generating' | 'sign' | 'finalize' | 'done';
+
 export default function AppealStep({ state, dispatch }: StepProps) {
   const { paymentEnabled, appealChargeAmount } = useCalculatorFeatures();
   const { sendEmail } = useEmailSend();
   const [appealWaiverAccepted, setAppealWaiverAccepted] = useState(false);
 
+  const [flow, setFlow] = useState<FlowPhase>('intro');
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [draftPdfBase64, setDraftPdfBase64] = useState<string | null>(null);
+  const [signedPdfBase64, setSignedPdfBase64] = useState<string | null>(null);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [signatureError, setSignatureError] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
   useEffect(() => {
     dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-7-default' });
   }, [dispatch]);
-  const [submitted, setSubmitted] = useState(false);
-  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
   const result = state.calculationResult ?? {};
   const reported = state.bimonthlyPayment ?? 0;
   const calculated = result.calculatedBimonthly ?? result.calculated ?? reported;
   const biMonthlySavings = reported - calculated;
   const annualSavings = biMonthlySavings * 6;
+  const cityName = (state.cityData?.cityName as string | undefined)?.trim() || state.citySlug || '';
 
-  const sendInvoice = () => {
+  const sendInvoice = useCallback(() => {
     if (!state.email) return;
-    // Fire and forget — non-blocking invoice email
-    sendEmail({
+    void sendEmail({
       type: 'invoice',
       to: state.email,
       payload: {
@@ -48,75 +62,228 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         amountNis: appealChargeAmount,
         date: new Date().toISOString(),
       },
-    }).catch(() => {
-      // Invoice sending is non-blocking — silently ignore errors
-    });
-  };
+    }).catch(() => {});
+  }, [appealChargeAmount, sendEmail, state.email, state.fullName]);
 
-  const completeSubmit = () => {
-    setSubmitted(true);
+  const sendAppealPdfToUser = useCallback(
+    async (pdfBase64: string): Promise<boolean> => {
+      const to = state.email?.trim();
+      if (!to || !isValidAppealEmail(to)) {
+        setEmailError('כתובת מייל לא תקינה');
+        return false;
+      }
+      const res = await sendEmail({
+        type: 'appeal_pdf',
+        to,
+        payload: {
+          fullName: state.fullName,
+          cityName,
+          reported,
+          calculated,
+          annualSavings,
+          pdfBase64,
+        },
+      });
+      if (!res.success) {
+        setEmailError(res.error ?? 'שליחת המייל נכשלה');
+        return false;
+      }
+      setEmailError(null);
+      return true;
+    },
+    [annualSavings, calculated, cityName, reported, sendEmail, state.email, state.fullName],
+  );
+
+  const beginGenerationFlow = useCallback(async () => {
+    setGenerateError(null);
+    setSignatureError(null);
+    setFlow('generating');
     sendInvoice();
-  };
+    try {
+      const body = buildAppealGeneratePayload(state);
+      const res = await fetch('/api/appeals/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = (await res.json()) as { error?: string; pdfBase64?: string };
+      if (!res.ok) {
+        throw new Error(data.error || 'הכנת מכתב ההשגה נכשלה');
+      }
+      if (!data.pdfBase64) {
+        throw new Error('תשובת שרת לא תקינה');
+      }
+      setDraftPdfBase64(data.pdfBase64);
+      setFlow('sign');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'שגיאה';
+      setGenerateError(msg);
+      setFlow('intro');
+    }
+  }, [sendInvoice, state]);
 
   const handleSubmit = () => {
     if (paymentEnabled) {
       setPaymentDialogOpen(true);
       return;
     }
-    completeSubmit();
+    void beginGenerationFlow();
   };
 
   const handlePaymentConfirm = () => {
-    completeSubmit();
+    setPaymentDialogOpen(false);
+    void beginGenerationFlow();
   };
 
-  const handleSendAppealEmail = async (email: string) => {
-    const result = await sendEmail({
-      type: 'appeal',
-      to: email,
-      payload: {
-        fullName: state.fullName,
-        cityName: state.cityData?.cityName ?? '',
-        reported,
-        calculated,
-        annualSavings,
-      },
-    });
-    if (!result.success) {
-      throw new Error(result.error);
+  const handleEmptySignature = () => {
+    setSignatureError('נא לחתום באזור החתימה לפני האישור');
+  };
+
+  const handleSignatureConfirmed = async (signaturePngBase64: string) => {
+    setSignatureError(null);
+    if (!isValidAppealEmail(state.email)) {
+      setSignatureError('נא למלא כתובת מייל תקינה בשלב פרטי הקשר במחשבון לפני חתימה.');
+      return;
+    }
+    if (!draftPdfBase64) {
+      setSignatureError('חסר מסמך — נסו שוב מההתחלה');
+      return;
+    }
+
+    setFlow('finalize');
+    setEmailSent(false);
+    setEmailError(null);
+
+    try {
+      const applyRes = await fetch('/api/appeals/apply-signature', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          draftPdfBase64,
+          signaturePngBase64,
+        }),
+      });
+      const applyData = (await applyRes.json()) as { error?: string; pdfBase64?: string };
+      if (!applyRes.ok) {
+        throw new Error(applyData.error || 'מיזוג החתימה נכשל');
+      }
+      if (!applyData.pdfBase64) {
+        throw new Error('תשובת שרת לא תקינה');
+      }
+      const signed = applyData.pdfBase64;
+      setSignedPdfBase64(signed);
+      const ok = await sendAppealPdfToUser(signed);
+      setEmailSent(ok);
+      setFlow('done');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'שגיאה';
+      setSignatureError(msg);
+      setSignedPdfBase64(null);
+      setFlow('sign');
     }
   };
 
-  if (submitted) {
+  const handleRetryEmail = async () => {
+    if (!signedPdfBase64) return;
+    setEmailError(null);
+    const ok = await sendAppealPdfToUser(signedPdfBase64);
+    setEmailSent(ok);
+  };
+
+  const downloadSignedPdf = () => {
+    if (!signedPdfBase64) return;
+    try {
+      const binary = atob(signedPdfBase64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'michtav-hashaga-chatum.pdf';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setEmailError('הורדת הקובץ נכשלה');
+    }
+  };
+
+  const canStart =
+    appealWaiverAccepted && state.fullName.trim().length > 0 && state.calculationResult != null;
+
+  if (flow === 'done') {
     return (
       <Box sx={{ pt: 5 }}>
-        <Alert severity="success" sx={{ mb: 3, fontSize: '1.1rem' }}>
-          ההשגה הוכנה בהצלחה!
-        </Alert>
+        {emailSent ? (
+          <Alert severity="success" sx={{ mb: 3, fontSize: '1.05rem' }}>
+            מכתב ההשגה החתום נשלח לכתובת {state.email?.trim()}.
+          </Alert>
+        ) : (
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            {emailError || signatureError || 'לא הצלחנו לשלוח את המייל. ניתן לנסות שוב או להוריד את הקובץ.'}
+          </Alert>
+        )}
+
         <Typography textAlign="center" color="text.secondary" sx={{ mb: 3 }}>
           תודה שהשתמשת במחשבון הארנונה
         </Typography>
+
         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Button
-            variant="contained"
-            startIcon={<EmailIcon />}
-            onClick={() => setEmailDialogOpen(true)}
-          >
-            שלח השגה למייל
-          </Button>
+          {signedPdfBase64 && (
+            <Button variant="contained" startIcon={<DownloadIcon />} onClick={downloadSignedPdf}>
+              הורד PDF חתום
+            </Button>
+          )}
+          {signedPdfBase64 && !emailSent && (
+            <Button variant="outlined" startIcon={<EmailIcon />} onClick={() => void handleRetryEmail()}>
+              שלח שוב למייל
+            </Button>
+          )}
           <Button variant="outlined" onClick={() => dispatch({ type: 'RESET_CALCULATOR' })} href="/#hero">
             חזרה לדף הבית
           </Button>
         </Box>
+      </Box>
+    );
+  }
 
-        <EmailSendDialog
-          open={emailDialogOpen}
-          onClose={() => setEmailDialogOpen(false)}
-          onSend={handleSendAppealEmail}
-          defaultEmail={state.email}
-          title="שליחת השגה למייל"
-          description="מכתב ההשגה יישלח לכתובת המייל שלך."
-        />
+  if (flow === 'generating' || flow === 'finalize') {
+    return (
+      <Box sx={{ pt: 6, textAlign: 'center' }}>
+        <CircularProgress sx={{ mb: 2 }} aria-label="טוען" />
+        <Typography>
+          {flow === 'generating' ? 'מכינים את מכתב ההשגה…' : 'משלבים חתימה ושולחים למייל…'}
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (flow === 'sign' && draftPdfBase64) {
+    return (
+      <Box>
+        <Typography variant="h5" textAlign="center" mb={2}>
+          חתימה על מכתב ההשגה
+        </Typography>
+        {signatureError && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setSignatureError(null)}>
+            {signatureError}
+          </Alert>
+        )}
+        {!isValidAppealEmail(state.email) && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            נדרשת כתובת מייל תקינה בשלב פרטי הקשר כדי לשלוח את המסמך אוטומטית.
+          </Alert>
+        )}
+        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+          <AppealSignaturePad
+            onConfirm={(png) => void handleSignatureConfirmed(png)}
+            onEmptySignature={handleEmptySignature}
+            disabled={flow !== 'sign'}
+          />
+        </Paper>
+        <Button variant="outlined" onClick={() => dispatch({ type: 'PREV_STEP' })}>
+          חזרה
+        </Button>
       </Box>
     );
   }
@@ -126,6 +293,12 @@ export default function AppealStep({ state, dispatch }: StepProps) {
       <Typography variant="h5" textAlign="center" mb={3}>
         הגשת השגה
       </Typography>
+
+      {generateError && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setGenerateError(null)}>
+          {generateError}
+        </Alert>
+      )}
 
       {paymentEnabled && (
         <CouponPaymentSection state={state} dispatch={dispatch} context="appeal" />
@@ -162,7 +335,7 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         <Button variant="outlined" onClick={() => dispatch({ type: 'PREV_STEP' })}>
           חזרה
         </Button>
-        <Button variant="contained" disabled={!appealWaiverAccepted} onClick={handleSubmit}>
+        <Button variant="contained" disabled={!canStart} onClick={handleSubmit}>
           תשלום והכנת השגה
         </Button>
       </Box>

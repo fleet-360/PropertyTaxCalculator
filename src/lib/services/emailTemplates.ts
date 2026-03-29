@@ -26,6 +26,9 @@ export interface AppealEmailParams {
   annualSavings: number;
 }
 
+/** Same summary as appeal email + signed PDF attached out-of-band in nodemailer. */
+export type AppealPdfEmailParams = AppealEmailParams;
+
 export interface InvoiceEmailParams {
   to: string;
   fullName: string;
@@ -174,6 +177,19 @@ export function buildAppealEmailHtml(params: AppealEmailParams): string {
     </p>`;
 
   return buildBaseWrapper(content, 'אישור הגשת השגה');
+}
+
+export function buildAppealPdfEmailHtml(params: AppealPdfEmailParams): string {
+  const content = `
+    <p style="margin:0 0 8px;font-size:16px;color:${COLORS.textPrimary};">שלום ${params.fullName},</p>
+    <p style="margin:0 0 16px;font-size:15px;color:${COLORS.textSecondary};">
+      מצורף מכתב ההשגה שלך בנוגע לנכס ב${params.cityName}, כולל חתימתך הדיגיטלית בקובץ PDF.
+    </p>
+    <p style="margin:0;font-size:14px;color:${COLORS.textSecondary};">
+      שמרו את הקובץ המצורף. לשאלות ניתן ליצור איתנו קשר.
+    </p>`;
+
+  return buildBaseWrapper(content, 'מכתב השגה חתום — מחשבון הארנונה');
 }
 
 /* ------------------------------------------------------------------ */
