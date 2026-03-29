@@ -32,6 +32,7 @@ import { ALL_ZONES_TARIFF_CODE, ALL_ZONES_LABEL_HE } from '@/lib/tariff-constant
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
+import OrdinanceImportButton from '@/components/admin/OrdinanceImportButton';
 import FormHelperText from '@mui/material/FormHelperText';
 import {
   normalizeCityTariffPayload,
@@ -78,6 +79,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
   const [data, setData] = React.useState<ICityTariffData>(city || emptyCityData);
   const [saving, setSaving] = React.useState(false);
   const [snackbar, setSnackbar] = React.useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [importedFromOrdinance, setImportedFromOrdinance] = React.useState(false);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
   const [expandedAccordion, setExpandedAccordion] = React.useState({
     basic: true,
@@ -148,6 +150,39 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       ssi === null || ssi >= selectedExemptionSubsLen ? 0 : ssi,
     );
   }, [selectedExemptionSectionIndex, selectedExemptionSubsLen]);
+
+  // ── Load imported ordinance data from sessionStorage ──────────────
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('fromOrdinance') !== 'true') return;
+
+    try {
+      const stored = sessionStorage.getItem('ordinanceImportData');
+      if (!stored) return;
+
+      const imported: ICityTariffData = JSON.parse(stored);
+      sessionStorage.removeItem('ordinanceImportData');
+
+      // For update mode: merge imported data but keep the _id
+      const merged = city ? { ...imported, _id: city._id } : imported;
+      setData(merged);
+      setImportedFromOrdinance(true);
+
+      // Auto-select first items if available
+      if (merged.types.length > 0) {
+        setSelectedTypeIndex(0);
+        if (merged.types[0].subtypes.length > 0) setSelectedSubtypeIndex(0);
+      }
+      if (merged.exemptions.length > 0) {
+        setSelectedExemptionSectionIndex(0);
+        if (merged.exemptions[0].subSections.length > 0) setSelectedExemptionSubIndex(0);
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Update slug from English name
   const handleCityNameEnChange = (value: string) => {
@@ -516,6 +551,13 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
 
   return (
     <Box>
+      {/* Ordinance import banner */}
+      {importedFromOrdinance && (
+        <Alert severity="info" sx={{ mb: 3 }} onClose={() => setImportedFromOrdinance(false)}>
+          נתונים יובאו מצו ארנונה באמצעות AI — נא לסקור ולתקן לפני שמירה
+        </Alert>
+      )}
+
       {/* Header */}
       <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
         <Box>
@@ -526,14 +568,19 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
             {isNew ? 'הגדרת תעריפי ארנונה לעיר חדשה' : 'עריכת תעריפי ארנונה'}
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<SaveIcon />}
-          onClick={handleSave}
-          disabled={saving}
-        >
-          {saving ? 'שומר...' : 'שמור'}
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          {!isNew && city?._id && (
+            <OrdinanceImportButton mode="update" existingCityId={city._id} />
+          )}
+          <Button
+            variant="contained"
+            startIcon={<SaveIcon />}
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? 'שומר...' : 'שמור'}
+          </Button>
+        </Box>
       </Box>
 
       {/* Section 1: Basic Info */}
