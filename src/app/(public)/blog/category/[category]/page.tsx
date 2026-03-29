@@ -1,6 +1,8 @@
+
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import MuiLink from '@mui/material/Link';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
@@ -8,15 +10,10 @@ import Box from '@mui/material/Box';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import dbConnect from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
-import Settings from '@/lib/models/Settings';
+import { BLOG_PATHS, blogCategoryPath } from '@/lib/blog/routes';
+import { getBlogSiteSettings } from '@/lib/blog/settings';
 import PostCard from '@/components/blog/PostCard';
 import Pagination from '@/components/blog/Pagination';
-
-async function getSettings() {
-  await dbConnect();
-  const settings = await Settings.getSettings();
-  return JSON.parse(JSON.stringify(settings));
-}
 
 async function getPostsByCategory(category: string, page: number, perPage: number) {
   await dbConnect();
@@ -56,7 +53,7 @@ interface CategoryPageProps {
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { category } = await params;
   const decodedCategory = decodeURIComponent(category);
-  const settings = await getSettings();
+  const settings = await getBlogSiteSettings();
   const siteName = settings.siteName || 'Blog';
 
   // Capitalize first letter
@@ -77,7 +74,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   const { category } = await params;
   const resolvedSearchParams = await searchParams;
   const decodedCategory = decodeURIComponent(category);
-  const settings = await getSettings();
+  const settings = await getBlogSiteSettings();
   const currentPage = Math.max(1, parseInt(resolvedSearchParams.page || '1', 10) || 1);
   const perPage = settings.postsPerPage || 10;
   const { posts, totalCount, totalPages, categoryName } = await getPostsByCategory(
@@ -100,7 +97,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         component="section"
         sx={{
           py: { xs: 4, md: 6 },
-          backgroundColor: '#fafafa',
+          backgroundColor: 'background.default',
           borderBottom: '1px solid',
           borderColor: 'divider',
         }}
@@ -119,22 +116,22 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
               </Typography>
             }
           >
-            <Link
+            <MuiLink
+              component={"a"}
               href="/"
-              style={{
-                color: '#1976d2',
-                textDecoration: 'none',
-                fontSize: '0.85rem',
-              }}
+              underline="hover"
+              sx={{ fontSize: '0.85rem', color: 'primary.main' }}
             >
-              Home
-            </Link>
-            <Typography
-              component="span"
-              sx={{ color: 'text.secondary', fontSize: '0.85rem' }}
+              דף הבית
+            </MuiLink>
+            <MuiLink
+              component={"a"}
+              href={BLOG_PATHS.home}
+              underline="hover"
+              sx={{ fontSize: '0.85rem', color: 'text.secondary' }}
             >
-              Category
-            </Typography>
+              כל הכתבות
+            </MuiLink>
             <Typography
               component="span"
               sx={{ color: 'text.primary', fontWeight: 500, fontSize: '0.85rem' }}
@@ -149,7 +146,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             sx={{
               fontWeight: 800,
               fontSize: { xs: '1.8rem', md: '2.5rem' },
-              color: '#1a1a1a',
+              color: 'text.primary',
               letterSpacing: '-0.02em',
             }}
           >
@@ -160,7 +157,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             color="text.secondary"
             sx={{ mt: 1 }}
           >
-            {totalCount} {totalCount === 1 ? 'post' : 'posts'} in this category
+            {totalCount === 1 ? 'כתבה אחת' : `${totalCount} כתבות`} בקטגוריה זו
           </Typography>
         </Container>
       </Box>
@@ -178,7 +175,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          basePath={`/category/${encodeURIComponent(decodedCategory.toLowerCase())}`}
+          basePath={blogCategoryPath(decodedCategory)}
         />
 
         {totalCount > 0 && (

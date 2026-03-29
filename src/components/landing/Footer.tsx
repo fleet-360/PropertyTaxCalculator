@@ -1,12 +1,13 @@
 'use client';
 import { Box, Container, Typography, Link as MuiLink } from '@mui/material';
 import Link from 'next/link';
+import { BLOG_PATHS } from '@/lib/blog/routes';
 
 const quickLinks = [
   { label: 'דף הבית', href: '/' },
   { label: 'מחשבון ארנונה', href: '/#calculator-section' },
   { label: 'המלצות לקוחות', href: '#testimonials' },
-  { label: 'מאמרים', href: '/blog' },
+  { label: 'מאמרים', href: BLOG_PATHS.home },
   { label: 'אודות', href: '#' },
   { label: 'צור קשר', href: '#' },
 ];
@@ -107,7 +108,7 @@ export default function Footer() {
                 <MuiLink
                   key={i}
                   component={Link}
-                  href="/blog"
+                  href={BLOG_PATHS.home}
                   sx={{
                     fontSize: { xs: '13px', md: '14px' },
                     color: '#060606',

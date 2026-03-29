@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { headingPlainTextToAnchorId } from '@/lib/headingAnchorId';
 
 interface TocBlock {
   id: string;
@@ -25,13 +26,6 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '').trim();
 }
 
-function getAnchorId(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-}
-
 /** Offset below fixed header when scrolling to a heading */
 const SCROLL_TOP_PADDING_PX = 100;
 
@@ -47,7 +41,7 @@ export default function TableOfContents({ blocks }: TableOfContentsProps) {
         const levelStr = block.data.level || 'h2';
         const level = parseInt(levelStr.replace('h', ''), 10) || 2;
         entries.push({
-          id: block.id as string,
+          id: headingPlainTextToAnchorId(plainText),
           text: plainText,
           level,
         });
@@ -80,7 +74,7 @@ export default function TableOfContents({ blocks }: TableOfContentsProps) {
         position: 'sticky',
         top: 100,
         p: 3,
-        backgroundColor: '#f9fafb',
+        backgroundColor: 'background.default',
         borderRadius: 2,
         border: '1px solid',
         borderColor: 'divider',
@@ -111,30 +105,27 @@ export default function TableOfContents({ blocks }: TableOfContentsProps) {
               mb: 0.5,
             }}
           >
-            <a
+            <Box
+              component="a"
               href={`#${heading.id}`}
-              onClick={(e) => handleClick(e, heading.id)}
-              style={{
+              onClick={(e: React.MouseEvent<HTMLAnchorElement>) => handleClick(e, heading.id)}
+              sx={{
                 display: 'block',
                 padding: '4px 8px',
                 fontSize: '0.85rem',
                 lineHeight: 1.5,
-                color: '#555',
+                color: 'text.secondary',
                 textDecoration: 'none',
-                borderRadius: '4px',
+                borderRadius: 1,
                 transition: 'color 0.2s, background-color 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#1976d2';
-                e.currentTarget.style.backgroundColor = 'rgba(25, 118, 210, 0.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = '#555';
-                e.currentTarget.style.backgroundColor = 'transparent';
+                '&:hover': {
+                  color: 'primary.main',
+                  backgroundColor: 'action.hover',
+                },
               }}
             >
               {heading.text}
-            </a>
+            </Box>
           </Box>
         ))}
       </Box>
