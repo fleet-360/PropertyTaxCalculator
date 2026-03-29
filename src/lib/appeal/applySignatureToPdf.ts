@@ -1,12 +1,13 @@
 import { PDFDocument } from 'pdf-lib';
 import {
+  APPEAL_FOOTER_SIGNATURE_MAX_HEIGHT_PT,
   APPEAL_PAGE_MARGIN_PT,
   appealFooterBaselines,
   signatureImagePdfLibY,
 } from './appealPdfLayout';
 
 /**
- * Draw signature PNG on the last page, right-aligned between “חתימת המגיש:” and the underscore line
+ * Draw signature PNG on the last page, right-aligned between “חתימת המגיש:” and the rule line
  * (geometry must match `renderAppealPdf`).
  */
 export async function applySignatureToPdfBuffer(
@@ -24,14 +25,18 @@ export async function applySignatureToPdfBuffer(
 
   const maxW = Math.min(200, width * 0.42);
   const aspect = pngImage.height / pngImage.width;
-  const imgW = maxW;
-  const imgH = maxW * aspect;
+  let imgW = maxW;
+  let imgH = maxW * aspect;
+  if (imgH > APPEAL_FOOTER_SIGNATURE_MAX_HEIGHT_PT) {
+    imgH = APPEAL_FOOTER_SIGNATURE_MAX_HEIGHT_PT;
+    imgW = imgH / aspect;
+  }
 
   const margin = APPEAL_PAGE_MARGIN_PT;
   const x = width - margin - imgW;
 
-  const { lineBaselineY } = appealFooterBaselines(height, margin);
-  const y = signatureImagePdfLibY(height, lineBaselineY);
+  const { signatureImageBottomY } = appealFooterBaselines(height, margin);
+  const y = signatureImagePdfLibY(height, signatureImageBottomY);
 
   lastPage.drawImage(pngImage, {
     x,
