@@ -89,6 +89,8 @@ export default function DisclaimerStep({ state, dispatch }: StepProps) {
                         areaSqm: d.area,
                       }))
                     : undefined,
+                additionalAreas: state.additionalAreas.length > 0 ? state.additionalAreas : undefined,
+                selectedFees: state.selectedFees.length > 0 ? state.selectedFees : undefined,
               }),
             })
               .then((r) => {

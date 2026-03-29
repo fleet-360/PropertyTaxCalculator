@@ -1,5 +1,9 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import type { IContactEmails } from '@/lib/types/system-config';
+import {
+  type IContactEmails,
+  DEFAULT_MATCH_TOLERANCE_IS_PERCENT,
+  DEFAULT_MATCH_TOLERANCE_VALUE,
+} from '@/lib/types/system-config';
 
 // Re-export shared types so existing consumers don't break
 export type { IContactEmails } from '@/lib/types/system-config';
@@ -10,6 +14,8 @@ export interface ISystemConfig extends Document {
   systemEnabled: boolean;
   calculatorPrice: number;
   appealPrice: number;
+  matchToleranceValue: number;
+  matchToleranceIsPercent: boolean;
   contactEmails?: IContactEmails;
   createdAt: Date;
   updatedAt: Date;
@@ -48,6 +54,15 @@ const SystemConfigSchema = new Schema<ISystemConfig>(
     appealPrice: {
       type: Number,
       default: 180,
+    },
+    matchToleranceValue: {
+      type: Number,
+      default: DEFAULT_MATCH_TOLERANCE_VALUE,
+      min: 0,
+    },
+    matchToleranceIsPercent: {
+      type: Boolean,
+      default: DEFAULT_MATCH_TOLERANCE_IS_PERCENT,
     },
     contactEmails: {
       type: ContactEmailsSchema,

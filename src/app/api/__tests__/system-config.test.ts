@@ -23,6 +23,8 @@ describe('GET /api/system-config', () => {
     expect(data).toHaveProperty('systemEnabled');
     expect(data).toHaveProperty('calculatorPrice');
     expect(data).toHaveProperty('appealPrice');
+    expect(data).toHaveProperty('matchToleranceValue');
+    expect(data).toHaveProperty('matchToleranceIsPercent');
     expect(typeof data.paymentEnabled).toBe('boolean');
     expect(typeof data.calculatorPrice).toBe('number');
   });

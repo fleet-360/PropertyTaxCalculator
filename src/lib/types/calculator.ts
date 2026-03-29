@@ -22,6 +22,28 @@ export interface TaxCalculationInput {
   childrenCount?: number;
   // Error corrections
   correctedAreaSqm?: number;  // if user reports measurement error
+  // Dynamic area types (replaces legacy fields when city defines areaTypeDiscounts)
+  additionalAreas?: { areaType: string; areaSqm: number }[];
+  // Fee opt-in (names of optional fees the user opted into)
+  selectedFees?: string[];
+}
+
+// ── Area breakdown item ──────────────────────────────────────────────
+export interface AreaBreakdownItem {
+  areaType: string;
+  label: string;
+  areaSqm: number;
+  baseRatePerSqm: number;
+  discountPercent: number;
+  effectiveRatePerSqm: number;
+  annualAmount: number;
+}
+
+// ── Applied fee ──────────────────────────────────────────────────────
+export interface AppliedFee {
+  name: string;
+  amount: number;        // דו-חודשי
+  isMandatory: boolean;
 }
 
 // ── Calculation result ───────────────────────────────────────────────
@@ -42,6 +64,11 @@ export interface TaxCalculationResult {
     eligibleAreaSqm: number;
   };
   annualAfterExemption: number;
+  // Area breakdown (when areaTypeDiscounts exist on tariff)
+  areaBreakdown?: AreaBreakdownItem[];
+  // Applied fees (when cityFees exist on tariff)
+  appliedFees?: AppliedFee[];
+  totalFeesBimonthly?: number;
   // Bimonthly
   calculatedBimonthly: number;
   reportedBimonthly: number;

@@ -8,6 +8,8 @@ import type {
   IExemptionSubSection,
   IExemptionSection,
   IAvailableZone,
+  IAreaTypeDiscount,
+  ICityFee,
 } from '@/lib/types/city-tariff';
 
 export { ALL_ZONES_TARIFF_CODE, ALL_ZONES_LABEL_HE } from '@/lib/tariff-constants';
@@ -22,6 +24,8 @@ export type {
   IExemptionSubSection,
   IExemptionSection,
   IAvailableZone,
+  IAreaTypeDiscount,
+  ICityFee,
 } from '@/lib/types/city-tariff';
 
 // ── City tariff document interface ───────────────────────────────────
@@ -35,6 +39,8 @@ export interface ICityTariff extends Document {
   types: IPropertyType[];
   exemptions: IExemptionSection[];
   availableZones: IAvailableZone[];
+  areaTypeDiscounts: IAreaTypeDiscount[];
+  cityFees: ICityFee[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -122,6 +128,27 @@ const ExemptionSectionSchema = new Schema<IExemptionSection>(
   { _id: false }
 );
 
+// ── Area type discount schema ────────────────────────────────────────
+const AreaTypeDiscountSchema = new Schema<IAreaTypeDiscount>(
+  {
+    areaType: { type: String, required: true },
+    label: { type: String, required: true },
+    discountPercent: { type: Number, required: true, min: 0, max: 100 },
+    minimumRatePerSqm: { type: Number, required: true, min: 0 },
+  },
+  { _id: false }
+);
+
+// ── City fee schema ─────────────────────────────────────────────────
+const CityFeeSchema = new Schema<ICityFee>(
+  {
+    name: { type: String, required: true },
+    amount: { type: Number, required: true, min: 0 },
+    isMandatory: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+
 // ── Available zone schema ────────────────────────────────────────────
 const AvailableZoneSchema = new Schema<IAvailableZone>(
   {
@@ -164,6 +191,8 @@ const CityTariffSchema = new Schema<ICityTariff>(
     types: { type: [PropertyTypeSchema], default: [] },
     exemptions: { type: [ExemptionSectionSchema], default: [] },
     availableZones: { type: [AvailableZoneSchema], default: [] },
+    areaTypeDiscounts: { type: [AreaTypeDiscountSchema], default: [] },
+    cityFees: { type: [CityFeeSchema], default: [] },
   },
   {
     timestamps: true,

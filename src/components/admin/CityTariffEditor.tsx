@@ -48,6 +48,8 @@ import type {
   IExemptionSubSection,
   IExemptionSection,
   IAvailableZone,
+  IAreaTypeDiscount,
+  ICityFee,
   ICityTariffData,
 } from '@/lib/types/city-tariff';
 
@@ -66,6 +68,8 @@ const emptyCityData: ICityTariffData = {
   types: [],
   exemptions: [],
   availableZones: [],
+  areaTypeDiscounts: [],
+  cityFees: [],
 };
 
 // ── Component ────────────────────────────────────────────────────────
@@ -80,6 +84,8 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
     zones: true,
     types: true,
     exemptions: true,
+    areaTypeDiscounts: true,
+    cityFees: true,
   });
 
   const clearFieldErr = React.useCallback((path: string) => {
@@ -1452,6 +1458,215 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
               </Stack>
             </>
           )}
+        </AccordionDetails>
+      </Accordion>
+
+      {/* Section 5: Area Type Discounts */}
+      <Accordion
+        expanded={expandedAccordion.areaTypeDiscounts}
+        onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, areaTypeDiscounts: exp }))}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            הנחות שטח <Chip label={(data.areaTypeDiscounts ?? []).length} size="small" sx={{ ml: 1 }} />
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          {(data.areaTypeDiscounts ?? []).map((d, di) => (
+            <Paper key={di} variant="outlined" sx={{ p: 2, mb: 2 }}>
+              <Stack direction="row" spacing={1.5} alignItems="flex-start" flexWrap="wrap" useFlexGap>
+                <TextField
+                  label="קוד סוג שטח"
+                  size="small"
+                  value={d.areaType}
+                  onChange={(e) => {
+                    clearFieldErr(`areaTypeDiscounts.${di}.areaType`);
+                    setData((prev) => {
+                      const arr = [...(prev.areaTypeDiscounts ?? [])];
+                      arr[di] = { ...arr[di], areaType: e.target.value };
+                      return { ...prev, areaTypeDiscounts: arr };
+                    });
+                  }}
+                  error={!!fieldErr(`areaTypeDiscounts.${di}.areaType`)}
+                  helperText={fieldErr(`areaTypeDiscounts.${di}.areaType`)}
+                  sx={{ flex: '1 1 140px' }}
+                />
+                <TextField
+                  label="שם בעברית"
+                  size="small"
+                  value={d.label}
+                  onChange={(e) => {
+                    clearFieldErr(`areaTypeDiscounts.${di}.label`);
+                    setData((prev) => {
+                      const arr = [...(prev.areaTypeDiscounts ?? [])];
+                      arr[di] = { ...arr[di], label: e.target.value };
+                      return { ...prev, areaTypeDiscounts: arr };
+                    });
+                  }}
+                  error={!!fieldErr(`areaTypeDiscounts.${di}.label`)}
+                  helperText={fieldErr(`areaTypeDiscounts.${di}.label`)}
+                  sx={{ flex: '1 1 140px' }}
+                />
+                <TextField
+                  label="אחוז הנחה"
+                  size="small"
+                  type="number"
+                  value={d.discountPercent}
+                  onChange={(e) => {
+                    clearFieldErr(`areaTypeDiscounts.${di}.discountPercent`);
+                    setData((prev) => {
+                      const arr = [...(prev.areaTypeDiscounts ?? [])];
+                      arr[di] = { ...arr[di], discountPercent: Number(e.target.value) };
+                      return { ...prev, areaTypeDiscounts: arr };
+                    });
+                  }}
+                  error={!!fieldErr(`areaTypeDiscounts.${di}.discountPercent`)}
+                  helperText={fieldErr(`areaTypeDiscounts.${di}.discountPercent`)}
+                  sx={{ flex: '0 1 120px' }}
+                  slotProps={{ htmlInput: { min: 0, max: 100 } }}
+                />
+                <TextField
+                  label='מינימום ₪/מ"ר'
+                  size="small"
+                  type="number"
+                  value={d.minimumRatePerSqm}
+                  onChange={(e) => {
+                    clearFieldErr(`areaTypeDiscounts.${di}.minimumRatePerSqm`);
+                    setData((prev) => {
+                      const arr = [...(prev.areaTypeDiscounts ?? [])];
+                      arr[di] = { ...arr[di], minimumRatePerSqm: Number(e.target.value) };
+                      return { ...prev, areaTypeDiscounts: arr };
+                    });
+                  }}
+                  error={!!fieldErr(`areaTypeDiscounts.${di}.minimumRatePerSqm`)}
+                  helperText={fieldErr(`areaTypeDiscounts.${di}.minimumRatePerSqm`)}
+                  sx={{ flex: '0 1 120px' }}
+                  slotProps={{ htmlInput: { min: 0 } }}
+                />
+                <IconButton
+                  color="error"
+                  onClick={() => {
+                    setData((prev) => ({
+                      ...prev,
+                      areaTypeDiscounts: (prev.areaTypeDiscounts ?? []).filter((_, i) => i !== di),
+                    }));
+                  }}
+                  aria-label="מחק הנחת שטח"
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Stack>
+            </Paper>
+          ))}
+          <Button
+            startIcon={<AddIcon />}
+            onClick={() => {
+              setData((prev) => ({
+                ...prev,
+                areaTypeDiscounts: [
+                  ...(prev.areaTypeDiscounts ?? []),
+                  { areaType: '', label: '', discountPercent: 0, minimumRatePerSqm: 0 },
+                ],
+              }));
+            }}
+          >
+            הוסף סוג שטח
+          </Button>
+        </AccordionDetails>
+      </Accordion>
+
+      {/* Section 6: City Fees */}
+      <Accordion
+        expanded={expandedAccordion.cityFees}
+        onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, cityFees: exp }))}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            אגרות נוספות <Chip label={(data.cityFees ?? []).length} size="small" sx={{ ml: 1 }} />
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          {(data.cityFees ?? []).map((f, fi) => (
+            <Paper key={fi} variant="outlined" sx={{ p: 2, mb: 2 }}>
+              <Stack direction="row" spacing={1.5} alignItems="flex-start" flexWrap="wrap" useFlexGap>
+                <TextField
+                  label="שם אגרה"
+                  size="small"
+                  value={f.name}
+                  onChange={(e) => {
+                    clearFieldErr(`cityFees.${fi}.name`);
+                    setData((prev) => {
+                      const arr = [...(prev.cityFees ?? [])];
+                      arr[fi] = { ...arr[fi], name: e.target.value };
+                      return { ...prev, cityFees: arr };
+                    });
+                  }}
+                  error={!!fieldErr(`cityFees.${fi}.name`)}
+                  helperText={fieldErr(`cityFees.${fi}.name`)}
+                  sx={{ flex: '1 1 180px' }}
+                />
+                <TextField
+                  label="עלות דו-חודשית (₪)"
+                  size="small"
+                  type="number"
+                  value={f.amount}
+                  onChange={(e) => {
+                    clearFieldErr(`cityFees.${fi}.amount`);
+                    setData((prev) => {
+                      const arr = [...(prev.cityFees ?? [])];
+                      arr[fi] = { ...arr[fi], amount: Number(e.target.value) };
+                      return { ...prev, cityFees: arr };
+                    });
+                  }}
+                  error={!!fieldErr(`cityFees.${fi}.amount`)}
+                  helperText={fieldErr(`cityFees.${fi}.amount`)}
+                  sx={{ flex: '0 1 150px' }}
+                  slotProps={{ htmlInput: { min: 0 } }}
+                />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={f.isMandatory}
+                      onChange={(e) => {
+                        setData((prev) => {
+                          const arr = [...(prev.cityFees ?? [])];
+                          arr[fi] = { ...arr[fi], isMandatory: e.target.checked };
+                          return { ...prev, cityFees: arr };
+                        });
+                      }}
+                    />
+                  }
+                  label="חובה"
+                />
+                <IconButton
+                  color="error"
+                  onClick={() => {
+                    setData((prev) => ({
+                      ...prev,
+                      cityFees: (prev.cityFees ?? []).filter((_, i) => i !== fi),
+                    }));
+                  }}
+                  aria-label="מחק אגרה"
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Stack>
+            </Paper>
+          ))}
+          <Button
+            startIcon={<AddIcon />}
+            onClick={() => {
+              setData((prev) => ({
+                ...prev,
+                cityFees: [
+                  ...(prev.cityFees ?? []),
+                  { name: '', amount: 0, isMandatory: false },
+                ],
+              }));
+            }}
+          >
+            הוסף אגרה
+          </Button>
         </AccordionDetails>
       </Accordion>
 

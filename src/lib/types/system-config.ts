@@ -20,7 +20,27 @@ export interface ISystemConfigData {
   systemEnabled: boolean;
   calculatorPrice: number;
   appealPrice: number;
+  /** Max gap for `match`: fixed ₪ on bimonthly diff, or % of calculated bimonthly when `matchToleranceIsPercent` */
+  matchToleranceValue: number;
+  matchToleranceIsPercent: boolean;
   contactEmails?: IContactEmails;
+}
+
+export const DEFAULT_MATCH_TOLERANCE_VALUE = 10;
+export const DEFAULT_MATCH_TOLERANCE_IS_PERCENT = false;
+
+/** Normalize tolerance fields from DB/API for calculator calls (invalid numbers fall back to default ₪ value). */
+export function parseMatchToleranceFromConfig(raw: {
+  matchToleranceValue?: unknown;
+  matchToleranceIsPercent?: unknown;
+}): { matchToleranceValue: number; matchToleranceIsPercent: boolean } {
+  let matchToleranceValue = DEFAULT_MATCH_TOLERANCE_VALUE;
+  const v = raw.matchToleranceValue;
+  if (typeof v === 'number' && Number.isFinite(v) && v >= 0) {
+    matchToleranceValue = v;
+  }
+  const matchToleranceIsPercent = raw.matchToleranceIsPercent === true;
+  return { matchToleranceValue, matchToleranceIsPercent };
 }
 
 /** Flags + prices passed from server into CalculatorWizard / landing CTA */
