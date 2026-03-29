@@ -1,7 +1,13 @@
 import { PDFDocument } from 'pdf-lib';
+import {
+  APPEAL_PAGE_MARGIN_PT,
+  appealFooterBaselines,
+  signatureImagePdfLibY,
+} from './appealPdfLayout';
 
 /**
- * Draw signature PNG on the last page (bottom-right in PDF coordinates).
+ * Draw signature PNG on the last page, right-aligned between “חתימת המגיש:” and the underscore line
+ * (geometry must match `renderAppealPdf`).
  */
 export async function applySignatureToPdfBuffer(
   pdfBuffer: Buffer,
@@ -21,9 +27,11 @@ export async function applySignatureToPdfBuffer(
   const imgW = maxW;
   const imgH = maxW * aspect;
 
-  const margin = 48;
+  const margin = APPEAL_PAGE_MARGIN_PT;
   const x = width - margin - imgW;
-  const y = margin;
+
+  const { lineBaselineY } = appealFooterBaselines(height, margin);
+  const y = signatureImagePdfLibY(height, lineBaselineY);
 
   lastPage.drawImage(pngImage, {
     x,

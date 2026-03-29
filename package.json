@@ -29,6 +29,7 @@
     "@types/react-dom": "^19.2.3",
     "@vercel/blob": "^2.3.2",
     "bcryptjs": "^3.0.3",
+    "bidi-js": "^1.0.3",
     "dompurify": "^3.3.2",
     "dotenv": "^17.3.1",
     "framer-motion": "^12.38.0",
