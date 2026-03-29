@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import MuiLink from '@mui/material/Link';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
@@ -9,7 +10,8 @@ import Divider from '@mui/material/Divider';
 import Grid from '@mui/material/Grid';
 import dbConnect from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
-import Settings from '@/lib/models/Settings';
+import { BLOG_PATHS, blogCategoryPath } from '@/lib/blog/routes';
+import { formatPostDateHe, formatPostDateISO } from '@/lib/blog/dates';
 import { generatePostMetadata, generateJsonLd } from '@/lib/seo';
 import BlockRenderer from '@/components/editor/BlockRenderer';
 import ShareButtons from '@/components/blog/ShareButtons';
@@ -20,12 +22,6 @@ async function getPost(slug: string) {
   const post = await Post.findOne({ slug, status: 'published' }).lean();
   if (!post) return null;
   return JSON.parse(JSON.stringify(post));
-}
-
-async function getSettings() {
-  await dbConnect();
-  const settings = await Settings.getSettings();
-  return JSON.parse(JSON.stringify(settings));
 }
 
 interface PostPageProps {
@@ -49,25 +45,9 @@ export async function generateStaticParams() {
   }));
 }
 
-function formatDate(date: Date | string | undefined): string {
-  if (!date) return '';
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
-
-function formatISODate(date: Date | string | undefined): string {
-  if (!date) return '';
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toISOString();
-}
-
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
-  const [post, settings] = await Promise.all([getPost(slug), getSettings()]);
+  const post = await getPost(slug);
 
   if (!post) {
     notFound();
@@ -102,24 +82,25 @@ export default async function PostPage({ params }: PostPageProps) {
               <Box component="header" sx={{ mb: 4 }}>
                 {/* Category */}
                 {post.category && post.category !== 'Uncategorized' && (
-                  <Link
-                    href={`/category/${encodeURIComponent(post.category.toLowerCase())}`}
-                    style={{ textDecoration: 'none' }}
+                  <MuiLink
+                    component={"a"}
+                    href={blogCategoryPath(post.category)}
+                    underline="none"
+                    sx={{ mb: 2, display: 'inline-block' }}
                   >
                     <Chip
                       label={post.category}
                       clickable
                       size="small"
                       sx={{
-                        mb: 2,
-                        backgroundColor: '#1976d2',
-                        color: '#fff',
+                        backgroundColor: 'primary.main',
+                        color: 'primary.contrastText',
                         fontWeight: 600,
                         fontSize: '0.75rem',
-                        '&:hover': { backgroundColor: '#1565c0' },
+                        '&:hover': { backgroundColor: 'primary.dark' },
                       }}
                     />
-                  </Link>
+                  </MuiLink>
                 )}
 
                 {/* Title */}
@@ -132,7 +113,7 @@ export default async function PostPage({ params }: PostPageProps) {
                     fontSize: { xs: '1.8rem', md: '2.8rem' },
                     lineHeight: 1.2,
                     mb: 3,
-                    color: '#1a1a1a',
+                    color: 'text.primary',
                     letterSpacing: '-0.02em',
                   }}
                 >
@@ -157,11 +138,11 @@ export default async function PostPage({ params }: PostPageProps) {
                         width: 32,
                         height: 32,
                         borderRadius: '50%',
-                        backgroundColor: '#1976d2',
+                        backgroundColor: 'primary.main',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#fff',
+                        color: 'primary.contrastText',
                         fontWeight: 700,
                         fontSize: '0.8rem',
                       }}
@@ -189,11 +170,11 @@ export default async function PostPage({ params }: PostPageProps) {
                     <Typography
                       variant="body2"
                       component="time"
-                      dateTime={formatISODate(post.publishedAt)}
+                      dateTime={formatPostDateISO(post.publishedAt)}
                       itemProp="datePublished"
-                      content={formatISODate(post.publishedAt)}
+                      content={formatPostDateISO(post.publishedAt)}
                     >
-                      {formatDate(post.publishedAt)}
+                      {formatPostDateHe(post.publishedAt)}
                     </Typography>
                   )}
 
@@ -290,8 +271,8 @@ export default async function PostPage({ params }: PostPageProps) {
                         sx={{
                           borderColor: 'divider',
                           '&:hover': {
-                            backgroundColor: 'rgba(25, 118, 210, 0.05)',
-                            borderColor: '#1976d2',
+                            backgroundColor: 'action.hover',
+                            borderColor: 'primary.main',
                           },
                         }}
                       />
@@ -305,17 +286,14 @@ export default async function PostPage({ params }: PostPageProps) {
 
               {/* Back to Home */}
               <Box sx={{ mt: 5, pt: 4, borderTop: '1px solid', borderColor: 'divider' }}>
-                <Link
-                  href="/"
-                  style={{
-                    color: '#1976d2',
-                    textDecoration: 'none',
-                    fontWeight: 500,
-                    fontSize: '0.9rem',
-                  }}
+                <MuiLink
+                  component={"a"}
+                  href={BLOG_PATHS.home}
+                  underline="hover"
+                  sx={{ fontWeight: 500, fontSize: '0.9rem', color: 'primary.main' }}
                 >
-                  &larr; Back to all posts
-                </Link>
+                  &larr; חזרה לכל הכתבות
+                </MuiLink>
               </Box>
             </Box>
           </Grid>

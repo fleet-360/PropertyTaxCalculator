@@ -6,15 +6,10 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import dbConnect from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
-import Settings from '@/lib/models/Settings';
+import { BLOG_PATHS } from '@/lib/blog/routes';
+import { getBlogSiteSettings } from '@/lib/blog/settings';
 import PostCard from '@/components/blog/PostCard';
 import Pagination from '@/components/blog/Pagination';
-
-async function getSettings() {
-  await dbConnect();
-  const settings = await Settings.getSettings();
-  return JSON.parse(JSON.stringify(settings));
-}
 
 async function getPosts(page: number, perPage: number) {
   await dbConnect();
@@ -35,7 +30,7 @@ async function getPosts(page: number, perPage: number) {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSettings();
+  const settings = await getBlogSiteSettings();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
   return {
@@ -57,7 +52,7 @@ interface BlogHomeProps {
 
 export default async function BlogHome({ searchParams }: BlogHomeProps) {
   const params = await searchParams;
-  const settings = await getSettings();
+  const settings = await getBlogSiteSettings();
   const currentPage = Math.max(1, parseInt(params.page || '1', 10) || 1);
   const perPage = settings.postsPerPage || 10;
   const { posts, totalCount, totalPages } = await getPosts(currentPage, perPage);
@@ -70,7 +65,7 @@ export default async function BlogHome({ searchParams }: BlogHomeProps) {
         sx={{
           py: { xs: 6, md: 10 },
           textAlign: 'center',
-          backgroundColor: '#fafafa',
+          backgroundColor: 'background.default',
           borderBottom: '1px solid',
           borderColor: 'divider',
         }}
@@ -83,7 +78,7 @@ export default async function BlogHome({ searchParams }: BlogHomeProps) {
               fontWeight: 800,
               fontSize: { xs: '2rem', md: '3rem' },
               mb: 2,
-              color: '#1a1a1a',
+              color: 'text.primary',
               letterSpacing: '-0.02em',
             }}
           >
@@ -113,10 +108,10 @@ export default async function BlogHome({ searchParams }: BlogHomeProps) {
         {posts.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 10 }}>
             <Typography variant="h5" color="text.secondary" sx={{ mb: 2 }}>
-              No posts yet
+              אין כתבות עדיין
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Check back soon for new content.
+              בואו לבדוק מחר לקבל תוכן חדש.
             </Typography>
           </Box>
         ) : (
@@ -132,7 +127,7 @@ export default async function BlogHome({ searchParams }: BlogHomeProps) {
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
-              basePath="/"
+              basePath={BLOG_PATHS.home}
             />
 
             {totalCount > 0 && (

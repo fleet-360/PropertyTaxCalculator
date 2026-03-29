@@ -15,6 +15,7 @@ import {
   Typography,
   Button,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { ButtonData } from '../types';
 
 interface ButtonBlockProps {
@@ -23,6 +24,8 @@ interface ButtonBlockProps {
 }
 
 export default function ButtonBlock({ data, onUpdate }: ButtonBlockProps) {
+  const theme = useTheme();
+
   const handleChange = (field: keyof ButtonData, value: string) => {
     onUpdate({ ...data, [field]: value });
   };
@@ -46,9 +49,7 @@ export default function ButtonBlock({ data, onUpdate }: ButtonBlockProps) {
   };
 
   const handleRelChange = (relValue: string, checked: boolean) => {
-    const currentRels = data.rel
-      ? data.rel.split(' ').filter((r) => r.trim())
-      : [];
+    const currentRels = data.rel ? data.rel.split(' ').filter((r) => r.trim()) : [];
     let newRels: string[];
     if (checked) {
       newRels = [...currentRels, relValue];
@@ -60,70 +61,86 @@ export default function ButtonBlock({ data, onUpdate }: ButtonBlockProps) {
 
   const relValues = data.rel ? data.rel.split(' ').filter((r) => r.trim()) : [];
 
+  const contrastOnColor = theme.palette.getContrastText(data.color);
+
   return (
-    <Box>
-      {/* Text and URL */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+    <Box dir="rtl" lang="he">
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
         <TextField
           fullWidth
           size="small"
-          label="Button Text"
+          label="טקסט הכפתור"
           value={data.text}
           onChange={(e) => handleChange('text', e.target.value)}
+          sx={{ flex: 1, minWidth: 160 }}
         />
         <TextField
           fullWidth
           size="small"
-          label="URL"
+          label="כתובת (URL)"
           placeholder="https://example.com"
           value={data.url}
           onChange={(e) => handleChange('url', e.target.value)}
+          sx={{ flex: 1, minWidth: 200 }}
+          inputProps={{ dir: 'ltr', lang: 'en' }}
         />
       </Box>
 
-      {/* Style, Size, Color */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
         <Box>
           <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-            Style:
+            סגנון:
           </Typography>
           <ToggleButtonGroup
             value={data.style}
             exclusive
             onChange={handleStyleChange}
             size="small"
+            aria-label="סגנון כפתור"
           >
-            <ToggleButton value="filled">Filled</ToggleButton>
-            <ToggleButton value="outline">Outline</ToggleButton>
+            <ToggleButton value="filled" aria-label="מלא">
+              מלא
+            </ToggleButton>
+            <ToggleButton value="outline" aria-label="מתאר">
+              מתאר
+            </ToggleButton>
           </ToggleButtonGroup>
         </Box>
 
         <Box>
           <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-            Size:
+            גודל:
           </Typography>
           <ToggleButtonGroup
             value={data.size}
             exclusive
             onChange={handleSizeChange}
             size="small"
+            aria-label="גודל כפתור"
           >
-            <ToggleButton value="small">Small</ToggleButton>
-            <ToggleButton value="medium">Medium</ToggleButton>
-            <ToggleButton value="large">Large</ToggleButton>
+            <ToggleButton value="small" aria-label="קטן">
+              קטן
+            </ToggleButton>
+            <ToggleButton value="medium" aria-label="בינוני">
+              בינוני
+            </ToggleButton>
+            <ToggleButton value="large" aria-label="גדול">
+              גדול
+            </ToggleButton>
           </ToggleButtonGroup>
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
           <Box>
             <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-              Color:
+              צבע:
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <input
                 type="color"
                 value={data.color}
                 onChange={(e) => handleChange('color', e.target.value)}
+                aria-label="צבע כפתור"
                 style={{
                   width: 32,
                   height: 32,
@@ -137,6 +154,7 @@ export default function ButtonBlock({ data, onUpdate }: ButtonBlockProps) {
                 size="small"
                 value={data.color}
                 onChange={(e) => handleChange('color', e.target.value)}
+                inputProps={{ dir: 'ltr', lang: 'en', 'aria-label': 'קוד צבע' }}
                 sx={{ width: 100, '& .MuiInputBase-input': { py: 0.5, fontSize: '0.8rem' } }}
               />
             </Box>
@@ -144,37 +162,37 @@ export default function ButtonBlock({ data, onUpdate }: ButtonBlockProps) {
         </Box>
       </Box>
 
-      {/* Target, Tag */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-        <FormControl size="small" sx={{ minWidth: 150 }}>
-          <InputLabel>Target</InputLabel>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel id="button-target-label">יעד קישור</InputLabel>
           <Select
+            labelId="button-target-label"
             value={data.target}
-            label="Target"
+            label="יעד קישור"
             onChange={(e) => handleChange('target', e.target.value)}
           >
-            <MenuItem value="_self">Same Window</MenuItem>
-            <MenuItem value="_blank">New Tab</MenuItem>
+            <MenuItem value="_self">אותו חלון</MenuItem>
+            <MenuItem value="_blank">לשונית חדשה</MenuItem>
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel>Tag</InputLabel>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel id="button-tag-label">סוג אלמנט</InputLabel>
           <Select
+            labelId="button-tag-label"
             value={data.tag}
-            label="Tag"
+            label="סוג אלמנט"
             onChange={(e) => handleChange('tag', e.target.value)}
           >
-            <MenuItem value="a">&lt;a&gt; (Link)</MenuItem>
-            <MenuItem value="button">&lt;button&gt;</MenuItem>
+            <MenuItem value="a">&lt;a&gt; קישור</MenuItem>
+            <MenuItem value="button">&lt;button&gt; כפתור</MenuItem>
           </Select>
         </FormControl>
       </Box>
 
-      {/* Rel attributes */}
       <Box sx={{ mb: 2 }}>
         <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-          Rel Attributes:
+          מאפייני rel:
         </Typography>
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           {['nofollow', 'sponsored', 'ugc', 'noopener', 'noreferrer'].map((rel) => (
@@ -193,9 +211,8 @@ export default function ButtonBlock({ data, onUpdate }: ButtonBlockProps) {
         </Box>
       </Box>
 
-      {/* Button preview */}
       <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-        Preview:
+        תצוגה מקדימה:
       </Typography>
       <Box
         sx={{
@@ -211,15 +228,15 @@ export default function ButtonBlock({ data, onUpdate }: ButtonBlockProps) {
           sx={{
             backgroundColor: data.style === 'filled' ? data.color : 'transparent',
             borderColor: data.color,
-            color: data.style === 'filled' ? '#fff' : data.color,
+            color: data.style === 'filled' ? contrastOnColor : data.color,
             '&:hover': {
-              backgroundColor: data.style === 'filled' ? data.color : `${data.color}10`,
+              backgroundColor: data.style === 'filled' ? data.color : 'transparent',
               borderColor: data.color,
-              opacity: 0.9,
+              opacity: 0.92,
             },
           }}
         >
-          {data.text || 'Button'}
+          {data.text || 'כפתור'}
         </Button>
       </Box>
     </Box>

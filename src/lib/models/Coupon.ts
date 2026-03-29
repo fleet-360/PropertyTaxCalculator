@@ -57,8 +57,6 @@ const CouponSchema = new Schema<ICoupon>(
   }
 );
 
-// ── Indexes ───────────────────────────────────────────────────────────
-CouponSchema.index({ code: 1 }, { unique: true });
 
 // ── Pre-save hook: uppercase the code ────────────────────────────────
 CouponSchema.pre('save', function () {

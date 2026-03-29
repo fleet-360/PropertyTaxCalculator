@@ -17,7 +17,7 @@ import {
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
 import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
 import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
-import { ImageData } from '../types';
+import { ImageData, normalizeBlockTextAlignment } from '../types';
 
 interface ImageBlockProps {
   data: ImageData;
@@ -40,31 +40,32 @@ export default function ImageBlock({ data, onUpdate }: ImageBlockProps) {
     }
   };
 
+  const alignment = normalizeBlockTextAlignment(data.alignment, { defaultAlign: 'center' });
+
   return (
-    <Box>
-      {/* URL Input */}
+    <Box dir="rtl" lang="he">
       <TextField
         fullWidth
         size="small"
-        label="Image URL"
+        label="כתובת תמונה (URL)"
         placeholder="https://example.com/image.jpg"
         value={data.url}
         onChange={(e) => handleChange('url', e.target.value)}
         sx={{ mb: 2 }}
+        inputProps={{ dir: 'ltr', lang: 'en' }}
       />
 
-      {/* Image Preview */}
       {data.url && (
         <Box
           sx={{
             mb: 2,
-            textAlign: data.alignment,
+            textAlign: alignment,
           }}
         >
           <Box
             component="img"
             src={data.url}
-            alt={data.alt || 'Image preview'}
+            alt={data.alt || 'תצוגה מקדימה של תמונה'}
             sx={{
               maxWidth: '100%',
               width: data.width,
@@ -80,46 +81,42 @@ export default function ImageBlock({ data, onUpdate }: ImageBlockProps) {
         </Box>
       )}
 
-      {/* Alt text */}
       <TextField
         fullWidth
         size="small"
-        label="Alt Text"
-        placeholder="Describe the image"
+        label="טקסט חלופי (alt)"
+        placeholder="תיאור קצר של התמונה"
         value={data.alt}
         onChange={(e) => handleChange('alt', e.target.value)}
-        helperText="Required for SEO and accessibility"
+        helperText="חשוב לנגישות ולקידום (SEO)"
         sx={{ mb: 2 }}
         error={!data.alt && !!data.url}
       />
 
-      {/* Title */}
       <TextField
         fullWidth
         size="small"
-        label="Title Attribute"
-        placeholder="Image title (tooltip on hover)"
+        label="כותרת (title)"
+        placeholder="מוצג בעת מעבר עכבר"
         value={data.title}
         onChange={(e) => handleChange('title', e.target.value)}
         sx={{ mb: 2 }}
       />
 
-      {/* Caption */}
       <TextField
         fullWidth
         size="small"
-        label="Caption"
-        placeholder="Image caption (shown below image)"
+        label="כיתוב"
+        placeholder="כיתוב שיוצג מתחת לתמונה"
         value={data.caption}
         onChange={(e) => handleChange('caption', e.target.value)}
         sx={{ mb: 2 }}
       />
 
-      {/* Width and Alignment row */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           <Typography variant="caption" color="text.secondary">
-            Width:
+            רוחב:
           </Typography>
           {widthPresets.map((preset) => (
             <Chip
@@ -136,56 +133,58 @@ export default function ImageBlock({ data, onUpdate }: ImageBlockProps) {
             size="small"
             value={data.width}
             onChange={(e) => handleChange('width', e.target.value)}
-            placeholder="Custom (e.g. 300px)"
-            sx={{ width: 130, '& .MuiInputBase-input': { py: 0.5, fontSize: '0.8rem' } }}
+            placeholder="מותאם (למשל 300px)"
+            inputProps={{ dir: 'ltr', lang: 'en' }}
+            sx={{ width: 140, '& .MuiInputBase-input': { py: 0.5, fontSize: '0.8rem' } }}
           />
         </Box>
 
         <ToggleButtonGroup
-          value={data.alignment}
+          value={alignment}
           exclusive
           onChange={handleAlignmentChange}
           size="small"
+          aria-label="יישור תמונה"
         >
-          <ToggleButton value="left">
-            <FormatAlignLeftIcon fontSize="small" />
+          <ToggleButton value="start" aria-label="יישור לתחילת שורה">
+            <FormatAlignRightIcon fontSize="small" />
           </ToggleButton>
-          <ToggleButton value="center">
+          <ToggleButton value="center" aria-label="יישור למרכז">
             <FormatAlignCenterIcon fontSize="small" />
           </ToggleButton>
-          <ToggleButton value="right">
-            <FormatAlignRightIcon fontSize="small" />
+          <ToggleButton value="end" aria-label="יישור לסוף שורה">
+            <FormatAlignLeftIcon fontSize="small" />
           </ToggleButton>
         </ToggleButtonGroup>
       </Box>
 
-      {/* Link */}
       <TextField
         fullWidth
         size="small"
-        label="Link (optional)"
-        placeholder="https://example.com (wraps image in a link)"
+        label="קישור (אופציונלי)"
+        placeholder="https://... — עוטף את התמונה בקישור"
         value={data.link}
         onChange={(e) => handleChange('link', e.target.value)}
         sx={{ mb: 2 }}
+        inputProps={{ dir: 'ltr', lang: 'en' }}
       />
 
-      {/* Loading strategy */}
-      <FormControl size="small" sx={{ minWidth: 150 }}>
-        <InputLabel>Loading</InputLabel>
+      <FormControl size="small" sx={{ minWidth: 180 }}>
+        <InputLabel id="image-loading-label">טעינת תמונה</InputLabel>
         <Select
+          labelId="image-loading-label"
           value={data.loading}
-          label="Loading"
+          label="טעינת תמונה"
           onChange={(e) => handleChange('loading', e.target.value)}
         >
-          <MenuItem value="lazy">Lazy (recommended)</MenuItem>
-          <MenuItem value="eager">Eager</MenuItem>
+          <MenuItem value="lazy">עצלן (מומלץ)</MenuItem>
+          <MenuItem value="eager">מיידי</MenuItem>
         </Select>
       </FormControl>
 
       {!data.alt && data.url && (
         <Alert severity="warning" sx={{ mt: 2 }}>
-          Alt text is missing. This is important for SEO and accessibility.
+          חסר טקסט חלופי (alt). מומלץ למלא לנגישות ולקידום האתר.
         </Alert>
       )}
     </Box>

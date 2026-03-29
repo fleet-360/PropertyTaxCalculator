@@ -1,12 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import {
-  Box,
-  TextField,
-  Typography,
-  Alert,
-} from '@mui/material';
+import { Box, TextField, Typography, Alert } from '@mui/material';
 import { VideoData } from '../types';
 
 interface VideoBlockProps {
@@ -14,13 +9,9 @@ interface VideoBlockProps {
   onUpdate: (data: VideoData) => void;
 }
 
-/**
- * Parses YouTube and Vimeo URLs and returns an embeddable URL.
- */
 function parseVideoUrl(url: string): string | null {
   if (!url) return null;
 
-  // YouTube: various URL formats
   const youtubePatterns = [
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
     /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
@@ -33,13 +24,11 @@ function parseVideoUrl(url: string): string | null {
     }
   }
 
-  // Vimeo
   const vimeoMatch = url.match(/(?:vimeo\.com\/)(\d+)/);
   if (vimeoMatch) {
     return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
   }
 
-  // If it's already an embed URL or other iframe-compatible URL, return it
   if (url.includes('embed') || url.includes('player')) {
     return url;
   }
@@ -55,26 +44,25 @@ export default function VideoBlock({ data, onUpdate }: VideoBlockProps) {
   };
 
   return (
-    <Box>
-      {/* URL Input */}
+    <Box dir="rtl" lang="he">
       <TextField
         fullWidth
         size="small"
-        label="Video URL"
-        placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/..."
+        label="כתובת וידאו"
+        placeholder="https://www.youtube.com/watch?v=... או https://vimeo.com/..."
         value={data.url}
         onChange={(e) => handleChange('url', e.target.value)}
-        helperText="Supports YouTube and Vimeo URLs"
+        helperText="נתמך: YouTube, Vimeo או כתובת הטמעה ישירה"
         sx={{ mb: 2 }}
+        inputProps={{ dir: 'ltr', lang: 'en' }}
       />
 
-      {/* iframe Preview */}
       {embedUrl ? (
         <Box
           sx={{
             position: 'relative',
             width: '100%',
-            paddingTop: '56.25%', // 16:9 aspect ratio
+            paddingTop: '56.25%',
             mb: 2,
             borderRadius: 1,
             overflow: 'hidden',
@@ -84,7 +72,7 @@ export default function VideoBlock({ data, onUpdate }: VideoBlockProps) {
           <Box
             component="iframe"
             src={embedUrl}
-            title={data.iframeTitle || 'Embedded video'}
+            title={data.iframeTitle || 'וידאו מוטמע'}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             sx={{
@@ -99,7 +87,7 @@ export default function VideoBlock({ data, onUpdate }: VideoBlockProps) {
         </Box>
       ) : data.url ? (
         <Alert severity="warning" sx={{ mb: 2 }}>
-          Could not parse video URL. Supported formats: YouTube, Vimeo, or direct embed URLs.
+          לא ניתן לפרש את כתובת הווידאו. נתמך: YouTube, Vimeo או כתובת iframe.
         </Alert>
       ) : (
         <Box
@@ -117,31 +105,29 @@ export default function VideoBlock({ data, onUpdate }: VideoBlockProps) {
           }}
         >
           <Typography color="text.secondary" variant="body2">
-            Enter a video URL above to preview
+            הזן כתובת וידאו לתצוגה מקדימה
           </Typography>
         </Box>
       )}
 
-      {/* Caption */}
       <TextField
         fullWidth
         size="small"
-        label="Caption"
-        placeholder="Video caption"
+        label="כיתוב"
+        placeholder="כיתוב לווידאו"
         value={data.caption}
         onChange={(e) => handleChange('caption', e.target.value)}
         sx={{ mb: 2 }}
       />
 
-      {/* iframe title */}
       <TextField
         fullWidth
         size="small"
-        label="iframe Title"
-        placeholder="Descriptive title for accessibility"
+        label="כותרת iframe (נגישות)"
+        placeholder="תיאור קצר לקוראי מסך"
         value={data.iframeTitle}
         onChange={(e) => handleChange('iframeTitle', e.target.value)}
-        helperText="Important for accessibility (screen readers)"
+        helperText="חשוב לנגישות (קוראי מסך)"
       />
     </Box>
   );
