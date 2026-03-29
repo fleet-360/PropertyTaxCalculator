@@ -85,6 +85,10 @@ export interface WizardState {
   couponCodeDraft: string;
   /** Applied coupon — reused for calculator payment and appeal payment */
   appliedCoupon: AppliedWizardCoupon | null;
+  // Dynamic area types (when city defines areaTypeDiscounts)
+  additionalAreas: { areaType: string; areaSqm: number }[];
+  // Fee opt-in (names of optional fees the user opted into)
+  selectedFees: string[];
   // Lead tracking
   leadId: string | null;
   calculationIndex: number;
@@ -129,6 +133,8 @@ export const initialState: WizardState = {
   contactRedirectReason: null,
   couponCodeDraft: '',
   appliedCoupon: null,
+  additionalAreas: [],
+  selectedFees: [],
   leadId: null,
   calculationIndex: 0,
   miaMessageId: 'step-0-default',

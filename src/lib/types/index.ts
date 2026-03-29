@@ -71,7 +71,13 @@ export type {
   ISystemConfigData,
 } from './system-config';
 
-export { DEFAULT_CALCULATOR_FEATURE_CONFIG, toCalculatorFeatureConfig } from './system-config';
+export {
+  DEFAULT_CALCULATOR_FEATURE_CONFIG,
+  DEFAULT_MATCH_TOLERANCE_IS_PERCENT,
+  DEFAULT_MATCH_TOLERANCE_VALUE,
+  parseMatchToleranceFromConfig,
+  toCalculatorFeatureConfig,
+} from './system-config';
 
 export type {
   ISettingsData,

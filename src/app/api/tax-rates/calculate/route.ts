@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import CityTariff from '@/lib/models/CityTariff';
+import SystemConfig from '@/lib/models/SystemConfig';
 import {
   calculatePropertyTax,
   calculateBusinessPropertyTax,
   type TaxCalculationInput,
 } from '@/lib/calculator';
+import { parseMatchToleranceFromConfig } from '@/lib/types/system-config';
 
 // ── POST /api/tax-rates/calculate ────────────────────────────────────
 // Calculate property tax (public).
@@ -31,6 +33,8 @@ export async function POST(request: NextRequest) {
       childrenCount,
       correctedAreaSqm,
       designations,
+      additionalAreas,
+      selectedFees,
     } = body;
 
     // Normalize exemption codes: support both single string and array
@@ -52,8 +56,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Load city tariff
-    const tariff = await CityTariff.findOne({ slug: citySlug, isActive: true });
+    const [tariff, systemConfig] = await Promise.all([
+      CityTariff.findOne({ slug: citySlug, isActive: true }),
+      SystemConfig.getConfig(),
+    ]);
 
     if (!tariff) {
       return NextResponse.json(
@@ -62,6 +68,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { matchToleranceValue, matchToleranceIsPercent } = parseMatchToleranceFromConfig(systemConfig);
 
     // Business with designations
     if (designations && Array.isArray(designations) && designations.length > 0) {
@@ -71,7 +78,9 @@ export async function POST(request: NextRequest) {
         bimonthlyPayment,
         exemptionCodes,
         householdSize,
-        childrenCount
+        childrenCount,
+        matchToleranceValue,
+        matchToleranceIsPercent
       );
 
       return NextResponse.json(result, { status: 200 });
@@ -105,9 +114,16 @@ export async function POST(request: NextRequest) {
       householdSize,
       childrenCount,
       correctedAreaSqm,
+      additionalAreas,
+      selectedFees,
     };
 
-    const result = calculatePropertyTax(tariff, input);
+    const result = calculatePropertyTax(
+      tariff,
+      input,
+      matchToleranceValue,
+      matchToleranceIsPercent
+    );
 
     return NextResponse.json(result, { status: 200 });
   } catch (error) {

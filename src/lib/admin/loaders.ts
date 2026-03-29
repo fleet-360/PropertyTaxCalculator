@@ -10,7 +10,11 @@ import { requireAdminSession } from '@/lib/admin/requireAdminSession';
 import type { CitySummary, LeadListItem } from '@/lib/types/admin';
 import type { ICouponData } from '@/lib/types/coupon';
 import type { PostListItem, PostSortField, SortDirection } from '@/lib/types/post';
-import type { ISystemConfigData } from '@/lib/types/system-config';
+import {
+  DEFAULT_MATCH_TOLERANCE_IS_PERCENT,
+  DEFAULT_MATCH_TOLERANCE_VALUE,
+  type ISystemConfigData,
+} from '@/lib/types/system-config';
 import type { ISettingsData } from '@/lib/types/settings';
 
 function toIso(d: unknown): string {
@@ -75,6 +79,8 @@ export async function loadSystemConfigForAdmin(): Promise<ISystemConfigData> {
     systemEnabled: Boolean(data.systemEnabled),
     calculatorPrice: data.calculatorPrice,
     appealPrice: data.appealPrice,
+    matchToleranceValue: data.matchToleranceValue ?? DEFAULT_MATCH_TOLERANCE_VALUE,
+    matchToleranceIsPercent: data.matchToleranceIsPercent ?? DEFAULT_MATCH_TOLERANCE_IS_PERCENT,
     contactEmails: {
       service: data.contactEmails?.service || '',
       noreply: data.contactEmails?.noreply || '',

@@ -49,6 +49,8 @@ export function normalizeCityTariffPayload(raw: CityTariffPayloadInput): CityTar
         documentTypes: Array.isArray(sub.documentTypes) ? sub.documentTypes : [],
       })),
     })),
+    areaTypeDiscounts: raw.areaTypeDiscounts ?? [],
+    cityFees: raw.cityFees ?? [],
   };
 }
 
@@ -158,6 +160,37 @@ export function validateCityTariffPayload(data: CityTariffPayloadInput): CityTar
     });
   });
 
+  // ── Area type discounts ────────────────────────────────────────────
+  const seenAreaTypes = new Set<string>();
+  (data.areaTypeDiscounts ?? []).forEach((d, di) => {
+    if (!trimNonEmpty(d.areaType)) {
+      errors.push({ path: `areaTypeDiscounts.${di}.areaType`, message: 'קוד סוג שטח חובה' });
+    } else if (seenAreaTypes.has(d.areaType.trim())) {
+      errors.push({ path: `areaTypeDiscounts.${di}.areaType`, message: 'קוד סוג שטח כפול' });
+    } else {
+      seenAreaTypes.add(d.areaType.trim());
+    }
+    if (!trimNonEmpty(d.label)) {
+      errors.push({ path: `areaTypeDiscounts.${di}.label`, message: 'שם סוג שטח חובה' });
+    }
+    if (!Number.isFinite(d.discountPercent) || d.discountPercent < 0 || d.discountPercent > 100) {
+      errors.push({ path: `areaTypeDiscounts.${di}.discountPercent`, message: 'אחוז הנחה חייב להיות בין 0 ל-100' });
+    }
+    if (!Number.isFinite(d.minimumRatePerSqm) || d.minimumRatePerSqm < 0) {
+      errors.push({ path: `areaTypeDiscounts.${di}.minimumRatePerSqm`, message: 'מחיר מינימום חייב להיות 0 או יותר' });
+    }
+  });
+
+  // ── City fees ─────────────────────────────────────────────────────
+  (data.cityFees ?? []).forEach((f, fi) => {
+    if (!trimNonEmpty(f.name)) {
+      errors.push({ path: `cityFees.${fi}.name`, message: 'שם אגרה חובה' });
+    }
+    if (!Number.isFinite(f.amount) || f.amount < 0) {
+      errors.push({ path: `cityFees.${fi}.amount`, message: 'עלות אגרה חייבת להיות 0 או יותר' });
+    }
+  });
+
   data.exemptions.forEach((sec, ei) => {
     if (!trimNonEmpty(sec.sectionCode)) {
       errors.push({ path: `exemptions.${ei}.sectionCode`, message: 'קוד סעיף הנחה חובה' });
@@ -193,11 +226,13 @@ export function validationIssuesToFieldMap(issues: CityTariffValidationIssue[]):
   return m;
 }
 
-export type CityTariffAccordionSection = 'basic' | 'zones' | 'types' | 'exemptions';
+export type CityTariffAccordionSection = 'basic' | 'zones' | 'types' | 'exemptions' | 'areaTypeDiscounts' | 'cityFees';
 
 export function accordionSectionForValidationPath(path: string): CityTariffAccordionSection {
   if (path.startsWith('availableZones')) return 'zones';
   if (path.startsWith('types')) return 'types';
   if (path.startsWith('exemptions')) return 'exemptions';
+  if (path.startsWith('areaTypeDiscounts')) return 'areaTypeDiscounts';
+  if (path.startsWith('cityFees')) return 'cityFees';
   return 'basic';
 }

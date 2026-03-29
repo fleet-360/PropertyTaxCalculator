@@ -72,6 +72,21 @@ export interface IAvailableZone {
   label: string;
 }
 
+// ── Area type discount sub-document interface ────────────────────────
+export interface IAreaTypeDiscount {
+  areaType: string;           // code: "open_balcony", "pool", "storage"
+  label: string;              // Hebrew: "מרפסת פתוחה", "בריכה", "מחסן"
+  discountPercent: number;    // 0-100
+  minimumRatePerSqm: number;  // מחיר מינימום למ"ר לאחר הנחה
+}
+
+// ── City fee/surcharge sub-document interface ────────────────────────
+export interface ICityFee {
+  name: string;           // שם האגרה
+  amount: number;         // עלות דו-חודשית ב-₪
+  isMandatory: boolean;   // האם חובה
+}
+
 // ── Plain city tariff data (no Mongoose Document) ────────────────────
 export interface ICityTariffData {
   _id?: string;
@@ -84,4 +99,6 @@ export interface ICityTariffData {
   types: IPropertyType[];
   exemptions: IExemptionSection[];
   availableZones: IAvailableZone[];
+  areaTypeDiscounts: IAreaTypeDiscount[];
+  cityFees: ICityFee[];
 }

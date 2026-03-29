@@ -5,11 +5,15 @@
  * with reported bimonthly payment to determine if user is overpaying.
  */
 
-import type { ICityTariff, IPropertyType, ISubType, IZoneRate, ISizeRange, IExemptionSection } from './models/CityTariff';
-import type { TaxCalculationInput, TaxCalculationResult, RateResult } from './types/calculator';
+import {
+  DEFAULT_MATCH_TOLERANCE_IS_PERCENT,
+  DEFAULT_MATCH_TOLERANCE_VALUE,
+} from '@/lib/types/system-config';
+import type { ICityTariff, IPropertyType, ISubType, IZoneRate, ISizeRange, IExemptionSection, IAreaTypeDiscount } from './models/CityTariff';
+import type { TaxCalculationInput, TaxCalculationResult, RateResult, AreaBreakdownItem, AppliedFee } from './types/calculator';
 
 // Re-export shared types so existing consumers don't break
-export type { TaxCalculationInput, TaxCalculationResult, RateResult } from './types/calculator';
+export type { TaxCalculationInput, TaxCalculationResult, RateResult, AreaBreakdownItem, AppliedFee } from './types/calculator';
 
 /**
  * Calculate progressive (cumulative/bracket-style) annual cost.
@@ -249,6 +253,38 @@ export function resolveBestExemption(
 // ── Main calculation ───────────────────────────────────────────────────
 
 /**
+ * Converts configured match tolerance into a ₪ band on the bimonthly difference.
+ * When `isPercent`, uses `calculatedBimonthly` as the base; if that is 0, the band is 0.
+ */
+export function getEffectiveMatchToleranceNis(
+  calculatedBimonthly: number,
+  value: number,
+  isPercent: boolean
+): number {
+  const base =
+    Number.isFinite(calculatedBimonthly) && calculatedBimonthly >= 0 ? calculatedBimonthly : 0;
+  const v = Number.isFinite(value) && value >= 0 ? value : 0;
+  if (isPercent) {
+    if (base === 0) return 0;
+    return Math.round(((base * v) / 100) * 100) / 100;
+  }
+  return Math.round(v * 100) / 100;
+}
+
+function resolveEffectiveMatchToleranceNis(
+  calculatedBimonthly: number,
+  matchToleranceValue: number,
+  matchToleranceIsPercent: boolean
+): number {
+  const value =
+    Number.isFinite(matchToleranceValue) && matchToleranceValue >= 0
+      ? matchToleranceValue
+      : DEFAULT_MATCH_TOLERANCE_VALUE;
+  const isPercent = matchToleranceIsPercent ?? DEFAULT_MATCH_TOLERANCE_IS_PERCENT;
+  return getEffectiveMatchToleranceNis(calculatedBimonthly, value, isPercent);
+}
+
+/**
  * Calculate property tax and compare with reported payment.
  *
  * Formula:
@@ -257,13 +293,15 @@ export function resolveBestExemption(
  *   bimonthly = annual / 6
  *
  * Outcome:
- *   match      — difference < 5₪ bimonthly (tolerance)
+ *   match      — |reported − calculated| within tolerance (fixed ₪ or % of calculated bimonthly)
  *   overpaying — reported > calculated (user pays too much)
  *   underpaying — reported < calculated
  */
 export function calculatePropertyTax(
   tariff: ICityTariff,
-  input: TaxCalculationInput
+  input: TaxCalculationInput,
+  matchToleranceValue: number = DEFAULT_MATCH_TOLERANCE_VALUE,
+  matchToleranceIsPercent: boolean = DEFAULT_MATCH_TOLERANCE_IS_PERCENT
 ): TaxCalculationResult {
   // Validation
   const effectiveArea = input.correctedAreaSqm ?? input.propertyAreaSqm;
@@ -276,29 +314,90 @@ export function calculatePropertyTax(
 
   // Use corrected area if provided (measurement error)
   const mainArea = input.correctedAreaSqm ?? input.propertyAreaSqm;
-  const totalArea =
-    mainArea +
-    (input.coveredBalconySqm ?? 0) +
-    (input.storageSqm ?? 0) +
-    (input.parkingSqm ?? 0);
 
-  // Find rate (progressive if size ranges exist)
-  const { rate: ratePerSqm, propertyCode, annualTotal } = findRate(
-    tariff,
-    input.propertyType,
-    input.subType,
-    input.zone,
-    totalArea
-  );
+  const hasAreaTypeDiscounts = tariff.areaTypeDiscounts && tariff.areaTypeDiscounts.length > 0;
+  const additionalAreas = input.additionalAreas ?? [];
+  const useNewAreaLogic = hasAreaTypeDiscounts && additionalAreas.length > 0;
 
-  // Calculate annual before exemption (use progressive total from findRate)
-  const annualBeforeExemption = annualTotal;
+  // ── Area calculation ──────────────────────────────────────────────
+  let totalArea: number;
+  let annualBeforeExemption: number;
+  let ratePerSqm: number;
+  let propertyCode: string | undefined;
+  let areaBreakdown: AreaBreakdownItem[] | undefined;
 
-  // Apply exemption if selected
+  if (useNewAreaLogic) {
+    // New logic: calculate main area + each additional area type separately
+    const mainRate = findRate(tariff, input.propertyType, input.subType, input.zone, mainArea);
+    const baseRatePerSqm = mainArea > 0 ? mainRate.annualTotal / mainArea : mainRate.rate;
+
+    const breakdown: AreaBreakdownItem[] = [{
+      areaType: 'main',
+      label: 'שטח עיקרי',
+      areaSqm: mainArea,
+      baseRatePerSqm: Math.round(baseRatePerSqm * 100) / 100,
+      discountPercent: 0,
+      effectiveRatePerSqm: Math.round(baseRatePerSqm * 100) / 100,
+      annualAmount: mainRate.annualTotal,
+    }];
+
+    let additionalAnnual = 0;
+    let additionalAreaTotal = 0;
+
+    for (const aa of additionalAreas) {
+      if (!aa.areaSqm || aa.areaSqm <= 0) continue;
+
+      const discount = tariff.areaTypeDiscounts.find(
+        (d: IAreaTypeDiscount) => d.areaType === aa.areaType
+      );
+
+      let effectiveRate = baseRatePerSqm;
+      let discountPct = 0;
+
+      if (discount) {
+        discountPct = discount.discountPercent;
+        const discountedRate = baseRatePerSqm * (1 - discountPct / 100);
+        effectiveRate = Math.max(discountedRate, discount.minimumRatePerSqm);
+      }
+
+      const areaAnnual = aa.areaSqm * effectiveRate;
+      additionalAnnual += areaAnnual;
+      additionalAreaTotal += aa.areaSqm;
+
+      breakdown.push({
+        areaType: aa.areaType,
+        label: discount?.label ?? aa.areaType,
+        areaSqm: aa.areaSqm,
+        baseRatePerSqm: Math.round(baseRatePerSqm * 100) / 100,
+        discountPercent: discountPct,
+        effectiveRatePerSqm: Math.round(effectiveRate * 100) / 100,
+        annualAmount: Math.round(areaAnnual * 100) / 100,
+      });
+    }
+
+    totalArea = mainArea + additionalAreaTotal;
+    annualBeforeExemption = mainRate.annualTotal + additionalAnnual;
+    ratePerSqm = mainRate.rate;
+    propertyCode = mainRate.propertyCode;
+    areaBreakdown = breakdown;
+  } else {
+    // Legacy logic: sum all areas at the same rate
+    totalArea =
+      mainArea +
+      (input.coveredBalconySqm ?? 0) +
+      (input.storageSqm ?? 0) +
+      (input.parkingSqm ?? 0);
+
+    const rateResult = findRate(tariff, input.propertyType, input.subType, input.zone, totalArea);
+    annualBeforeExemption = rateResult.annualTotal;
+    ratePerSqm = rateResult.rate;
+    propertyCode = rateResult.propertyCode;
+  }
+
+  // ── Apply exemption if selected ───────────────────────────────────
   let annualAfterExemption = annualBeforeExemption;
   let appliedExemption: TaxCalculationResult['appliedExemption'] = undefined;
 
-  // Normalize: support both single code and array of codes
   const exemptionCodes = input.selectedExemptionCodes
     ?? (input.selectedExemptionCode ? [input.selectedExemptionCode] : []);
 
@@ -311,12 +410,10 @@ export function calculatePropertyTax(
     );
 
     if (exemption) {
-      // Discount applies to eligible area only
       const eligibleArea = exemption.maxAreaSqm
         ? Math.min(totalArea, exemption.maxAreaSqm)
         : totalArea;
 
-      // For exemptions with area cap, calculate the discount proportionally
       const discountRatio = eligibleArea / totalArea;
       annualAfterExemption = annualBeforeExemption * (1 - (exemption.discountPercent / 100) * discountRatio);
 
@@ -331,15 +428,44 @@ export function calculatePropertyTax(
     }
   }
 
-  // Bimonthly = annual / 6 (Israel: 6 bimonthly periods per year)
-  const calculatedBimonthly = Math.round((annualAfterExemption / 6) * 100) / 100;
+  // ── Fees (bimonthly) ──────────────────────────────────────────────
+  let appliedFees: AppliedFee[] | undefined;
+  let totalFeesBimonthly: number | undefined;
+
+  const hasCityFees = tariff.cityFees && tariff.cityFees.length > 0;
+  if (hasCityFees) {
+    const selectedFeeNames = new Set(input.selectedFees ?? []);
+    const fees: AppliedFee[] = [];
+
+    for (const fee of tariff.cityFees) {
+      if (fee.isMandatory || selectedFeeNames.has(fee.name)) {
+        fees.push({
+          name: fee.name,
+          amount: fee.amount,
+          isMandatory: fee.isMandatory,
+        });
+      }
+    }
+
+    if (fees.length > 0) {
+      appliedFees = fees;
+      totalFeesBimonthly = fees.reduce((sum, f) => sum + f.amount, 0);
+    }
+  }
+
+  // ── Bimonthly = annual / 6 + fees ────────────────────────────────
+  const taxBimonthly = Math.round((annualAfterExemption / 6) * 100) / 100;
+  const calculatedBimonthly = Math.round((taxBimonthly + (totalFeesBimonthly ?? 0)) * 100) / 100;
   const reportedBimonthly = input.bimonthlyPayment;
 
-  // Determine outcome (10₪ tolerance)
-  const TOLERANCE = 10;
+  const effectiveToleranceNis = resolveEffectiveMatchToleranceNis(
+    calculatedBimonthly,
+    matchToleranceValue,
+    matchToleranceIsPercent
+  );
   const diff = reportedBimonthly - calculatedBimonthly;
   let outcome: 'match' | 'overpaying' | 'underpaying';
-  if (Math.abs(diff) <= TOLERANCE) {
+  if (Math.abs(diff) <= effectiveToleranceNis) {
     outcome = 'match';
   } else if (diff > 0) {
     outcome = 'overpaying';
@@ -359,6 +485,9 @@ export function calculatePropertyTax(
     annualBeforeExemption: Math.round(annualBeforeExemption * 100) / 100,
     appliedExemption,
     annualAfterExemption: Math.round(annualAfterExemption * 100) / 100,
+    areaBreakdown,
+    appliedFees,
+    totalFeesBimonthly,
     calculatedBimonthly,
     reportedBimonthly,
     outcome,
@@ -378,7 +507,9 @@ export function calculateBusinessPropertyTax(
   bimonthlyPayment: number,
   selectedExemptionCodes?: string[],
   householdSize?: number,
-  childrenCount?: number
+  childrenCount?: number,
+  matchToleranceValue: number = DEFAULT_MATCH_TOLERANCE_VALUE,
+  matchToleranceIsPercent: boolean = DEFAULT_MATCH_TOLERANCE_IS_PERCENT
 ): TaxCalculationResult {
   // Validation
   if (designations.length === 0) {
@@ -435,11 +566,15 @@ export function calculateBusinessPropertyTax(
   }
 
   const calculatedBimonthly = Math.round((annualAfterExemption / 6) * 100) / 100;
+  const effectiveToleranceNis = resolveEffectiveMatchToleranceNis(
+    calculatedBimonthly,
+    matchToleranceValue,
+    matchToleranceIsPercent
+  );
   const diff = bimonthlyPayment - calculatedBimonthly;
-  const TOLERANCE = 10;
 
   let outcome: 'match' | 'overpaying' | 'underpaying';
-  if (Math.abs(diff) <= TOLERANCE) {
+  if (Math.abs(diff) <= effectiveToleranceNis) {
     outcome = 'match';
   } else if (diff > 0) {
     outcome = 'overpaying';

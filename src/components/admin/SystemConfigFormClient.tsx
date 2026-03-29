@@ -151,6 +151,32 @@ export default function SystemConfigFormClient({ initialConfig }: { initialConfi
               onChange={(e) => updateField('appealPrice', Number(e.target.value))}
             />
           </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              label={
+                config.matchToleranceIsPercent
+                  ? 'סטייה מקסימלית לתוצאה "תואם" (%)'
+                  : 'סטייה מקסימלית לתוצאה "תואם" (₪ דו־חודשי)'
+              }
+              type="number"
+              fullWidth
+              inputProps={{ min: 0 }}
+              value={config.matchToleranceValue}
+              onChange={(e) => updateField('matchToleranceValue', Number(e.target.value))}
+              helperText="הפרש בין תשלום מדווח למחושב: בתוך המרווח נחשב תואם; מחוץ — משלם ביתר או בחסר."
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }} sx={{ display: 'flex', alignItems: 'center' }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={config.matchToleranceIsPercent}
+                  onChange={(e) => updateField('matchToleranceIsPercent', e.target.checked)}
+                />
+              }
+              label="המספר למעלה הוא אחוז מהסכום המחושב הדו־חודשי (לא סכום קבוע בשקלים)"
+            />
+          </Grid>
         </Grid>
       </Paper>
 

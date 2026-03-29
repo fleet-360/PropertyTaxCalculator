@@ -1,7 +1,16 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import mongoose from 'mongoose';
 import CityTariff, { ICityTariff } from '@/lib/models/CityTariff';
-import { findRate, findByPropertyCode, resolveExemption, resolveBestExemption, calculatePropertyTax, calculateBusinessPropertyTax } from '@/lib/calculator';
+import {
+  findRate,
+  findByPropertyCode,
+  resolveExemption,
+  resolveBestExemption,
+  calculatePropertyTax,
+  calculateBusinessPropertyTax,
+  getEffectiveMatchToleranceNis,
+} from '@/lib/calculator';
+import { parseMatchToleranceFromConfig } from '@/lib/types/system-config';
 import { allScenarios, residentialScenarios, exemptionScenarios, businessScenarios } from '@/data/mock-city-scenarios';
 
 let mockCity: ICityTariff;
@@ -363,6 +372,44 @@ describe('Validation edge cases', () => {
   });
 });
 
+// ── getEffectiveMatchToleranceNis ─────────────────────────────────────
+
+describe('getEffectiveMatchToleranceNis', () => {
+  it('fixed ₪: returns value rounded to 2 decimals', () => {
+    expect(getEffectiveMatchToleranceNis(1000, 10, false)).toBe(10);
+    expect(getEffectiveMatchToleranceNis(1000, 10.456, false)).toBe(10.46);
+  });
+
+  it('percent: 1% of 1000 → 10₪', () => {
+    expect(getEffectiveMatchToleranceNis(1000, 1, true)).toBe(10);
+  });
+
+  it('percent: calculated bimonthly 0 → 0 band', () => {
+    expect(getEffectiveMatchToleranceNis(0, 5, true)).toBe(0);
+  });
+});
+
+describe('parseMatchToleranceFromConfig', () => {
+  it('defaults when missing', () => {
+    expect(parseMatchToleranceFromConfig({})).toEqual({
+      matchToleranceValue: 10,
+      matchToleranceIsPercent: false,
+    });
+  });
+
+  it('respects valid value and percent flag', () => {
+    expect(parseMatchToleranceFromConfig({ matchToleranceValue: 5, matchToleranceIsPercent: true })).toEqual({
+      matchToleranceValue: 5,
+      matchToleranceIsPercent: true,
+    });
+  });
+
+  it('rejects negative or non-finite value', () => {
+    expect(parseMatchToleranceFromConfig({ matchToleranceValue: -3 }).matchToleranceValue).toBe(10);
+    expect(parseMatchToleranceFromConfig({ matchToleranceValue: Number.NaN }).matchToleranceValue).toBe(10);
+  });
+});
+
 // ── Tolerance boundary (10₪) ────────────────────────────────────────
 
 describe('Tolerance boundary (±10₪)', () => {
@@ -398,6 +445,34 @@ describe('Tolerance boundary (±10₪)', () => {
       propertyAreaSqm: 80, bimonthlyPayment: 1256.66,
     });
     expect(result.outcome).toBe('underpaying');
+  });
+
+  it('fixed 5₪ tolerance: diff +5₪ → match, +5.01₪ → overpaying', () => {
+    const input = {
+      propertyType: 'residential' as const,
+      subType: 'standard' as const,
+      zone: 'א' as const,
+      propertyAreaSqm: 80,
+      bimonthlyPayment: 1271.67,
+    };
+    expect(calculatePropertyTax(mockCity, input, 5, false).outcome).toBe('match');
+    expect(calculatePropertyTax(mockCity, { ...input, bimonthlyPayment: 1271.68 }, 5, false).outcome).toBe(
+      'overpaying'
+    );
+  });
+
+  it('1% of calculated bimonthly: edge matches rounded percent band', () => {
+    // calculated 1266.67; 1% → 12.67₪
+    const base = {
+      propertyType: 'residential' as const,
+      subType: 'standard' as const,
+      zone: 'א' as const,
+      propertyAreaSqm: 80,
+    };
+    expect(calculatePropertyTax(mockCity, { ...base, bimonthlyPayment: 1279.34 }, 1, true).outcome).toBe('match');
+    expect(calculatePropertyTax(mockCity, { ...base, bimonthlyPayment: 1279.35 }, 1, true).outcome).toBe(
+      'overpaying'
+    );
   });
 });
 

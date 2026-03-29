@@ -21,6 +21,8 @@ import Divider from "@mui/material/Divider";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Alert from "@mui/material/Alert";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
@@ -66,6 +68,8 @@ interface FormData {
   reportedPayment: number;
   paymentPeriod: string;
   designations: { type: string; subtype: string; zone: string; area: number }[];
+  additionalAreas: { areaType: string; areaSqm: number }[];
+  selectedFees: string[];
 }
 
 const designationRowSchema = z.object({
@@ -100,6 +104,11 @@ function createDataEntrySchema(isBusiness: boolean) {
       reportedPayment: z.coerce.number().positive("סכום חייב להיות גדול מ-0"),
       paymentPeriod: z.string().default("bimonthly"),
       designations: z.array(designationRowSchema).default([]),
+      additionalAreas: z.array(z.object({
+        areaType: z.string(),
+        areaSqm: z.coerce.number().min(0).default(0),
+      })).default([]),
+      selectedFees: z.array(z.string()).default([]),
     })
     .superRefine((data, ctx) => {
       if (!isBusiness) return;
@@ -329,6 +338,8 @@ function DesignationRow({
 export default function DataEntryStep({ state, dispatch }: StepProps) {
   const cityData = state.cityData;
   const isBusiness = state.propertyType === "business";
+  const hasAreaTypeDiscounts = !!(cityData?.areaTypeDiscounts?.length > 0);
+  const hasCityFees = !!(cityData?.cityFees?.length > 0);
 
   // ── Mia message on mount ──
   useEffect(() => {
@@ -375,6 +386,10 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
       reportedPayment: state.reportedPayment || ("" as any),
       paymentPeriod: state.paymentPeriod || "bimonthly",
       designations: state.designations,
+      additionalAreas: state.additionalAreas?.length > 0
+        ? state.additionalAreas
+        : (cityData?.areaTypeDiscounts ?? []).map((d: any) => ({ areaType: d.areaType, areaSqm: '' as any })),
+      selectedFees: state.selectedFees ?? [],
     },
   });
 
@@ -574,6 +589,12 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
           type: "SET_DESIGNATIONS",
           payload: data.designations as any,
         });
+      } else if (key === "additionalAreas") {
+        // Filter out zero-area entries and dispatch
+        const filtered = (data.additionalAreas ?? []).filter((a) => a.areaSqm > 0);
+        dispatch({ type: "UPDATE_FIELD", field: "additionalAreas", value: filtered });
+      } else if (key === "selectedFees") {
+        dispatch({ type: "UPDATE_FIELD", field: "selectedFees", value: data.selectedFees ?? [] });
       } else {
         dispatch({ type: "UPDATE_FIELD", field: key as any, value: data[key] });
       }
@@ -920,51 +941,117 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
             )}
           />
         </Box>
-        <Box sx={{ minWidth: 0 }}>
-          <Controller
-            name="coveredBalconyArea"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label='מרפסת מקורה (מ"ר)'
-                type="number"
-                fullWidth
-                size="small"
+        {/* Dynamic area type fields OR legacy hardcoded fields */}
+        {hasAreaTypeDiscounts ? (
+          <>
+            {(cityData.areaTypeDiscounts as any[]).map((d: any, idx: number) => (
+              <Box key={d.areaType} sx={{ minWidth: 0 }}>
+                <Controller
+                  name={`additionalAreas.${idx}.areaSqm` as const}
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label={`${d.label} (מ"ר)`}
+                      type="number"
+                      fullWidth
+                      size="small"
+                      helperText={`הנחה ${d.discountPercent}%`}
+                    />
+                  )}
+                />
+              </Box>
+            ))}
+          </>
+        ) : (
+          <>
+            <Box sx={{ minWidth: 0 }}>
+              <Controller
+                name="coveredBalconyArea"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label='מרפסת מקורה (מ"ר)'
+                    type="number"
+                    fullWidth
+                    size="small"
+                  />
+                )}
               />
-            )}
-          />
-        </Box>
-        <Box sx={{ minWidth: 0 }}>
-          <Controller
-            name="storageArea"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label='מחסן (מ"ר)'
-                type="number"
-                fullWidth
-                size="small"
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Controller
+                name="storageArea"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label='מחסן (מ"ר)'
+                    type="number"
+                    fullWidth
+                    size="small"
+                  />
+                )}
               />
-            )}
-          />
-        </Box>
-        <Box sx={{ minWidth: 0 }}>
-          <Controller
-            name="parkingArea"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label='חניה (מ"ר)'
-                type="number"
-                fullWidth
-                size="small"
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Controller
+                name="parkingArea"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label='חניה (מ"ר)'
+                    type="number"
+                    fullWidth
+                    size="small"
+                  />
+                )}
               />
-            )}
-          />
-        </Box></>}
+            </Box>
+          </>
+        )}
+
+        {/* City fees selection */}
+        {hasCityFees && (cityData.cityFees as any[]).some((f: any) => !f.isMandatory) && (
+          <Box sx={fullRowSx}>
+            <Typography
+              variant="subtitle2"
+              color="text.secondary"
+              sx={{ mt: 1, mb: 0.5 }}
+            >
+              אגרות נוספות (אופציונלי)
+            </Typography>
+            {(cityData.cityFees as any[])
+              .filter((f: any) => !f.isMandatory)
+              .map((f: any) => (
+                <Controller
+                  key={f.name}
+                  name="selectedFees"
+                  control={control}
+                  render={({ field }) => (
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={(field.value ?? []).includes(f.name)}
+                          onChange={(e) => {
+                            const current = field.value ?? [];
+                            if (e.target.checked) {
+                              field.onChange([...current, f.name]);
+                            } else {
+                              field.onChange(current.filter((n: string) => n !== f.name));
+                            }
+                          }}
+                        />
+                      }
+                      label={`${f.name} (₪${f.amount} לדו-חודש)`}
+                    />
+                  )}
+                />
+              ))}
+          </Box>
+        )}</>}
 
         {liveRate && state.citySlug !== "other" && (
           <Box sx={fullRowSx}>
