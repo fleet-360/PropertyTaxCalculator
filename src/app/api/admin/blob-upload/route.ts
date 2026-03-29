@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTokenFromRequest, verifyToken } from '@/lib/auth';
 import {
   BlobUploadFolder,
-  BlobUploadValidationError,
+  blobUploadFailurePayload,
   uploadToBlob,
 } from '@/lib/services/blobUploadService';
 
@@ -108,14 +108,12 @@ export async function POST(request: NextRequest) {
       { status: 200 },
     );
   } catch (error) {
-    if (error instanceof BlobUploadValidationError) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+    const { status, body } = blobUploadFailurePayload(error);
+    if (status >= 500) {
+      console.error('Blob upload error:', error);
+    } else {
+      console.warn('Blob upload rejected:', body.code, body.detail ?? body.error);
     }
-    if (error instanceof Error && error.message.includes('BLOB_READ_WRITE_TOKEN')) {
-      console.error('Blob upload configuration error:', error);
-      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
-    }
-    console.error('Blob upload error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(body, { status });
   }
 }
