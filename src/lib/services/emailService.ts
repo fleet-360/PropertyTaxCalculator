@@ -3,9 +3,11 @@ import type { Transporter } from 'nodemailer';
 import {
   buildResultsEmailHtml,
   buildAppealEmailHtml,
+  buildAppealPdfEmailHtml,
   buildInvoiceEmailHtml,
   type ResultsEmailParams,
   type AppealEmailParams,
+  type AppealPdfEmailParams,
   type InvoiceEmailParams,
 } from './emailTemplates';
 
@@ -52,14 +54,14 @@ function getTransporter(): Transporter {
   }
 
   if (!cached.transporter) {
-    const host = process.env.SMTP_HOST;
+    const host = process.env.SMTP_HOST?.trim();
     const port = Number(process.env.SMTP_PORT) || 587;
-    const user = process.env.SMTP_USER;
-    const pass = process.env.SMTP_PASS;
+    const user = process.env.SMTP_USER?.trim();
+    const pass = process.env.SMTP_PASS?.trim();
 
     if (!host || !user || !pass) {
       throw new Error(
-        'Missing SMTP configuration. Set SMTP_HOST, SMTP_USER, and SMTP_PASS in .env.local',
+        'חסרה תצורת SMTP: יש למלא ב-.env או .env.local את SMTP_HOST, SMTP_USER ו-SMTP_PASS (כולם לא ריקים). ב-Brevo: SMTP_USER = כתובת המשתמש ב-SMTP, SMTP_PASS = מפתח SMTP.',
       );
     }
 
@@ -117,6 +119,38 @@ export async function sendAppealEmail(params: AppealEmailParams): Promise<SendEm
     to: params.to,
     subject: 'אישור הגשת השגה — מחשבון הארנונה',
     html: buildAppealEmailHtml(params),
+  });
+}
+
+const MAX_APPEAL_PDF_BYTES = 9 * 1024 * 1024;
+
+export async function sendAppealPdfEmail(
+  params: AppealPdfEmailParams & { pdfBase64: string },
+): Promise<SendEmailResult> {
+  let pdfBuffer: Buffer;
+  try {
+    pdfBuffer = Buffer.from(params.pdfBase64, 'base64');
+  } catch {
+    return { success: false, error: 'קובץ PDF לא תקין' };
+  }
+  if (pdfBuffer.length < 200) {
+    return { success: false, error: 'קובץ PDF חסר או פגום' };
+  }
+  if (pdfBuffer.length > MAX_APPEAL_PDF_BYTES) {
+    return { success: false, error: 'קובץ PDF גדול מדי לשליחה במייל' };
+  }
+
+  return sendEmail({
+    to: params.to,
+    subject: 'מכתב השגה חתום — מחשבון הארנונה',
+    html: buildAppealPdfEmailHtml(params),
+    attachments: [
+      {
+        filename: 'michtav-hashaga-chatum.pdf',
+        content: pdfBuffer,
+        contentType: 'application/pdf',
+      },
+    ],
   });
 }
 

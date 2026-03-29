@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Lead from '@/lib/models/Lead';
 import { verifyToken, getTokenFromRequest } from '@/lib/auth';
+import { normalizeCalculationResultForLead } from '@/lib/leads/normalizeCalculationResult';
 import mongoose from 'mongoose';
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -55,15 +56,25 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // If updating a specific calculation entry
     if (calculationIndex !== undefined && calculationUpdate) {
+      const mergedUpdate = { ...calculationUpdate } as Record<string, unknown>;
+      if ('calculationResult' in mergedUpdate) {
+        const normalized = normalizeCalculationResultForLead(mergedUpdate.calculationResult);
+        if (normalized) {
+          mergedUpdate.calculationResult = normalized;
+        } else {
+          delete mergedUpdate.calculationResult;
+        }
+      }
+
       const setFields: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(calculationUpdate)) {
+      for (const [key, value] of Object.entries(mergedUpdate)) {
         setFields[`calculations.${calculationIndex}.${key}`] = value;
       }
 
       const updatedLead = await Lead.findByIdAndUpdate(
         id,
         { $set: { ...leadUpdate, ...setFields } },
-        { new: true, runValidators: true }
+        { returnDocument: 'after', runValidators: true }
       ).lean();
 
       if (!updatedLead) {
@@ -77,7 +88,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const updatedLead = await Lead.findByIdAndUpdate(
       id,
       { $set: leadUpdate },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     ).lean();
 
     if (!updatedLead) {
