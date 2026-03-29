@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useLayoutEffect } from 'react';
 import {
   Box,
   FormControl,
@@ -12,10 +12,11 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
 import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
 import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
-import { HeadingData } from '../types';
+import { HeadingData, normalizeBlockTextAlignment } from '../types';
 
 interface HeadingBlockProps {
   data: HeadingData;
@@ -32,13 +33,27 @@ const headingFontSizes: Record<string, string> = {
 };
 
 export default function HeadingBlock({ data, onUpdate }: HeadingBlockProps) {
+  const theme = useTheme();
   const editableRef = useRef<HTMLDivElement>(null);
 
-  const handleBlur = useCallback(() => {
+  const captureText = useCallback(() => {
     if (editableRef.current) {
-      onUpdate({ ...data, text: editableRef.current.innerText });
+      const text = editableRef.current.innerText;
+      if (text !== data.text) {
+        onUpdate({ ...data, text });
+      }
     }
   }, [data, onUpdate]);
+
+  // Avoid React resetting contentEditable children on re-renders (caret jump / RTL glitches).
+  useLayoutEffect(() => {
+    const el = editableRef.current;
+    if (!el) return;
+    if (document.activeElement === el) return;
+    if (el.innerText !== data.text) {
+      el.textContent = data.text;
+    }
+  }, [data.text]);
 
   const handleLevelChange = (level: HeadingData['level']) => {
     onUpdate({ ...data, level });
@@ -57,15 +72,17 @@ export default function HeadingBlock({ data, onUpdate }: HeadingBlockProps) {
     onUpdate({ ...data, color: e.target.value });
   };
 
+  const alignment = normalizeBlockTextAlignment(data.alignment);
+
   return (
-    <Box>
-      {/* Controls */}
+    <Box dir="rtl" lang="he">
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-        <FormControl size="small" sx={{ minWidth: 80 }}>
-          <InputLabel>Level</InputLabel>
+        <FormControl size="small" sx={{ minWidth: 100 }}>
+          <InputLabel id="heading-level-label">רמת כותרת</InputLabel>
           <Select
+            labelId="heading-level-label"
             value={data.level}
-            label="Level"
+            label="רמת כותרת"
             onChange={(e) => handleLevelChange(e.target.value as HeadingData['level'])}
           >
             <MenuItem value="h1">H1</MenuItem>
@@ -78,30 +95,32 @@ export default function HeadingBlock({ data, onUpdate }: HeadingBlockProps) {
         </FormControl>
 
         <ToggleButtonGroup
-          value={data.alignment}
+          value={alignment}
           exclusive
           onChange={handleAlignmentChange}
           size="small"
+          aria-label="יישור כותרת"
         >
-          <ToggleButton value="left">
-            <FormatAlignLeftIcon fontSize="small" />
+          <ToggleButton value="start" aria-label="יישור לתחילת שורה">
+            <FormatAlignRightIcon fontSize="small" />
           </ToggleButton>
-          <ToggleButton value="center">
+          <ToggleButton value="center" aria-label="יישור למרכז">
             <FormatAlignCenterIcon fontSize="small" />
           </ToggleButton>
-          <ToggleButton value="right">
-            <FormatAlignRightIcon fontSize="small" />
+          <ToggleButton value="end" aria-label="יישור לסוף שורה">
+            <FormatAlignLeftIcon fontSize="small" />
           </ToggleButton>
         </ToggleButtonGroup>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="caption" color="text.secondary">
-            Color:
+            צבע:
           </Typography>
           <input
             type="color"
             value={data.color}
             onChange={handleColorChange}
+            aria-label="צבע כותרת"
             style={{
               width: 32,
               height: 32,
@@ -115,21 +134,25 @@ export default function HeadingBlock({ data, onUpdate }: HeadingBlockProps) {
             size="small"
             value={data.color}
             onChange={handleColorChange}
+            inputProps={{ dir: 'ltr', lang: 'en', 'aria-label': 'קוד צבע' }}
             sx={{ width: 100, '& .MuiInputBase-input': { py: 0.5, fontSize: '0.8rem' } }}
           />
         </Box>
       </Box>
 
-      {/* Editable heading */}
       <Box
         ref={editableRef}
         contentEditable
         suppressContentEditableWarning
-        onBlur={handleBlur}
+        dir="rtl"
+        lang="he"
+        onBlur={captureText}
+        onInput={captureText}
         sx={{
           fontSize: headingFontSizes[data.level],
+          fontFamily: theme.typography.fontFamily,
           fontWeight: 'bold',
-          textAlign: data.alignment,
+          textAlign: alignment,
           color: data.color,
           outline: 'none',
           minHeight: '1.5em',
@@ -141,13 +164,11 @@ export default function HeadingBlock({ data, onUpdate }: HeadingBlockProps) {
             borderColor: 'primary.main',
           },
           '&:empty:before': {
-            content: '"Enter heading text..."',
+            content: '"הזן טקסט כותרת..."',
             color: 'text.disabled',
           },
         }}
-      >
-        {data.text}
-      </Box>
+      />
     </Box>
   );
 }

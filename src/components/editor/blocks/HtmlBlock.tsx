@@ -31,28 +31,37 @@ export default function HtmlBlock({ data, onUpdate }: HtmlBlockProps) {
   };
 
   return (
-    <Box>
-      {/* Mode Toggle */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+    <Box dir="rtl" lang="he">
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 1.5,
+          flexWrap: 'wrap',
+          gap: 1,
+        }}
+      >
         <ToggleButtonGroup
           value={mode}
           exclusive
           onChange={handleModeChange}
           size="small"
+          aria-label="מצב תצוגה"
         >
-          <ToggleButton value="code">
-            <CodeIcon fontSize="small" sx={{ mr: 0.5 }} />
-            Code
+          <ToggleButton value="code" aria-label="קוד">
+            <CodeIcon fontSize="small" sx={{ marginInlineEnd: 0.5 }} />
+            קוד
           </ToggleButton>
-          <ToggleButton value="preview">
-            <VisibilityIcon fontSize="small" sx={{ mr: 0.5 }} />
-            Preview
+          <ToggleButton value="preview" aria-label="תצוגה מקדימה">
+            <VisibilityIcon fontSize="small" sx={{ marginInlineEnd: 0.5 }} />
+            תצוגה מקדימה
           </ToggleButton>
         </ToggleButtonGroup>
 
-        <Alert severity="info" icon={false} sx={{ py: 0, px: 1 }}>
+        <Alert severity="info" icon={false} sx={{ py: 0, px: 1, maxWidth: '100%' }}>
           <Typography variant="caption">
-            HTML is rendered as-is. Be cautious of XSS when using user-generated content.
+            ה-HTML מוצג כפי שהוא. שימו לב לסיכוני XSS בתוכן ממשתמשים.
           </Typography>
         </Alert>
       </Box>
@@ -65,7 +74,8 @@ export default function HtmlBlock({ data, onUpdate }: HtmlBlockProps) {
           maxRows={20}
           value={data.code}
           onChange={(e) => onUpdate({ ...data, code: e.target.value })}
-          placeholder="<div>Your HTML here...</div>"
+          placeholder="<div>ה-HTML שלך כאן...</div>"
+          inputProps={{ dir: 'ltr', lang: 'en', style: { textAlign: 'start' } }}
           sx={{
             '& .MuiInputBase-input': {
               fontFamily: '"Fira Code", "Consolas", "Monaco", monospace',
@@ -76,6 +86,8 @@ export default function HtmlBlock({ data, onUpdate }: HtmlBlockProps) {
         />
       ) : (
         <Box
+          dir="rtl"
+          lang="he"
           sx={{
             minHeight: 100,
             p: 2,
@@ -89,7 +101,7 @@ export default function HtmlBlock({ data, onUpdate }: HtmlBlockProps) {
             <div dangerouslySetInnerHTML={{ __html: data.code }} />
           ) : (
             <Typography color="text.secondary" variant="body2" sx={{ fontStyle: 'italic' }}>
-              No HTML content to preview.
+              אין תוכן HTML לתצוגה מקדימה.
             </Typography>
           )}
         </Box>

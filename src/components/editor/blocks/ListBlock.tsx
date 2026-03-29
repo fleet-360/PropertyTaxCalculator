@@ -45,7 +45,7 @@ export default function ListBlock({ data, onUpdate }: ListBlockProps) {
   };
 
   const handleDeleteItem = (index: number) => {
-    if (data.items.length <= 1) return; // Keep at least one item
+    if (data.items.length <= 1) return;
     const newItems = data.items.filter((_, i) => i !== index);
     onUpdate({ ...data, items: newItems });
   };
@@ -59,38 +59,37 @@ export default function ListBlock({ data, onUpdate }: ListBlockProps) {
   };
 
   return (
-    <Box>
-      {/* List type toggle */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
+    <Box dir="rtl" lang="he">
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
         <Typography variant="caption" color="text.secondary">
-          Type:
+          סוג רשימה:
         </Typography>
         <ToggleButtonGroup
           value={data.type}
           exclusive
           onChange={handleTypeChange}
           size="small"
+          aria-label="סוג רשימה"
         >
-          <ToggleButton value="unordered">
-            <FormatListBulletedIcon fontSize="small" sx={{ mr: 0.5 }} />
-            Unordered
+          <ToggleButton value="unordered" aria-label="רשימת תבליטים">
+            <FormatListBulletedIcon fontSize="small" sx={{ marginInlineEnd: 0.5 }} />
+            תבליטים
           </ToggleButton>
-          <ToggleButton value="ordered">
-            <FormatListNumberedIcon fontSize="small" sx={{ mr: 0.5 }} />
-            Ordered
+          <ToggleButton value="ordered" aria-label="רשימה ממוספרת">
+            <FormatListNumberedIcon fontSize="small" sx={{ marginInlineEnd: 0.5 }} />
+            ממוספרת
           </ToggleButton>
         </ToggleButtonGroup>
       </Box>
 
-      {/* List items */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         {data.items.map((item, index) => (
           <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Typography
               variant="body2"
               sx={{
-                minWidth: 24,
-                textAlign: 'right',
+                minWidth: 28,
+                textAlign: 'center',
                 color: 'text.secondary',
                 fontWeight: 500,
               }}
@@ -102,38 +101,42 @@ export default function ListBlock({ data, onUpdate }: ListBlockProps) {
               size="small"
               value={item}
               onChange={(e) => handleItemChange(index, e.target.value)}
-              placeholder={`Item ${index + 1}`}
+              placeholder={`פריט ${index + 1}`}
+              inputProps={{ 'aria-label': `טקסט פריט ${index + 1}` }}
               sx={{ '& .MuiInputBase-input': { py: 0.75 } }}
             />
-            <Tooltip title="Move Up">
+            <Tooltip title="הזז למעלה">
               <span>
                 <IconButton
                   size="small"
                   onClick={() => handleMoveItem(index, 'up')}
                   disabled={index === 0}
+                  aria-label="הזז פריט למעלה"
                 >
                   <ArrowUpwardIcon fontSize="small" />
                 </IconButton>
               </span>
             </Tooltip>
-            <Tooltip title="Move Down">
+            <Tooltip title="הזז למטה">
               <span>
                 <IconButton
                   size="small"
                   onClick={() => handleMoveItem(index, 'down')}
                   disabled={index === data.items.length - 1}
+                  aria-label="הזז פריט למטה"
                 >
                   <ArrowDownwardIcon fontSize="small" />
                 </IconButton>
               </span>
             </Tooltip>
-            <Tooltip title="Delete Item">
+            <Tooltip title="מחק פריט">
               <span>
                 <IconButton
                   size="small"
                   onClick={() => handleDeleteItem(index)}
                   disabled={data.items.length <= 1}
                   sx={{ color: 'error.light' }}
+                  aria-label="מחק פריט"
                 >
                   <DeleteIcon fontSize="small" />
                 </IconButton>
@@ -143,14 +146,13 @@ export default function ListBlock({ data, onUpdate }: ListBlockProps) {
         ))}
       </Box>
 
-      {/* Add item button */}
       <Button
         startIcon={<AddIcon />}
         onClick={handleAddItem}
         size="small"
         sx={{ mt: 1.5 }}
       >
-        Add Item
+        הוסף פריט
       </Button>
     </Box>
   );

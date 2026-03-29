@@ -1,10 +1,14 @@
+'use client'
 import Link from 'next/link';
+import MuiLink from '@mui/material/Link';
 import Card from '@mui/material/Card';
 import CardMedia from '@mui/material/CardMedia';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
+import { blogCategoryPath, blogPostPath } from '@/lib/blog/routes';
+import { formatPostDateHe } from '@/lib/blog/dates';
 
 interface PostCardProps {
   post: {
@@ -17,16 +21,6 @@ interface PostCardProps {
     category: string;
     publishedAt?: Date | string;
   };
-}
-
-function formatDate(date: Date | string | undefined): string {
-  if (!date) return '';
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
 }
 
 export default function PostCard({ post }: PostCardProps) {
@@ -59,7 +53,8 @@ export default function PostCard({ post }: PostCardProps) {
           <Box
             sx={{
               height: 220,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: (theme) =>
+                `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -79,20 +74,22 @@ export default function PostCard({ post }: PostCardProps) {
         )}
         {post.category && post.category !== 'Uncategorized' && (
           <Link
-            href={`/category/${encodeURIComponent(post.category.toLowerCase())}`}
-            style={{ position: 'absolute', top: 12, left: 12, textDecoration: 'none' }}
+            href={blogCategoryPath(post.category)}
+            style={{ position: 'absolute', top: 12, insetInlineStart: 12, textDecoration: 'none' }}
           >
             <Chip
               label={post.category}
               size="small"
               clickable
               sx={{
-                backgroundColor: 'rgba(25, 118, 210, 0.9)',
-                color: '#fff',
+                backgroundColor: 'primary.main',
+                color: 'primary.contrastText',
                 fontWeight: 600,
                 fontSize: '0.75rem',
+                opacity: 0.95,
                 '&:hover': {
-                  backgroundColor: 'rgba(25, 118, 210, 1)',
+                  opacity: 1,
+                  backgroundColor: 'primary.dark',
                 },
               }}
             />
@@ -122,7 +119,7 @@ export default function PostCard({ post }: PostCardProps) {
           }}
         >
           <Link
-            href={`/${post.slug}`}
+            href={blogPostPath(post.slug)}
             style={{
               color: 'inherit',
               textDecoration: 'none',
@@ -175,24 +172,19 @@ export default function PostCard({ post }: PostCardProps) {
                   : post.publishedAt.toISOString()
               }
             >
-              {formatDate(post.publishedAt)}
+              {formatPostDateHe(post.publishedAt)}
             </Typography>
           )}
         </Box>
 
-        <Link
-          href={`/${post.slug}`}
-          style={{
-            display: 'inline-block',
-            marginTop: '12px',
-            fontSize: '0.875rem',
-            fontWeight: 600,
-            color: '#1976d2',
-            textDecoration: 'none',
-          }}
+        <MuiLink
+          component={Link}
+          href={blogPostPath(post.slug)}
+          underline="hover"
+          sx={{ display: 'inline-block', mt: 1.5, fontSize: '0.875rem', fontWeight: 600, color: 'primary.main' }}
         >
-          Read more &rarr;
-        </Link>
+          קרא עוד &larr;
+        </MuiLink>
       </CardContent>
     </Card>
   );

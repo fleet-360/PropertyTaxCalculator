@@ -1,12 +1,7 @@
 'use client';
 
 import React from 'react';
-import {
-  Box,
-  Slider,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Slider, TextField, Typography } from '@mui/material';
 import { SpacerData } from '../types';
 
 interface SpacerBlockProps {
@@ -27,11 +22,10 @@ export default function SpacerBlock({ data, onUpdate }: SpacerBlockProps) {
   };
 
   return (
-    <Box>
-      {/* Controls */}
+    <Box dir="rtl" lang="he">
       <Box sx={{ display: 'flex', gap: 3, mb: 2, alignItems: 'center' }}>
         <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-          Height:
+          גובה:
         </Typography>
         <Slider
           value={data.height}
@@ -42,6 +36,7 @@ export default function SpacerBlock({ data, onUpdate }: SpacerBlockProps) {
           valueLabelDisplay="auto"
           valueLabelFormat={(v) => `${v}px`}
           sx={{ flex: 1 }}
+          aria-label="גובה רווח"
         />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <TextField
@@ -49,7 +44,7 @@ export default function SpacerBlock({ data, onUpdate }: SpacerBlockProps) {
             type="number"
             value={data.height}
             onChange={handleInputChange}
-            inputProps={{ min: 10, max: 500, step: 5 }}
+            inputProps={{ min: 10, max: 500, step: 5, 'aria-label': 'גובה בפיקסלים' }}
             sx={{ width: 80, '& .MuiInputBase-input': { py: 0.5, fontSize: '0.85rem' } }}
           />
           <Typography variant="caption" color="text.secondary">
@@ -58,7 +53,6 @@ export default function SpacerBlock({ data, onUpdate }: SpacerBlockProps) {
         </Box>
       </Box>
 
-      {/* Visual preview */}
       <Box
         sx={{
           height: data.height,
@@ -73,7 +67,7 @@ export default function SpacerBlock({ data, onUpdate }: SpacerBlockProps) {
         }}
       >
         <Typography variant="caption" color="text.disabled">
-          {data.height}px spacer
+          רווח {data.height}px
         </Typography>
       </Box>
     </Box>

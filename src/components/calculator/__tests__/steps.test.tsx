@@ -4,6 +4,10 @@
  * Step component render tests
  */
 
+vi.mock('@/hooks/useLeadUpdate', () => ({
+  useLeadUpdate: () => ({ updateLead: vi.fn(() => Promise.resolve()) }),
+}));
+
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
@@ -29,33 +33,48 @@ function makeState(overrides: Partial<WizardState> = {}): WizardState {
 // ═══════════════════════════════════════════════════════════════════════
 
 describe('ContactRedirectStep', () => {
+  const dispatch = vi.fn();
+  const contactState = makeState({ leadId: 'test-lead' });
+
   it('reason="area" → shows large area message', () => {
-    renderWithTheme(<ContactRedirectStep reason="area" />);
+    renderWithTheme(
+      <ContactRedirectStep reason="area" dispatch={dispatch} state={contactState} />
+    );
     expect(screen.getByText('שטח הנכס גדול מ-1,000 מ"ר')).toBeInTheDocument();
   });
 
   it('reason="designations" → shows multiple designations message', () => {
-    renderWithTheme(<ContactRedirectStep reason="designations" />);
+    renderWithTheme(
+      <ContactRedirectStep reason="designations" dispatch={dispatch} state={contactState} />
+    );
     expect(screen.getByText('מספר ייעודים עסקיים')).toBeInTheDocument();
   });
 
   it('reason="city" → shows city not found message', () => {
-    renderWithTheme(<ContactRedirectStep reason="city" />);
+    renderWithTheme(
+      <ContactRedirectStep reason="city" dispatch={dispatch} state={contactState} />
+    );
     expect(screen.getByText('העיר אינה קיימת במאגר')).toBeInTheDocument();
   });
 
   it('reason="other_city" → shows unsupported city message', () => {
-    renderWithTheme(<ContactRedirectStep reason="other_city" />);
+    renderWithTheme(
+      <ContactRedirectStep reason="other_city" dispatch={dispatch} state={contactState} />
+    );
     expect(screen.getByText('העיר שבחרת אינה נתמכת במחשבון')).toBeInTheDocument();
   });
 
   it('reason="error" → shows error message', () => {
-    renderWithTheme(<ContactRedirectStep reason="error" />);
+    renderWithTheme(
+      <ContactRedirectStep reason="error" dispatch={dispatch} state={contactState} />
+    );
     expect(screen.getByText('לא ניתן לבצע חישוב')).toBeInTheDocument();
   });
 
   it('shows contact buttons', () => {
-    renderWithTheme(<ContactRedirectStep reason="area" />);
+    renderWithTheme(
+      <ContactRedirectStep reason="area" dispatch={dispatch} state={contactState} />
+    );
     expect(screen.getByText('התקשר אלינו')).toBeInTheDocument();
     expect(screen.getByText('שלח מייל')).toBeInTheDocument();
   });
