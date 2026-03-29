@@ -13,6 +13,7 @@ import {
   SpacerData,
   normalizeBlockTextAlignment,
 } from './types';
+import { headingPlainTextToAnchorId } from '@/lib/headingAnchorId';
 
 interface BlockRendererProps {
   blocks: BlockData[];
@@ -57,14 +58,10 @@ function RenderHeading({ data }: { data: HeadingData }) {
     style.color = data.color;
   }
 
-  // Generate an id from heading text for anchor linking
-  const id = data.text
-    ? data.text
-        .replace(/<[^>]*>/g, '')
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '')
-    : undefined;
+  // Generate an id from heading text for anchor linking (same rules as TableOfContents)
+  const plainHeading = data.text ? data.text.replace(/<[^>]*>/g, '').trim() : '';
+  const anchor = plainHeading ? headingPlainTextToAnchorId(plainHeading) : '';
+  const id = anchor || undefined;
 
   return <Tag id={id} style={style}>{data.text}</Tag>;
 }

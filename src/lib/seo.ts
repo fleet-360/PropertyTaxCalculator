@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { blogPostPath } from '@/lib/blog/routes';
 import type { IPost } from './models/Post';
 
 function toISOString(date: Date | string | undefined | null): string | undefined {
@@ -85,7 +86,8 @@ export function generateJsonLd(
   post: IPost,
   siteUrl: string
 ): BlogPostingJsonLd {
-  const postUrl = `${siteUrl}/${post.slug}`;
+  const base = siteUrl.replace(/\/$/, '');
+  const postUrl = `${base}${blogPostPath(post.slug)}`;
 
   const jsonLd: BlogPostingJsonLd = {
     '@context': 'https://schema.org',

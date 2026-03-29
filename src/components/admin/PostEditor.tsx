@@ -2,6 +2,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import BlockEditor from '@/components/editor/BlockEditor';
+import { blogPostPath } from '@/lib/blog/routes';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
@@ -401,7 +402,8 @@ export default function PostEditor({ initialData, onSave, isNew }: PostEditorPro
   const seoScoreColor = seoScore >= 80 ? '#2e7d32' : seoScore >= 50 ? '#ed6c02' : '#d32f2f';
 
   const googleSnippetTitle = post.seo.metaTitle || post.title || 'Page Title';
-  const googleSnippetUrl = `yoursite.com/${post.slug || 'your-post-slug'}`;
+  const siteBase = (process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '');
+  const googleSnippetUrl = `${siteBase}${blogPostPath(post.slug || 'your-post-slug')}`;
   const googleSnippetDescription = post.seo.metaDescription || post.excerpt || 'No description provided. Add a meta description to improve search visibility.';
 
   return (
@@ -467,7 +469,7 @@ export default function PostEditor({ initialData, onSave, isNew }: PostEditorPro
             size="small"
             variant="outlined"
             startIcon={<OpenInNewIcon />}
-            href={`/blog/${post.slug}`}
+            href={blogPostPath(post.slug)}
             target="_blank"
             sx={{ borderColor: '#e0e0e0', color: '#555' }}
           >
@@ -529,7 +531,7 @@ export default function PostEditor({ initialData, onSave, isNew }: PostEditorPro
               size="small"
               variant="outlined"
               error={!!errors.slug}
-              helperText={errors.slug || `URL: yoursite.com/${post.slug || 'your-post-slug'}`}
+              helperText={errors.slug || `URL: ${googleSnippetUrl}`}
               slotProps={{
                 input: {
                   sx: { fontFamily: 'monospace', fontSize: '0.9rem' },

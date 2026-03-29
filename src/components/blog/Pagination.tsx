@@ -1,6 +1,9 @@
+'use client';
+
 import Link from 'next/link';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { useTheme } from '@mui/material/styles';
 
 interface PaginationProps {
   currentPage: number;
@@ -9,6 +12,8 @@ interface PaginationProps {
 }
 
 export default function Pagination({ currentPage, totalPages, basePath }: PaginationProps) {
+  const theme = useTheme();
+
   if (totalPages <= 1) return null;
 
   const getPageUrl = (page: number) => {
@@ -16,9 +21,8 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
     return `${basePath}?page=${page}`;
   };
 
-  // Build page numbers to show
   const pages: (number | 'ellipsis')[] = [];
-  const delta = 2; // pages around current
+  const delta = 2;
   const rangeStart = Math.max(2, currentPage - delta);
   const rangeEnd = Math.min(totalPages - 1, currentPage + delta);
 
@@ -30,6 +34,9 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
   if (rangeEnd < totalPages - 1) pages.push('ellipsis');
   if (totalPages > 1) pages.push(totalPages);
 
+  const borderRadiusPx =
+    typeof theme.shape.borderRadius === 'number' ? theme.shape.borderRadius : 8;
+
   const linkStyles: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
@@ -37,7 +44,7 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
     minWidth: '40px',
     height: '40px',
     padding: '0 12px',
-    borderRadius: '8px',
+    borderRadius: `${borderRadiusPx}px`,
     textDecoration: 'none',
     fontSize: '0.9rem',
     fontWeight: 500,
@@ -46,19 +53,19 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
 
   const activeLinkStyles: React.CSSProperties = {
     ...linkStyles,
-    backgroundColor: '#1976d2',
-    color: '#fff',
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.primary.contrastText,
   };
 
   const inactiveLinkStyles: React.CSSProperties = {
     ...linkStyles,
-    color: '#555',
-    backgroundColor: '#f5f5f5',
+    color: theme.palette.text.secondary,
+    backgroundColor: theme.palette.action.hover,
   };
 
   const disabledStyles: React.CSSProperties = {
     ...linkStyles,
-    color: '#ccc',
+    color: theme.palette.action.disabled,
     cursor: 'default',
     pointerEvents: 'none',
   };
@@ -76,7 +83,6 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
           flexWrap: 'wrap',
         }}
       >
-        {/* Previous */}
         {currentPage > 1 ? (
           <Link
             href={getPageUrl(currentPage - 1)}
@@ -92,7 +98,6 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
           </span>
         )}
 
-        {/* Page Numbers */}
         {pages.map((page, idx) => {
           if (page === 'ellipsis') {
             return (
@@ -131,7 +136,6 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
           );
         })}
 
-        {/* Next */}
         {currentPage < totalPages ? (
           <Link
             href={getPageUrl(currentPage + 1)}

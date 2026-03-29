@@ -17,6 +17,7 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import Link from "next/link";
 import logo from "@/assets/icon-with-text-no-background.png";
+import { BLOG_PATHS } from "@/lib/blog/routes";
 
 const NAV_HEIGHT = 84;
 /** Padding-top for `main` under the fixed floating navbar (px). Matches former spacer in this file. */
@@ -32,14 +33,14 @@ const navItemsLanding = [
   { label: "בית", href: "#hero" },
   { label: "מחשבון", href: "#calculator-section" },
   { label: "המלצות", href: "#testimonials" },
-  { label: "מאמרים", href: "/blog" },
+  { label: "מאמרים", href: BLOG_PATHS.home },
 ];
 
 const navItemsRoutes = [
   { label: "בית", href: "/" },
   { label: "מחשבון", href: "/#calculator-section" },
   { label: "המלצות", href: "/#testimonials" },
-  { label: "מאמרים", href: "/blog" },
+  { label: "מאמרים", href: BLOG_PATHS.home },
 ];
 
 export type NavbarVariant = "landing" | "routes";
