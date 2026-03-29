@@ -11,6 +11,7 @@ import {
   DividerData,
   ButtonData,
   SpacerData,
+  normalizeBlockTextAlignment,
 } from './types';
 
 interface BlockRendererProps {
@@ -49,10 +50,9 @@ function parseVideoUrl(url: string): string | null {
 
 function RenderHeading({ data }: { data: HeadingData }) {
   const Tag = (data.level || 'h2') as keyof React.JSX.IntrinsicElements;
-  const style: React.CSSProperties = {};
-  if (data.alignment && data.alignment !== 'left') {
-    style.textAlign = data.alignment;
-  }
+  const style: React.CSSProperties = {
+    textAlign: normalizeBlockTextAlignment(data.alignment),
+  };
   if (data.color && data.color !== '#000000') {
     style.color = data.color;
   }
@@ -72,14 +72,14 @@ function RenderHeading({ data }: { data: HeadingData }) {
 function RenderParagraph({ data }: { data: ParagraphData }) {
   const style: React.CSSProperties = {
     lineHeight: 1.7,
+    textAlign: normalizeBlockTextAlignment(data.alignment),
   };
-  if (data.alignment && data.alignment !== 'left') {
-    style.textAlign = data.alignment;
-  }
   if (data.fontSize && data.fontSize !== 16) {
     style.fontSize = `${data.fontSize}px`;
   }
-  return <div style={style} dangerouslySetInnerHTML={{ __html: data.html }} />;
+  return (
+    <div dir="rtl" lang="he" style={style} dangerouslySetInnerHTML={{ __html: data.html }} />
+  );
 }
 
 function RenderImage({ data }: { data: ImageData }) {
@@ -87,7 +87,7 @@ function RenderImage({ data }: { data: ImageData }) {
 
   const figureStyle: React.CSSProperties = {
     margin: '1.5rem 0',
-    textAlign: data.alignment || 'center',
+    textAlign: normalizeBlockTextAlignment(data.alignment, { defaultAlign: 'center' }),
   };
 
   const img = (
@@ -360,7 +360,7 @@ export default function BlockRenderer({ blocks }: BlockRendererProps) {
   return (
     <article className="blog-content">
       {sortedBlocks.map((block) => (
-        <div key={block.id} className={`blog-block blog-block--${block.type}`}>
+        <div key={block.id} id={block.id as string} className={`blog-block blog-block--${block.type}`}>
           {renderBlock(block)}
         </div>
       ))}

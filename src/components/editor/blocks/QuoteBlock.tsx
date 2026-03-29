@@ -26,61 +26,65 @@ export default function QuoteBlock({ data, onUpdate }: QuoteBlockProps) {
   };
 
   return (
-    <Box>
-      {/* Controls */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
+    <Box dir="rtl" lang="he">
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
         <Typography variant="caption" color="text.secondary">
-          Style:
+          סגנון:
         </Typography>
         <ToggleButtonGroup
           value={data.style}
           exclusive
           onChange={handleStyleChange}
           size="small"
+          aria-label="סגנון ציטוט"
         >
-          <ToggleButton value="simple">Simple</ToggleButton>
-          <ToggleButton value="bordered">Bordered</ToggleButton>
+          <ToggleButton value="simple" aria-label="פשוט">
+            פשוט
+          </ToggleButton>
+          <ToggleButton value="bordered" aria-label="עם מסגרת">
+            עם מסגרת
+          </ToggleButton>
         </ToggleButtonGroup>
       </Box>
 
-      {/* Quote text */}
       <TextField
         fullWidth
         multiline
         minRows={3}
         size="small"
-        label="Quote Text"
-        placeholder="Enter your quote here..."
+        label="טקסט הציטוט"
+        placeholder="הזן את הציטוט כאן..."
         value={data.text}
         onChange={(e) => onUpdate({ ...data, text: e.target.value })}
         sx={{ mb: 2 }}
       />
 
-      {/* Author */}
       <TextField
         fullWidth
         size="small"
-        label="Author"
-        placeholder="Quote author"
+        label="מחבר"
+        placeholder="שם המחבר (אופציונלי)"
         value={data.author}
         onChange={(e) => onUpdate({ ...data, author: e.target.value })}
         sx={{ mb: 2 }}
       />
 
-      {/* Preview */}
       <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-        Preview:
+        תצוגה מקדימה:
       </Typography>
       <Box
+        dir="rtl"
+        lang="he"
         sx={{
           p: 2,
           backgroundColor: 'grey.50',
           borderRadius: 1,
           ...(data.style === 'bordered'
             ? {
-                borderLeft: '4px solid',
-                borderLeftColor: 'primary.main',
-                pl: 3,
+                borderInlineStartWidth: 4,
+                borderInlineStartStyle: 'solid',
+                borderInlineStartColor: 'primary.main',
+                paddingInlineStart: 3,
               }
             : {}),
         }}

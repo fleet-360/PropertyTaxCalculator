@@ -52,7 +52,7 @@ export async function generateStaticParams() {
 function formatDate(date: Date | string | undefined): string {
   if (!date) return '';
   const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('he-IL', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -306,7 +306,7 @@ export default async function PostPage({ params }: PostPageProps) {
               {/* Back to Home */}
               <Box sx={{ mt: 5, pt: 4, borderTop: '1px solid', borderColor: 'divider' }}>
                 <Link
-                  href="/"
+                  href="/blog"
                   style={{
                     color: '#1976d2',
                     textDecoration: 'none',
@@ -314,7 +314,7 @@ export default async function PostPage({ params }: PostPageProps) {
                     fontSize: '0.9rem',
                   }}
                 >
-                  &larr; Back to all posts
+                  &larr; חזרה לכל הכתבות
                 </Link>
               </Box>
             </Box>

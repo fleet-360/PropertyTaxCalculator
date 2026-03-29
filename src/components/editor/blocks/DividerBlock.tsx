@@ -22,32 +22,33 @@ const widthPresets = ['100%', '75%', '50%', '25%'];
 
 export default function DividerBlock({ data, onUpdate }: DividerBlockProps) {
   return (
-    <Box>
-      {/* Controls */}
+    <Box dir="rtl" lang="he">
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-        <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel>Style</InputLabel>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel id="divider-style-label">סגנון קו</InputLabel>
           <Select
+            labelId="divider-style-label"
             value={data.style}
-            label="Style"
+            label="סגנון קו"
             onChange={(e) =>
               onUpdate({ ...data, style: e.target.value as DividerData['style'] })
             }
           >
-            <MenuItem value="solid">Solid</MenuItem>
-            <MenuItem value="dashed">Dashed</MenuItem>
-            <MenuItem value="dotted">Dotted</MenuItem>
+            <MenuItem value="solid">רציף</MenuItem>
+            <MenuItem value="dashed">מקווקו</MenuItem>
+            <MenuItem value="dotted">מנוקד</MenuItem>
           </Select>
         </FormControl>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="caption" color="text.secondary">
-            Color:
+            צבע:
           </Typography>
           <input
             type="color"
             value={data.color}
             onChange={(e) => onUpdate({ ...data, color: e.target.value })}
+            aria-label="צבע מפריד"
             style={{
               width: 32,
               height: 32,
@@ -61,13 +62,14 @@ export default function DividerBlock({ data, onUpdate }: DividerBlockProps) {
             size="small"
             value={data.color}
             onChange={(e) => onUpdate({ ...data, color: e.target.value })}
+            inputProps={{ dir: 'ltr', lang: 'en', 'aria-label': 'קוד צבע' }}
             sx={{ width: 100, '& .MuiInputBase-input': { py: 0.5, fontSize: '0.8rem' } }}
           />
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           <Typography variant="caption" color="text.secondary">
-            Width:
+            רוחב:
           </Typography>
           {widthPresets.map((preset) => (
             <Chip
@@ -84,15 +86,15 @@ export default function DividerBlock({ data, onUpdate }: DividerBlockProps) {
             size="small"
             value={data.width}
             onChange={(e) => onUpdate({ ...data, width: e.target.value })}
-            placeholder="Custom"
+            placeholder="מותאם"
+            inputProps={{ dir: 'ltr', lang: 'en' }}
             sx={{ width: 100, '& .MuiInputBase-input': { py: 0.5, fontSize: '0.8rem' } }}
           />
         </Box>
       </Box>
 
-      {/* Preview */}
       <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-        Preview:
+        תצוגה מקדימה:
       </Typography>
       <Box
         sx={{

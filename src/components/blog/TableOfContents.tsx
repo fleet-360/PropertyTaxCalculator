@@ -32,6 +32,9 @@ function getAnchorId(text: string): string {
     .replace(/(^-|-$)/g, '');
 }
 
+/** Offset below fixed header when scrolling to a heading */
+const SCROLL_TOP_PADDING_PX = 100;
+
 export default function TableOfContents({ blocks }: TableOfContentsProps) {
   const headings = useMemo(() => {
     const entries: TocEntry[] = [];
@@ -44,7 +47,7 @@ export default function TableOfContents({ blocks }: TableOfContentsProps) {
         const levelStr = block.data.level || 'h2';
         const level = parseInt(levelStr.replace('h', ''), 10) || 2;
         entries.push({
-          id: getAnchorId(plainText),
+          id: block.id as string,
           text: plainText,
           level,
         });
@@ -62,8 +65,9 @@ export default function TableOfContents({ blocks }: TableOfContentsProps) {
     e.preventDefault();
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // Update URL hash without scrolling
+      const y =
+        element.getBoundingClientRect().top + window.scrollY - SCROLL_TOP_PADDING_PX;
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
       window.history.pushState(null, '', `#${id}`);
     }
   };
