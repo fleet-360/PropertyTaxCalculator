@@ -2,6 +2,7 @@ import fs from 'fs';
 import PDFDocument from 'pdfkit';
 import {
   APPEAL_PAGE_MARGIN_PT,
+  APPEAL_SIGNATURE_LINE_LENGTH_PT,
   appealFooterBaselines,
 } from './appealPdfLayout';
 import { getAppealHebrewFontPath } from './hebrewFontPath';
@@ -13,7 +14,7 @@ const PDF_HEBREW_LINE_FEATURES: [] = [];
 
 /**
  * Render Hebrew appeal letter as PDF (right-aligned). Footer is anchored to the bottom margin so the
- * signature image can be placed between the label and the underscore line (see `applySignatureToPdf`).
+ * signature image sits between the label and the rule line (see `applySignatureToPdf`).
  */
 export async function renderAppealLetterPdf(hebrewBody: string): Promise<Buffer> {
   const fontPath = getAppealHebrewFontPath();
@@ -70,11 +71,13 @@ export async function renderAppealLetterPdf(hebrewBody: string): Promise<Buffer>
       features: PDF_HEBREW_LINE_FEATURES,
     });
 
-    doc.text('__________________________', APPEAL_PAGE_MARGIN_PT, lineBaselineY, {
-      width: textWidth,
-      align: 'right',
-      features: PDF_HEBREW_LINE_FEATURES,
-    });
+    const lineRightX = APPEAL_PAGE_MARGIN_PT + textWidth;
+    const lineLeftX = lineRightX - APPEAL_SIGNATURE_LINE_LENGTH_PT;
+    doc.save();
+    doc.strokeColor('#000000');
+    doc.lineWidth(0.75);
+    doc.moveTo(lineLeftX, lineBaselineY).lineTo(lineRightX, lineBaselineY).stroke();
+    doc.restore();
 
     doc.end();
   });

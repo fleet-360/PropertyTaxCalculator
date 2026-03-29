@@ -168,15 +168,32 @@ export async function ensureGeminiFileUri(
   return active.uri;
 }
 
+export interface ResolvedGeminiFileRef {
+  fileUri: string;
+  mimeType: string;
+}
+
+/** Resolves each blob-backed source to a Gemini `fileUri`, preserving `mimeType` for `generateContent`. */
+export async function ensureGeminiFileRefs(
+  sources: BlobBackedGeminiSource[],
+  fileManager?: GoogleAIFileManager,
+  options?: EnsureGeminiFileOptions,
+): Promise<ResolvedGeminiFileRef[]> {
+  const fm = fileManager ?? getGeminiFileManager();
+  const out: ResolvedGeminiFileRef[] = [];
+  for (const s of sources) {
+    const fileUri = await ensureGeminiFileUri(s, fm, options);
+    const mimeType = s.mimeType?.trim() || 'application/pdf';
+    out.push({ fileUri, mimeType });
+  }
+  return out;
+}
+
 export async function ensureGeminiFileUris(
   sources: BlobBackedGeminiSource[],
   fileManager?: GoogleAIFileManager,
   options?: EnsureGeminiFileOptions,
 ): Promise<string[]> {
-  const fm = fileManager ?? getGeminiFileManager();
-  const out: string[] = [];
-  for (const s of sources) {
-    out.push(await ensureGeminiFileUri(s, fm, options));
-  }
-  return out;
+  const refs = await ensureGeminiFileRefs(sources, fileManager, options);
+  return refs.map((r) => r.fileUri);
 }

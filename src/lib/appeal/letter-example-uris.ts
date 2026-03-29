@@ -1,4 +1,5 @@
 import type { BlobBackedGeminiSource } from '@/lib/gemini/resolveBlobToGeminiFile';
+import { listSampleDocumentBlobSources } from '@/lib/appeal/listSampleDocumentBlobSources';
 
 /**
  * Direct Gemini File API URIs (optional). Paste after uploading via AI Studio / Files API.
@@ -53,11 +54,22 @@ export function getDirectAppealLetterExampleUris(): string[] {
   return [...fromEnv, ...fromConst];
 }
 
-/** Blob-backed sources to resolve through `ensureGeminiFileUris`. */
-export function getAppealLetterBlobSources(): BlobBackedGeminiSource[] {
-  return [...APPEAL_LETTER_EXAMPLE_BLOB_SOURCES, ...parseEnvJsonBlobSources()].filter(
+/**
+ * Blob-backed sources for appeal examples: manual/env entries plus every file under
+ * Vercel Blob folder `Sample documents/` (see `listSampleDocumentBlobSources`).
+ * Manual/env rows override the same `blobUrl` from the automatic list.
+ */
+export async function getAppealLetterBlobSources(): Promise<BlobBackedGeminiSource[]> {
+  const manualAndEnv = [...APPEAL_LETTER_EXAMPLE_BLOB_SOURCES, ...parseEnvJsonBlobSources()].filter(
     (s) => s.displayName.length > 0 && s.blobUrl.length > 0,
   );
+  const fromSampleFolder = await listSampleDocumentBlobSources();
+  const urlSet = new Set(manualAndEnv.map((s) => s.blobUrl));
+  const merged = [
+    ...manualAndEnv,
+    ...fromSampleFolder.filter((s) => !urlSet.has(s.blobUrl)),
+  ];
+  return merged;
 }
 
 /**

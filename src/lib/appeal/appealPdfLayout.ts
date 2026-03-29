@@ -1,31 +1,71 @@
 /** Must match `margin` passed to PDFDocument in `renderAppealPdf`. */
 export const APPEAL_PAGE_MARGIN_PT = 56;
 
-/** Distance from max content Y to baseline of the underscore line. */
-export const APPEAL_LINE_ABOVE_BOTTOM_MARGIN_PT = 24;
+/**
+ * Fixed footer block (PDFKit coordinates: origin top-left, y grows downward):
+ * 1. Body text ends above `bodyContentBottomY`.
+ * 2. “חתימת המגיש:” at `labelBaselineY`.
+ * 3. Signature image in [signatureSlotTopY, signatureImageBottomY].
+ * 4. Horizontal rule at `lineBaselineY` (below the signature).
+ * All distances are anchored from the page’s inner bottom (`pageHeight - marginBottom`).
+ */
+export const APPEAL_FOOTER_LINE_FROM_INNER_BOTTOM_PT = 28;
 
-/** Space reserved: label + gap for signature image (between label and line). */
-export const APPEAL_LABEL_AND_SIGNATURE_SLOT_PT = 56;
+/** Space between rule and bottom edge of signature image. */
+export const APPEAL_FOOTER_SIGNATURE_TO_LINE_GAP_PT = 10;
 
-/** Gap between end of body text and the “חתימת המגיש” baseline. */
-export const APPEAL_GAP_BODY_TO_LABEL_PT = 8;
+/** Max height for the signature bitmap in the reserved slot. */
+export const APPEAL_FOOTER_SIGNATURE_MAX_HEIGHT_PT = 56;
 
-/** Gap between bottom of signature image area and underscore baseline (PDFKit top coordinates). */
-export const APPEAL_SIGNATURE_GAP_ABOVE_LINE_PT = 8;
+/** Gap between label text box bottom and top of signature slot. */
+export const APPEAL_FOOTER_LABEL_TO_SIGNATURE_GAP_PT = 12;
 
-export function appealFooterBaselines(pageHeightPt: number, marginBottomPt: number) {
-  const maxY = pageHeightPt - marginBottomPt;
-  const lineBaselineY = maxY - APPEAL_LINE_ABOVE_BOTTOM_MARGIN_PT;
-  const labelBaselineY = lineBaselineY - APPEAL_LABEL_AND_SIGNATURE_SLOT_PT;
+/** Line box for “חתימת המגיש:” (~11pt font + descenders). */
+export const APPEAL_FOOTER_LABEL_LINE_HEIGHT_PT = 16;
+
+/** Gap between end of body and top of footer block (label). */
+export const APPEAL_GAP_BODY_TO_LABEL_PT = 12;
+
+/** Right-aligned rule length (pt). */
+export const APPEAL_SIGNATURE_LINE_LENGTH_PT = 120;
+
+export interface AppealFooterGeometry {
+  innerBottomY: number;
+  lineBaselineY: number;
+  signatureImageBottomY: number;
+  signatureSlotTopY: number;
+  labelBaselineY: number;
+  bodyContentBottomY: number;
+}
+
+export function appealFooterBaselines(
+  pageHeightPt: number,
+  marginBottomPt: number,
+): AppealFooterGeometry {
+  const innerBottomY = pageHeightPt - marginBottomPt;
+  const lineBaselineY = innerBottomY - APPEAL_FOOTER_LINE_FROM_INNER_BOTTOM_PT;
+  const signatureImageBottomY = lineBaselineY - APPEAL_FOOTER_SIGNATURE_TO_LINE_GAP_PT;
+  const signatureSlotTopY = signatureImageBottomY - APPEAL_FOOTER_SIGNATURE_MAX_HEIGHT_PT;
+  const labelBaselineY =
+    signatureSlotTopY -
+    APPEAL_FOOTER_LABEL_TO_SIGNATURE_GAP_PT -
+    APPEAL_FOOTER_LABEL_LINE_HEIGHT_PT;
   const bodyContentBottomY = labelBaselineY - APPEAL_GAP_BODY_TO_LABEL_PT;
-  return { maxY, lineBaselineY, labelBaselineY, bodyContentBottomY };
+
+  return {
+    innerBottomY,
+    lineBaselineY,
+    signatureImageBottomY,
+    signatureSlotTopY,
+    labelBaselineY,
+    bodyContentBottomY,
+  };
 }
 
 /**
  * pdf-lib `drawImage` y for the image’s lower-left corner (PDF origin bottom-left).
- * `lineBaselineFromTopPt` must match PDFKit underscore baseline (distance from top of page).
+ * `imageBottomFromTopPt` = distance from top of page to bottom edge of image.
  */
-export function signatureImagePdfLibY(pageHeightPt: number, lineBaselineFromTopPt: number): number {
-  const imageBottomFromTopPt = lineBaselineFromTopPt - APPEAL_SIGNATURE_GAP_ABOVE_LINE_PT;
+export function signatureImagePdfLibY(pageHeightPt: number, imageBottomFromTopPt: number): number {
   return pageHeightPt - imageBottomFromTopPt;
 }

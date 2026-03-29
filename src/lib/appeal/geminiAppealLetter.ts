@@ -1,5 +1,5 @@
 import type { Part } from '@google/generative-ai';
-import { ensureGeminiFileUris } from '@/lib/gemini/resolveBlobToGeminiFile';
+import { ensureGeminiFileRefs } from '@/lib/gemini/resolveBlobToGeminiFile';
 import { getVisionModel } from '@/lib/vision/gemini-client';
 import type { AppealUserContext } from './buildAppealUserContext';
 import {
@@ -21,10 +21,9 @@ function normalizeLetterText(raw: string): string {
 export async function generateAppealLetterHebrew(context: AppealUserContext): Promise<string> {
   const model = getVisionModel();
   const directUris = getDirectAppealLetterExampleUris();
-  const blobSources = getAppealLetterBlobSources();
-  const resolvedBlobUris =
-    blobSources.length > 0 ? await ensureGeminiFileUris(blobSources) : [];
-  const exampleUris = [...directUris, ...resolvedBlobUris];
+  const blobSources = await getAppealLetterBlobSources();
+  const resolvedBlobRefs =
+    blobSources.length > 0 ? await ensureGeminiFileRefs(blobSources) : [];
   const userJson = JSON.stringify(context, null, 2);
 
   const instruction = `You are an expert legal assistant for Israeli municipal property tax (ארנונה) appeals.
@@ -44,15 +43,21 @@ User data (JSON):
 ${userJson}`;
 
   const parts: Part[] = [
-    ...exampleUris.map((fileUri) => ({
+    ...directUris.map((fileUri) => ({
       fileData: {
         mimeType: APPEAL_EXAMPLE_PDF_MIME_TYPE,
         fileUri,
       },
     })),
+    ...resolvedBlobRefs.map(({ fileUri, mimeType }) => ({
+      fileData: {
+        mimeType,
+        fileUri,
+      },
+    })),
     { text: instruction },
   ];
-
+  //console.log(JSON.stringify(parts.map(p => p.fileData?.fileUri), null, 2))
   const result = await model.generateContent(parts);
   const text = result.response.text();
   const normalized = normalizeLetterText(text);
