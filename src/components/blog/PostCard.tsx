@@ -22,7 +22,7 @@ interface PostCardProps {
 function formatDate(date: Date | string | undefined): string {
   if (!date) return '';
   const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('he-IL', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -181,7 +181,7 @@ export default function PostCard({ post }: PostCardProps) {
         </Box>
 
         <Link
-          href={`/${post.slug}`}
+          href={`blog/${post.slug}`}
           style={{
             display: 'inline-block',
             marginTop: '12px',
@@ -191,7 +191,7 @@ export default function PostCard({ post }: PostCardProps) {
             textDecoration: 'none',
           }}
         >
-          Read more &rarr;
+          קרא עוד &larr;
         </Link>
       </CardContent>
     </Card>

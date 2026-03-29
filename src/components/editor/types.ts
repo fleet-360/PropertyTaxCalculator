@@ -17,16 +17,31 @@ export type BlockType =
   | 'button'
   | 'spacer';
 
+/** Logical text alignment (RTL/LTR aware). Legacy posts may still store left/right. */
+export type BlockTextAlignment = 'start' | 'center' | 'end';
+
+/** Maps stored alignment (including legacy left/right) to CSS logical values. */
+export function normalizeBlockTextAlignment(
+  value: string | undefined | null,
+  options?: { defaultAlign?: BlockTextAlignment },
+): BlockTextAlignment {
+  const fallback = options?.defaultAlign ?? 'start';
+  if (value === 'center') return 'center';
+  if (value === 'end' || value === 'right') return 'end';
+  if (value === 'start' || value === 'left') return 'start';
+  return fallback;
+}
+
 export interface HeadingData {
   text: string;
   level: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
-  alignment: 'left' | 'center' | 'right';
+  alignment: BlockTextAlignment;
   color: string;
 }
 
 export interface ParagraphData {
   html: string; // Rich text HTML content
-  alignment: 'left' | 'center' | 'right';
+  alignment: BlockTextAlignment;
   fontSize: number; // in px, default 16
 }
 
@@ -36,7 +51,7 @@ export interface ImageData {
   title: string;
   caption: string;
   width: string; // e.g. '100%', '50%', '300px'
-  alignment: 'left' | 'center' | 'right';
+  alignment: BlockTextAlignment;
   link: string;
   loading: 'lazy' | 'eager';
 }
@@ -88,15 +103,15 @@ export const getDefaultBlockData = (type: BlockType): Record<string, any> => {
   switch (type) {
     case 'heading':
       return {
-        text: 'New Heading',
+        text: 'כותרת חדשה',
         level: 'h2',
-        alignment: 'left',
+        alignment: 'start',
         color: '#000000',
       } as HeadingData;
     case 'paragraph':
       return {
-        html: '<p>Start writing...</p>',
-        alignment: 'left',
+        html: '<p><br></p>',
+        alignment: 'start',
         fontSize: 16,
       } as ParagraphData;
     case 'image':
@@ -114,7 +129,7 @@ export const getDefaultBlockData = (type: BlockType): Record<string, any> => {
       return {
         url: '',
         caption: '',
-        iframeTitle: 'Embedded video',
+        iframeTitle: 'וידאו מוטמע',
       } as VideoData;
     case 'html':
       return {
@@ -122,14 +137,14 @@ export const getDefaultBlockData = (type: BlockType): Record<string, any> => {
       } as HtmlData;
     case 'quote':
       return {
-        text: 'Enter your quote here...',
+        text: '',
         author: '',
         style: 'bordered',
       } as QuoteData;
     case 'list':
       return {
         type: 'unordered',
-        items: ['Item 1'],
+        items: ['פריט ראשון'],
       } as ListData;
     case 'divider':
       return {
@@ -139,7 +154,7 @@ export const getDefaultBlockData = (type: BlockType): Record<string, any> => {
       } as DividerData;
     case 'button':
       return {
-        text: 'Click Me',
+        text: 'לחץ כאן',
         url: '#',
         style: 'filled',
         color: '#1976d2',

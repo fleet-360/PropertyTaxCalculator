@@ -136,6 +136,7 @@ export default function InlineToolbar({ containerRef, onFormat }: InlineToolbarP
     <Paper
       ref={toolbarRef}
       elevation={8}
+      dir="rtl"
       sx={{
         position: 'fixed',
         top: position.top,
@@ -167,44 +168,45 @@ export default function InlineToolbar({ containerRef, onFormat }: InlineToolbarP
             }}
             sx={{ width: 200, '& .MuiInputBase-input': { py: 0.5, fontSize: '0.85rem' } }}
             autoFocus
+            inputProps={{ dir: 'ltr', lang: 'en', 'aria-label': 'כתובת קישור' }}
           />
-          <IconButton size="small" onClick={handleLinkInsert} color="primary">
+          <IconButton size="small" onClick={handleLinkInsert} color="primary" aria-label="אישור קישור">
             <CheckIcon fontSize="small" />
           </IconButton>
-          <IconButton size="small" onClick={handleLinkCancel}>
+          <IconButton size="small" onClick={handleLinkCancel} aria-label="ביטול">
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
       ) : (
         <>
-          <Tooltip title="Bold (Ctrl+B)">
-            <IconButton size="small" onClick={handleBold}>
+          <Tooltip title="מודגש (Ctrl+B)">
+            <IconButton size="small" onClick={handleBold} aria-label="מודגש">
               <FormatBoldIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Italic (Ctrl+I)">
-            <IconButton size="small" onClick={handleItalic}>
+          <Tooltip title="נטוי (Ctrl+I)">
+            <IconButton size="small" onClick={handleItalic} aria-label="נטוי">
               <FormatItalicIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Underline (Ctrl+U)">
-            <IconButton size="small" onClick={handleUnderline}>
+          <Tooltip title="קו תחתון (Ctrl+U)">
+            <IconButton size="small" onClick={handleUnderline} aria-label="קו תחתון">
               <FormatUnderlinedIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Strikethrough">
-            <IconButton size="small" onClick={handleStrikethrough}>
+          <Tooltip title="קו חוצה">
+            <IconButton size="small" onClick={handleStrikethrough} aria-label="קו חוצה">
               <StrikethroughSIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
-          <Tooltip title="Insert Link">
-            <IconButton size="small" onClick={handleLinkOpen}>
+          <Tooltip title="הוספת קישור">
+            <IconButton size="small" onClick={handleLinkOpen} aria-label="הוספת קישור">
               <LinkIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Remove Link">
-            <IconButton size="small" onClick={handleUnlink}>
+          <Tooltip title="הסרת קישור">
+            <IconButton size="small" onClick={handleUnlink} aria-label="הסרת קישור">
               <LinkOffIcon fontSize="small" />
             </IconButton>
           </Tooltip>

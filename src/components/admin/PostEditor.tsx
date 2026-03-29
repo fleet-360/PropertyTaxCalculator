@@ -439,7 +439,7 @@ export default function PostEditor({ initialData, onSave, isNew }: PostEditorPro
             whiteSpace: 'nowrap',
           }}
         >
-          {post.title || (isNew ? 'New Post' : 'Edit Post')}
+          {post.title || (isNew ? 'כתבה חדשה' : 'עריכת כתבה')}
         </Typography>
 
         {/* Save status indicator */}
@@ -457,9 +457,9 @@ export default function PostEditor({ initialData, onSave, isNew }: PostEditorPro
             fontWeight: 500,
           }}
         >
-          {saveStatus === 'saving' && 'Saving...'}
-          {saveStatus === 'saved' && 'Saved'}
-          {saveStatus === 'unsaved' && 'Unsaved changes'}
+          {saveStatus === 'saving' && 'שומר כתבה...'}
+          {saveStatus === 'saved' && 'שמור בהצלחה'}
+          {saveStatus === 'unsaved' && 'שינויים לא נשמרו'}
         </Typography>
 
         {post.slug && !isNew && (
@@ -471,7 +471,7 @@ export default function PostEditor({ initialData, onSave, isNew }: PostEditorPro
             target="_blank"
             sx={{ borderColor: '#e0e0e0', color: '#555' }}
           >
-            Preview
+            תצוגה מקדימה
           </Button>
         )}
 
@@ -481,7 +481,7 @@ export default function PostEditor({ initialData, onSave, isNew }: PostEditorPro
           startIcon={<SaveIcon />}
           onClick={() => handleSave('draft')}
         >
-          Save Draft
+          שמור טיוטה
         </Button>
 
         <Button
@@ -490,7 +490,7 @@ export default function PostEditor({ initialData, onSave, isNew }: PostEditorPro
           startIcon={<PublishIcon />}
           onClick={() => handleSave('published')}
         >
-          Publish
+          פרסם כתבה
         </Button>
       </Paper>
 
@@ -501,17 +501,20 @@ export default function PostEditor({ initialData, onSave, isNew }: PostEditorPro
           {/* Title */}
           <Paper sx={{ p: 3, mb: 3 }}>
             <TextField
-              label="Post Title"
+              label="כותרת הכתבה"
               value={post.title}
               onChange={(e) => handleTitleChange(e.target.value)}
               fullWidth
               required
               variant="outlined"
-              placeholder="Enter a compelling title..."
+              placeholder="הזן כותרת ..."
               error={!!errors.title}
               helperText={errors.title}
               slotProps={{
                 input: {
+                  sx: { fontSize: '1.4rem', fontWeight: 600 },
+                },
+                inputLabel: {
                   sx: { fontSize: '1.4rem', fontWeight: 600 },
                 },
               }}
