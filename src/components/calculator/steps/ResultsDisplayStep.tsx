@@ -33,6 +33,8 @@ export default function ResultsDisplayStep({ state, dispatch }: StepProps) {
   const biMonthlySavings = reported - calculated;
   const annualSavings = biMonthlySavings * 6;
   const tenYearSavings = annualSavings * 10;
+  const appealSavingsNonNegative =
+    biMonthlySavings >= 0 && annualSavings >= 0 && tenYearSavings >= 0;
 
   const areaBreakdown: AreaBreakdownItem[] | undefined = result.areaBreakdown;
   const appliedFees: AppliedFee[] | undefined = result.appliedFees;
@@ -200,6 +202,7 @@ export default function ResultsDisplayStep({ state, dispatch }: StepProps) {
         <Button
           variant="contained"
           startIcon={<GavelIcon />}
+          disabled={!appealSavingsNonNegative}
           onClick={() => dispatch({ type: "NEXT_STEP" })}
         >
           הגש השגה לעירייה

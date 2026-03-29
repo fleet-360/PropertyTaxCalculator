@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 
-export type EmailType = 'results' | 'appeal' | 'invoice';
+export type EmailType = 'results' | 'appeal' | 'appeal_pdf' | 'invoice';
 
 interface SendEmailParams {
   type: EmailType;
