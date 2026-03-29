@@ -7,6 +7,8 @@ import { CalculatorMiaSpeechBubbleTyping } from "@/components/common/TypingText"
 import CalculatorUnavailableMessage from "@/components/calculator/CalculatorUnavailableMessage";
 import type { CalculatorFeatureConfig } from "@/lib/types/system-config";
 import type { IMiaMessageData } from "@/lib/types/mia-message";
+import Image from "next/image";
+import miaImage from "@/assets/mia.gif";
 
 const CalculatorWizard = dynamic(
   () => import("@/components/calculator/CalculatorWizard"),
@@ -145,7 +147,6 @@ export default function CalculatorSection({ featureConfig }: CalculatorCTAProps)
                     sx={{
                       width: 120,
                       height: 350,
-                      bgcolor: "#e8eef6",
                       borderRadius: "60px 60px 10px 10px",
                       display: "flex",
                       alignItems: "center",
@@ -154,20 +155,8 @@ export default function CalculatorSection({ featureConfig }: CalculatorCTAProps)
                       gap: 1,
                     }}
                   >
-                    <Box aria-hidden="true" sx={{ fontSize: "48px" }}>
-                      👩‍💼
-                    </Box>
-                    <Typography
-                      sx={{
-                        fontSize: "11px",
-                        color: "#666",
-                        textAlign: "center",
-                      }}
-                    >
-                      מיה
-                      <br />
-                      יועצת ארנונה
-                    </Typography>
+                    <Image  src={miaImage} alt="Mia" width={120} height={350} />
+
                   </Box>
                 </Box>
                 {/* Speech bubble */}
@@ -202,7 +191,7 @@ export default function CalculatorSection({ featureConfig }: CalculatorCTAProps)
                     sx={{
                       position: "absolute",
                       left: -20,
-                      top: 64,
+                      top: "50%",
                       width: 0,
                       height: 0,
                       borderTop: "15px solid transparent",
