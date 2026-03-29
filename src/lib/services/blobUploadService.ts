@@ -122,8 +122,9 @@ export async function uploadToBlob(input: UploadToBlobInput): Promise<PutBlobRes
   const addRandomSuffix = input.addRandomSuffix ?? true;
 
   return put(pathname, input.body, {
-    access: 'public',
+    access: 'private',
     token,
+    allowOverwrite: true,
     contentType: input.contentType,
     addRandomSuffix,
   });

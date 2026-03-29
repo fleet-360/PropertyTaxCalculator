@@ -14,7 +14,9 @@ import {
   buildExemptionsPrompt,
   buildExtrasPrompt,
 } from './ordinance-prompts';
+import { parseLlmJsonObject } from './parseLlmJson';
 import { normalizeCityTariffPayload } from '@/lib/validateCityTariffPayload';
+import { uploadToBlob, BlobUploadFolder } from '@/lib/services/blobUploadService';
 import type {
   ICityTariffData,
   IAvailableZone,
@@ -54,20 +56,6 @@ const PASS_LABELS = [
 ];
 
 const TOTAL_PASSES = 5;
-
-// ── JSON parsing helper ──────────────────────────────────────────────
-
-function extractJsonFromText(text: string): Record<string, unknown> | null {
-  // Try markdown code fence first, then raw JSON
-  const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/) || text.match(/(\{[\s\S]*\})/);
-  if (!jsonMatch) return null;
-
-  try {
-    return JSON.parse(jsonMatch[1] || jsonMatch[0]);
-  } catch {
-    return null;
-  }
-}
 
 // ── Retry helper ─────────────────────────────────────────────────────
 
@@ -119,7 +107,7 @@ async function runPass(
     console.log('[OrdinanceExtractor] Response (first 1500 chars):', responseText.substring(0, 1500));
   }
 
-  return extractJsonFromText(responseText);
+  return parseLlmJsonObject(responseText);
 }
 
 // ── Main extraction function ─────────────────────────────────────────
@@ -182,6 +170,26 @@ export async function extractOrdinance(
       }
     } catch (error) {
       errors.push(`שגיאה בחילוץ מידע כללי: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
+    // ── Upload PDF to Vercel Blob (after metadata, so we have the slug) ──
+    if (data.slug) {
+      try {
+        onProgress?.({ pass: 1, total: TOTAL_PASSES, label: 'שומר את צו הארנונה...', percent: 18 });
+        const blobResult = await uploadToBlob({
+          body: pdfBuffer,
+          folder: BlobUploadFolder.Orders,
+          originalFilename: fileName,
+          citySlug: data.slug,
+          contentType: 'application/pdf',
+          addRandomSuffix: false,
+        });
+        data.ordinanceUrl = blobResult.url;
+      } catch (error) {
+        warnings.push(`לא הצלחנו לשמור את קובץ הצו: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    } else {
+      warnings.push('לא ניתן לשמור את קובץ הצו — שם העיר (slug) לא חולץ');
     }
 
     // ── Pass 2: Zones ──────────────────────────────────────────────
