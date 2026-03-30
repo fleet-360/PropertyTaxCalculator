@@ -56,6 +56,19 @@ export default function ExemptionsStep({ state, dispatch }: StepProps) {
     const newRows = [...rows];
     newRows[index] = { sectionCode, subSectionCode: '' }; // Reset subsection on category change
     updateRows(newRows);
+
+    // Dispatch Mia message for the selected exemption category
+    if (sectionCode) {
+      const section = exemptionSections.find((s) => s.sectionCode === sectionCode);
+      console.log(section);
+      if (section?.miaMessageId) {
+        dispatch({ type: 'SET_MIA_MESSAGE', payload: section.miaMessageId });
+      } else {
+        dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-3-default' });
+      }
+    } else {
+      dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-3-default' });
+    }
   };
 
   const handleSubSectionChange = (index: number, subSectionCode: string) => {

@@ -21,6 +21,7 @@ import {
   type CalculatorFeatureConfig,
 } from '@/lib/types/system-config';
 import { priceAfterCoupon } from '@/lib/priceAfterCoupon';
+import { isVercelBlobPublicUrl } from '@/lib/ordinancePdf';
 import type { AppliedWizardCoupon } from './wizardTypes';
 
 export type { CalculatorFeaturesContextValue } from './CalculatorFeaturesContext';
@@ -326,7 +327,6 @@ export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
   const ordinanceUrl = state.cityData?.ordinanceUrl as string | undefined;
   const showOrdinanceLink =
     Boolean(state.citySlug) && state.citySlug !== 'other' && Boolean(ordinanceUrl);
-
   const ordinanceTitle =
     state.cityData?.cityName != null && String(state.cityData.cityName).trim() !== ''
       ? `צו הארנונה — ${state.cityData.cityName}`
@@ -334,11 +334,16 @@ export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
 
   return (
     <CalculatorFeaturesContext.Provider value={featuresContextValue}>
-      <Container maxWidth="md" sx={{ position: 'relative' }}>
+      <Container maxWidth="md" sx={{ position: 'relative', flexDirection: 'column', alignItems: 'stretch' }}>
         {showOrdinanceLink && ordinanceUrl && (
           <Box sx={{ textAlign: 'center', mb: 2, position: 'absolute', top: 0, left: 0 }}>
             <DocumentPreviewPopover
               documentUrl={ordinanceUrl}
+              previewSrc={
+                isVercelBlobPublicUrl(ordinanceUrl)
+                  ? `/api/view-pdf/${encodeURIComponent(state.citySlug!)}`
+                  : undefined
+              }
               title={ordinanceTitle}
               triggerLabel="צפייה בצו הארנונה"
               triggerAriaLabel="פתיחת תצוגה מקדימה של צו הארנונה"

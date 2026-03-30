@@ -9,7 +9,7 @@ import Checkbox from '@mui/material/Checkbox';
 import Button from '@mui/material/Button';
 import type { StepProps } from '../CalculatorWizard';
 
-const INITIAL_WAIVER_TEXT = `הנני מצהיר/ה ומאשר/ת כי מחשבון הארנונה אינו מהווה ייעוץ משפטי ו/או תחליף לייעוץ משפטי, וכי תוצאות החישוב מבוססות על הנתונים שאזין במחשבון ולצורך התמצאות בלבד.`;
+const INITIAL_WAIVER_TEXT = `הנני מצהיר/ה ומאשר/ת את שמירת הנתונים האישיים שאזין במערכת. הנתונים יישמרו אצל מנהל המערכת, ואני מסכים/ה לכך שמנהל המערכת יוכל לפנות אליי בנוגע לנתונים אלה.`;
 
 export default function InitialWaiverStep({ dispatch }: StepProps) {
   const [accepted, setAccepted] = useState(false);
@@ -19,7 +19,7 @@ export default function InitialWaiverStep({ dispatch }: StepProps) {
   }, [dispatch]);
 
   return (
-    <Box>
+    <Box sx={{ flex: '1 1 auto' }}>
       <Typography
         sx={{
           fontWeight: 700,
@@ -29,7 +29,7 @@ export default function InitialWaiverStep({ dispatch }: StepProps) {
           mb: 3,
         }}
       >
-        אישור תנאים
+        אישור שמירת פרטים
       </Typography>
 
       <Paper

@@ -10,6 +10,8 @@ import Typography from '@mui/material/Typography';
 
 export interface DocumentPreviewPopoverProps {
   documentUrl: string;
+  /** When set (e.g. `/api/view-pdf/{slug}`), iframe and download use this proxy; download appends `?download=1`. */
+  previewSrc?: string;
   title: string;
   triggerLabel: string;
   triggerAriaLabel?: string;
@@ -30,6 +32,7 @@ function defaultFileNameFromUrl(url: string): string {
 
 export default function DocumentPreviewPopover({
   documentUrl,
+  previewSrc,
   title,
   triggerLabel,
   triggerAriaLabel,
@@ -38,6 +41,16 @@ export default function DocumentPreviewPopover({
 }: DocumentPreviewPopoverProps) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
+
+  const iframeSrc = previewSrc ?? documentUrl;
+
+  const downloadHref = useMemo(() => {
+    if (previewSrc) {
+      const sep = previewSrc.includes('?') ? '&' : '?';
+      return `${previewSrc}${sep}download=1`;
+    }
+    return documentUrl;
+  }, [previewSrc, documentUrl]);
 
   const resolvedDownloadName = useMemo(
     () => downloadFileName ?? defaultFileNameFromUrl(documentUrl),
@@ -112,7 +125,7 @@ export default function DocumentPreviewPopover({
           >
             <Box
               component="iframe"
-              src={documentUrl}
+              src={iframeSrc}
               title={title}
               sx={{
                 display: 'block',
@@ -126,8 +139,8 @@ export default function DocumentPreviewPopover({
           <Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
             <Button
               component="a"
-              href={documentUrl}
-              download={resolvedDownloadName}
+              href={downloadHref}
+              download={previewSrc ? undefined : resolvedDownloadName}
               target="_blank"
               rel="noopener noreferrer"
               variant="contained"
