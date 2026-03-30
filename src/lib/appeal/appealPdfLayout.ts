@@ -1,6 +1,26 @@
 /** Must match `margin` passed to PDFDocument in `renderAppealPdf`. */
 export const APPEAL_PAGE_MARGIN_PT = 56;
 
+/** ~Word default tab stop (pt) — leading `\\t` on a line maps to this indent step. */
+export const APPEAL_TAB_STOP_PT = 28;
+
+/** Approximate indent per leading space when models use spaces instead of tabs (body ~12.5pt). */
+export const APPEAL_LEADING_SPACE_INDENT_PT = 2.4;
+
+export const APPEAL_MAX_LINE_INDENT_PT = 160;
+
+/** PDFKit default A4 height in pt — used to reserve footer space for body text flow. */
+export const APPEAL_A4_HEIGHT_PT = 841.89;
+
+/**
+ * Bottom page margin so flowing body text stops above the signature block (same geometry as
+ * `appealFooterBaselines` with top/left/right = APPEAL_PAGE_MARGIN_PT).
+ */
+export function appealTextFlowBottomMarginPt(pageHeightPt: number = APPEAL_A4_HEIGHT_PT): number {
+  const { bodyContentBottomY } = appealFooterBaselines(pageHeightPt, APPEAL_PAGE_MARGIN_PT);
+  return Math.ceil(pageHeightPt - bodyContentBottomY) + 2;
+}
+
 /**
  * Fixed footer block (PDFKit coordinates: origin top-left, y grows downward):
  * 1. Body text ends above `bodyContentBottomY`.
