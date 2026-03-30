@@ -21,7 +21,10 @@ import {
   type CalculatorFeatureConfig,
 } from '@/lib/types/system-config';
 import { priceAfterCoupon } from '@/lib/priceAfterCoupon';
+import { isVercelBlobPublicUrl } from '@/lib/ordinancePdf';
 import type { AppliedWizardCoupon } from './wizardTypes';
+import { SxProps } from '@mui/material';
+import { Theme } from '@emotion/react';
 
 export type { CalculatorFeaturesContextValue } from './CalculatorFeaturesContext';
 export { CalculatorFeaturesContext, useCalculatorFeatures } from './CalculatorFeaturesContext';
@@ -92,8 +95,8 @@ export interface WizardState {
   // Lead tracking
   leadId: string | null;
   calculationIndex: number;
-  // Mia speech bubble
-  miaMessageId: string;
+  /** Mia speech bubble — single id or several ids merged in the parent (e.g. disclaimer notes). */
+  miaMessageId: string | string[];
 }
 
 export const initialState: WizardState = {
@@ -173,7 +176,7 @@ export type WizardAction =
   | { type: 'SET_CONTACT_REDIRECT'; payload: WizardState['contactRedirectReason'] }
   | { type: 'SET_LEAD_ID'; payload: string }
   | { type: 'SET_CALCULATION_INDEX'; payload: number }
-  | { type: 'SET_MIA_MESSAGE'; payload: string };
+  | { type: 'SET_MIA_MESSAGE'; payload: string | string[] };
 
 export function shouldSkipExemptions(state: WizardState): boolean {
   return state.propertyType === 'business';
@@ -239,6 +242,7 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
 export interface StepProps {
   state: WizardState;
   dispatch: Dispatch<WizardAction>;
+  sx?: SxProps<Theme>;
 }
 
 // ── Validation checks ──
@@ -283,7 +287,7 @@ function mergeFeatures(partial?: Partial<CalculatorFeatureConfig>): CalculatorFe
 
 export interface CalculatorWizardProps {
   features?: Partial<CalculatorFeatureConfig>;
-  onMiaMessage?: (messageId: string) => void;
+  onMiaMessage?: (messageId: string | string[]) => void;
 }
 
 export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
@@ -326,7 +330,6 @@ export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
   const ordinanceUrl = state.cityData?.ordinanceUrl as string | undefined;
   const showOrdinanceLink =
     Boolean(state.citySlug) && state.citySlug !== 'other' && Boolean(ordinanceUrl);
-
   const ordinanceTitle =
     state.cityData?.cityName != null && String(state.cityData.cityName).trim() !== ''
       ? `צו הארנונה — ${state.cityData.cityName}`
@@ -334,11 +337,16 @@ export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
 
   return (
     <CalculatorFeaturesContext.Provider value={featuresContextValue}>
-      <Container maxWidth="md" sx={{ position: 'relative' }}>
+      <Container maxWidth="md" sx={{ position: 'relative', flexDirection: 'column',  height: '100%' }}>
         {showOrdinanceLink && ordinanceUrl && (
-          <Box sx={{ textAlign: 'center', mb: 2, position: 'absolute', top: 0, left: 0 }}>
+          <Box sx={{ textAlign: 'center', mb: 2, position: 'absolute', top: 0, left: 0}}>
             <DocumentPreviewPopover
               documentUrl={ordinanceUrl}
+              previewSrc={
+                isVercelBlobPublicUrl(ordinanceUrl)
+                  ? `/api/view-pdf/${encodeURIComponent(state.citySlug!)}`
+                  : undefined
+              }
               title={ordinanceTitle}
               triggerLabel="צפייה בצו הארנונה"
               triggerAriaLabel="פתיחת תצוגה מקדימה של צו הארנונה"
@@ -346,7 +354,7 @@ export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
             />
           </Box>
         )}
-        {StepComponent && <StepComponent key={state.currentStep} state={state} dispatch={dispatch} />}
+        {StepComponent && <StepComponent sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',overflowY: 'scroll' }} key={state.currentStep} state={state} dispatch={dispatch} />}
       </Container>
     </CalculatorFeaturesContext.Provider>
   );

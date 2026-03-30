@@ -123,6 +123,7 @@ const ExemptionSectionSchema = new Schema<IExemptionSection>(
   {
     sectionCode: { type: String, required: true },
     sectionLabel: { type: String, required: true },
+    miaMessageId: { type: String },
     subSections: { type: [ExemptionSubSectionSchema], default: [] },
   },
   { _id: false }

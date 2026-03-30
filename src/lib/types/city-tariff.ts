@@ -63,6 +63,7 @@ export interface IExemptionSubSection {
 export interface IExemptionSection {
   sectionCode: string;
   sectionLabel: string;
+  miaMessageId?: string;
   subSections: IExemptionSubSection[];
 }
 

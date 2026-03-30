@@ -1,8 +1,10 @@
+import { BlobStoreNotFoundError } from '@vercel/blob';
 import { describe, expect, it } from 'vitest';
 import {
   basenameOnly,
   BlobUploadFolder,
   BlobUploadValidationError,
+  blobUploadFailurePayload,
   buildBlobPathname,
   CITY_SLUG_PATTERN,
   sanitizeOrderStem,
@@ -101,5 +103,32 @@ describe('buildBlobPathname', () => {
     expect(
       buildBlobPathname(BlobUploadFolder.Samples, 'a.pdf', 'ignored-slug'),
     ).toBe('Sample documents/a.pdf');
+  });
+});
+
+describe('blobUploadFailurePayload', () => {
+  it('maps validation errors to 400', () => {
+    const { status, body } = blobUploadFailurePayload(
+      new BlobUploadValidationError('Invalid citySlug format'),
+    );
+    expect(status).toBe(400);
+    expect(body.code).toBe('VALIDATION');
+    expect(body.error).toContain('citySlug');
+  });
+
+  it('maps missing token config to 500 with code BLOB_TOKEN_MISSING', () => {
+    const { status, body } = blobUploadFailurePayload(
+      new Error('BLOB_READ_WRITE_TOKEN is not configured'),
+    );
+    expect(status).toBe(500);
+    expect(body.code).toBe('BLOB_TOKEN_MISSING');
+    expect(body.error).toContain('BLOB_READ_WRITE_TOKEN');
+  });
+
+  it('maps Vercel BlobStoreNotFoundError to 502', () => {
+    const { status, body } = blobUploadFailurePayload(new BlobStoreNotFoundError());
+    expect(status).toBe(502);
+    expect(body.code).toBe('BLOB_STORE_NOT_FOUND');
+    expect(body.detail).toBeTruthy();
   });
 });

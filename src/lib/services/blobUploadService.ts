@@ -1,4 +1,20 @@
-import { put, type PutBlobResult } from '@vercel/blob';
+import {
+  put,
+  type PutBlobResult,
+  BlobError,
+  BlobAccessError,
+  BlobClientTokenExpiredError,
+  BlobContentTypeNotAllowedError,
+  BlobFileTooLargeError,
+  BlobPathnameMismatchError,
+  BlobPreconditionFailedError,
+  BlobRequestAbortedError,
+  BlobServiceNotAvailable,
+  BlobServiceRateLimited,
+  BlobStoreNotFoundError,
+  BlobStoreSuspendedError,
+  BlobUnknownError,
+} from '@vercel/blob';
 
 /** Internal folder key; maps to Vercel Blob path prefixes below. */
 export enum BlobUploadFolder {
@@ -10,6 +26,9 @@ const FOLDER_PREFIX: Record<BlobUploadFolder, string> = {
   [BlobUploadFolder.Orders]: 'Property tax orders',
   [BlobUploadFolder.Samples]: 'Sample documents',
 };
+
+/** Vercel Blob `list({ prefix })` for the sample-documents folder (includes trailing slash). */
+export const BLOB_SAMPLE_DOCUMENTS_LIST_PREFIX = `${FOLDER_PREFIX[BlobUploadFolder.Samples]}/`;
 
 /** Matches city slugs as stored on `CityTariff` (lowercase, hyphen-separated). */
 export const CITY_SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -128,4 +147,216 @@ export async function uploadToBlob(input: UploadToBlobInput): Promise<PutBlobRes
     contentType: input.contentType,
     addRandomSuffix,
   });
+}
+
+/** JSON body for failed blob uploads (admin API). */
+export interface BlobUploadErrorBody {
+  error: string;
+  code: string;
+  /** Technical message from the SDK or server; safe for admin debugging. */
+  detail?: string;
+}
+
+/**
+ * Maps thrown values from `uploadToBlob` / Vercel `put()` to HTTP status and a clear admin-facing payload.
+ * Subclasses are checked before the base `BlobError`.
+ */
+export function blobUploadFailurePayload(error: unknown): {
+  status: number;
+  body: BlobUploadErrorBody;
+} {
+  const isDev = process.env.NODE_ENV === 'development';
+
+  if (error instanceof BlobUploadValidationError) {
+    return {
+      status: 400,
+      body: { error: error.message, code: 'VALIDATION' },
+    };
+  }
+
+  if (error instanceof Error && error.message.includes('BLOB_READ_WRITE_TOKEN')) {
+    return {
+      status: 500,
+      body: {
+        error:
+          'חסר או לא הוגדר BLOB_READ_WRITE_TOKEN — הוסיפו טוקן Read-Write מחנות ה-Blob ב-Vercel ל-.env והפעילו מחדש את השרת.',
+        code: 'BLOB_TOKEN_MISSING',
+        ...(isDev && { detail: error.message }),
+      },
+    };
+  }
+
+  if (error instanceof BlobClientTokenExpiredError) {
+    return {
+      status: 502,
+      body: {
+        error:
+          'טוקן ה-Blob פג תוקף. צרו טוקן Read-Write חדש בלוח הבקרה של Vercel (Storage → Blob) ועדכנו את BLOB_READ_WRITE_TOKEN.',
+        code: 'BLOB_TOKEN_EXPIRED',
+        detail: error.message,
+      },
+    };
+  }
+
+  if (error instanceof BlobStoreNotFoundError) {
+    return {
+      status: 502,
+      body: {
+        error:
+          'חנות ה-Blob לא נמצאה. ודאו שהטוקן שייך לחנות Blob פעילה בפרויקט הנכון ב-Vercel.',
+        code: 'BLOB_STORE_NOT_FOUND',
+        detail: error.message,
+      },
+    };
+  }
+
+  if (error instanceof BlobStoreSuspendedError) {
+    return {
+      status: 503,
+      body: {
+        error: 'חנות ה-Blob מושעית ב-Vercel. בדקו את סטטוס ה-Storage בלוח הבקרה.',
+        code: 'BLOB_STORE_SUSPENDED',
+        detail: error.message,
+      },
+    };
+  }
+
+  if (error instanceof BlobFileTooLargeError) {
+    return {
+      status: 413,
+      body: {
+        error:
+          'הקובץ חורג ממגבלת הגודל של שירות ה-Blob (או של החנות). הקטינו את הקובץ או עדכנו מגבלות ב-Vercel.',
+        code: 'BLOB_FILE_TOO_LARGE',
+        detail: error.message,
+      },
+    };
+  }
+
+  if (error instanceof BlobContentTypeNotAllowedError) {
+    return {
+      status: 415,
+      body: {
+        error:
+          'סוג התוכן (Content-Type) לא מותר בהגדרות חנות ה-Blob. בדקו את מדיניות סוגי הקבצים ב-Vercel Blob.',
+        code: 'BLOB_CONTENT_TYPE_NOT_ALLOWED',
+        detail: error.message,
+      },
+    };
+  }
+
+  if (error instanceof BlobServiceRateLimited) {
+    const retry = error.retryAfter;
+    return {
+      status: 429,
+      body: {
+        error:
+          'הגעתם למגבלת קצב של שירות ה-Blob. נסו שוב בעוד כמה שניות.',
+        code: 'BLOB_RATE_LIMITED',
+        detail:
+          retry != null && retry > 0
+            ? `${error.message} (retryAfter: ${retry}s)`
+            : error.message,
+      },
+    };
+  }
+
+  if (error instanceof BlobServiceNotAvailable) {
+    return {
+      status: 503,
+      body: {
+        error: 'שירות Vercel Blob אינו זמין כרגע. נסו שוב מאוחר יותר.',
+        code: 'BLOB_SERVICE_UNAVAILABLE',
+        detail: error.message,
+      },
+    };
+  }
+
+  if (error instanceof BlobPathnameMismatchError) {
+    return {
+      status: 400,
+      body: {
+        error:
+          'נתיב הקובץ שנשלח לא תואם למדיניות ה-Blob. בדקו את שם הקובץ והתיקייה.',
+        code: 'BLOB_PATHNAME_MISMATCH',
+        detail: error.message,
+      },
+    };
+  }
+
+  if (error instanceof BlobAccessError) {
+    return {
+      status: 502,
+      body: {
+        error:
+          'הגישה ל-Blob נדחתה (הרשאות). ודאו ש-BLOB_READ_WRITE_TOKEN הוא טוקן כתיבה תקף.',
+        code: 'BLOB_ACCESS_DENIED',
+        detail: error.message,
+      },
+    };
+  }
+
+  if (error instanceof BlobPreconditionFailedError) {
+    return {
+      status: 412,
+      body: {
+        error: 'תנאי הקדמה (למשל ETag) לא התקיים — ייתכן שהקובץ השתנה.',
+        code: 'BLOB_PRECONDITION_FAILED',
+        detail: error.message,
+      },
+    };
+  }
+
+  if (error instanceof BlobRequestAbortedError) {
+    return {
+      status: 500,
+      body: {
+        error: 'העלאה בוטלה לפני השלמה.',
+        code: 'BLOB_REQUEST_ABORTED',
+        detail: error.message,
+      },
+    };
+  }
+
+  if (error instanceof BlobUnknownError) {
+    return {
+      status: 502,
+      body: {
+        error: 'שגיאה לא מסווגת מ-Vercel Blob. פרטים בשדה detail.',
+        code: 'BLOB_UNKNOWN',
+        detail: error.message,
+      },
+    };
+  }
+
+  if (error instanceof BlobError) {
+    return {
+      status: 502,
+      body: {
+        error: `שירות ה-Blob דחה את הבקשה: ${error.message}`,
+        code: 'BLOB_ERROR',
+        detail: error.message,
+      },
+    };
+  }
+
+  if (error instanceof Error) {
+    return {
+      status: 500,
+      body: {
+        error:
+          'שגיאה פנימית בהעלאה. אם אתם במצב פיתוח, בדקו את השדה detail ואת לוג השרת.',
+        code: 'INTERNAL',
+        ...(isDev && { detail: error.message }),
+      },
+    };
+  }
+
+  return {
+    status: 500,
+    body: {
+      error: 'שגיאה לא ידועה בהעלאה ל-Blob.',
+      code: 'UNKNOWN',
+    },
+  };
 }

@@ -10,17 +10,23 @@ import Button from '@mui/material/Button';
 import type { StepProps } from '../CalculatorWizard';
 import { useLeadUpdate } from '@/hooks/useLeadUpdate';
 
+/** Mia messages seeded in `seed-mia-messages.ts` — merged into one bubble on the disclaimer step. */
+const DISCLAIMER_MIA_MESSAGE_IDS = ['step-4-note-accuracy', 'step-4-note-ordinance'] as const;
+
 const DISCLAIMER_TEXT = `הנני מצהיר/ה ומאשר/ת כי מחשבון הארנונה אינו מהווה ייעוץ משפטי ו/או תחליף לייעוץ משפטי, וכי תוצאות החישוב מבוססות על הנתונים שהזנתי במחשבון ולצורך התמצאות בלבד. לאחר שעיינתי בתקנון האתר ובמדיניות הפרטיות, הנני מצהיר/ה כי לא אעלה באופן אישי ו/או באמצעות מי מטעמי כל טענה ו/או תלונה ו/או תביעה כנגד מחשבון הארנונה ומנהליו בכל מקרה של שימוש במחשבון הארנונה ובמקרה של סטייה מהתוצאה המופיעה בצו הארנונה.`;
 
-export default function DisclaimerStep({ state, dispatch }: StepProps) {
+export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
   const { updateLead } = useLeadUpdate();
 
   useEffect(() => {
-    dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-4-default' });
+    dispatch({
+      type: 'SET_MIA_MESSAGE',
+      payload: [...DISCLAIMER_MIA_MESSAGE_IDS],
+    });
   }, [dispatch]);
 
   return (
-    <Box>
+    <Box sx={sx}>
       <Typography variant="h5" textAlign="center" mb={3}>
         הצהרה ואישור
       </Typography>

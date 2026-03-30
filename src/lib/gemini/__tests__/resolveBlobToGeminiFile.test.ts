@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { FileState } from '@google/generative-ai/server';
 import {
   ensureGeminiFileUri,
+  ensureGeminiFileRefs,
   findFileByDisplayName,
   resetGeminiFileManagerForTests,
 } from '@/lib/gemini/resolveBlobToGeminiFile';
@@ -121,5 +122,68 @@ describe('ensureGeminiFileUri', () => {
     expect(out).toContain('generativelanguage.googleapis.com');
     expect(uploadFile).toHaveBeenCalledTimes(1);
     expect(getFile.mock.calls.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('ensureGeminiFileRefs', () => {
+  beforeEach(() => {
+    resetGeminiFileManagerForTests();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        arrayBuffer: () =>
+          Promise.resolve(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]).buffer),
+      }),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('returns fileUri with source mimeType', async () => {
+    const listFiles = vi.fn().mockResolvedValue({ files: [] });
+    const uploadFile = vi.fn().mockResolvedValue({
+      file: meta({
+        name: 'files/png1',
+        state: FileState.PROCESSING,
+        uri: 'https://generativelanguage.googleapis.com/v1beta/files/png1',
+      }),
+    });
+    const getFile = vi
+      .fn()
+      .mockResolvedValueOnce(
+        meta({
+          name: 'files/png1',
+          state: FileState.PROCESSING,
+          uri: 'https://generativelanguage.googleapis.com/v1beta/files/png1',
+        }),
+      )
+      .mockResolvedValueOnce(
+        meta({
+          name: 'files/png1',
+          state: FileState.ACTIVE,
+          uri: 'https://generativelanguage.googleapis.com/v1beta/files/png1',
+          expirationTime: '2099-01-01T00:00:00Z',
+        }),
+      );
+    const fm = { listFiles, uploadFile, getFile, deleteFile: vi.fn() } as any;
+
+    const refs = await ensureGeminiFileRefs(
+      [{ displayName: 'img-1', blobUrl: 'https://blob.example/x.png', mimeType: 'image/png' }],
+      fm,
+      { pollIntervalMs: 5, pollMaxWaitMs: 500 },
+    );
+    expect(refs).toEqual([
+      {
+        fileUri: 'https://generativelanguage.googleapis.com/v1beta/files/png1',
+        mimeType: 'image/png',
+      },
+    ]);
+    expect(uploadFile).toHaveBeenCalledWith(
+      expect.any(Buffer),
+      expect.objectContaining({ mimeType: 'image/png' }),
+    );
   });
 });

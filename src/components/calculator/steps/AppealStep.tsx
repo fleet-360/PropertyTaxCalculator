@@ -22,7 +22,13 @@ import { useCalculatorFeatures } from '../CalculatorFeaturesContext';
 import { useEmailSend } from '@/hooks/useEmailSend';
 import type { StepProps } from '../CalculatorWizard';
 
-const APPEAL_WAIVER_TEXT = `הנני מצהיר/ה ומאשר/ת כי ידוע לי שהגשת השגה באמצעות מחשבון הארנונה אינה מהווה ייעוץ משפטי. הנני מוותר/ת על כל טענה כלפי מפעילי המחשבון בנוגע לתוצאות ההשגה ו/או לכל נזק שעלול להיגרם כתוצאה מהגשתה. ידוע לי כי ההשגה מוגשת על בסיס הנתונים שהזנתי במחשבון ועל אחריותי בלבד.`;
+const APPEAL_WAIVER_TEXT = `אני החתום מטה, מצהיר ומאשר בזאת, כי מחשבון הארנונה איננו מהווה ייעוץ משפטי ו/או תחליף לייעוץ משפטי וכי כתב ההשגה אשר נערך עבורי מתבסס על נתונים שאני הזנתי במחשבון, והינם לעזר בלבד.
+
+לאחר שעיינתי בתקנון האתר ובמדיניות הפרטיות, אני מצהיר כי לא אבוא בעצמי ו/או באמצעות מי מטעמי בכל טענה ו/או תלונה ו/או תביעה כנגד מחשבון הארנונה ומנהליו בכל מקרה של שימוש במחשבון הארנונה ו בהגשת ההשגה וברור לי כי יתכן ומנהל הארנונה יקבע כי דין ההשגה להידחות ובמקרה כזה אהיה זכאי להגיש ערר בתוך 30 ימים ממועד דחיית ההשגה.
+
+הריני מצהיר כי עם קבלת כתב ההשגה באמצעות האימייל התמלאו התחייבויות מחשבון הארנונה כלפיי ואני אהיה זכאי להגיש את ההשגה באתר העירייה או באמצעות הדואר.
+
+קראתי את התקנון ומדיניות הפרטיות ואני מסכים ומאשר`;
 
 type FlowPhase = 'intro' | 'generating' | 'sign' | 'finalize' | 'done';
 
@@ -294,7 +300,7 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         הגשת השגה
       </Typography>
 
-      {generateError && (
+      {/* {generateError && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setGenerateError(null)}>
           {generateError}
         </Alert>
@@ -302,9 +308,9 @@ export default function AppealStep({ state, dispatch }: StepProps) {
 
       {paymentEnabled && (
         <CouponPaymentSection state={state} dispatch={dispatch} context="appeal" />
-      )}
+      )} */}
 
-      <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+      {/* <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
         <Typography variant="body1" mb={2}>
           השגה היא בעצם ערעור על חיוב הארנונה. ניתן להגיש השגה תוך 90 יום ממועד קבלת החיוב.
         </Typography>
@@ -314,10 +320,12 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         <Typography variant="h6" color="primary.main">
           מחיר: {appealChargeAmount.toLocaleString('he-IL')} ₪
         </Typography>
-      </Paper>
+      </Paper> */}
 
-      <Paper variant="outlined" sx={{ p: 2, mb: 2, maxHeight: 140, overflowY: 'auto', lineHeight: 1.8 }}>
-        <Typography variant="body2">{APPEAL_WAIVER_TEXT}</Typography>
+      <Paper variant="outlined" sx={{ p: 2, mb: 2, maxHeight: 320, overflowY: 'auto', lineHeight: 1.8 }}>
+        <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
+          {APPEAL_WAIVER_TEXT}
+        </Typography>
       </Paper>
 
       <FormControlLabel
@@ -346,6 +354,9 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         onConfirm={handlePaymentConfirm}
         amountNis={appealChargeAmount}
         title="תשלום השגה (הדגמה)"
+        state={state}
+        dispatch={dispatch}
+        context="appeal"
       />
     </Box>
   );
