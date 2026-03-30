@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
 const MONGODB_URI =
-  process.env.MONGODB_URI ||
+  process.env.MONGODB_URI_MONGODB_URI ||
   'mongodb://localhost:27017/property-tax-calculator-test';
 
 export async function setup() {

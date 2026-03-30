@@ -13,7 +13,7 @@
 import mongoose from 'mongoose';
 
 const MONGODB_URI =
-  process.env.MONGODB_URI || 'mongodb://localhost:27017/property-tax-calculator';
+  process.env.MONGODB_URI_MONGODB_URI || 'mongodb://localhost:27017/property-tax-calculator';
 
 const SOURCE_MAP: Record<string, string> = {
   calculator_business: 'calculator',

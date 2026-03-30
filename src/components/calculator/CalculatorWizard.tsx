@@ -93,8 +93,8 @@ export interface WizardState {
   // Lead tracking
   leadId: string | null;
   calculationIndex: number;
-  // Mia speech bubble
-  miaMessageId: string;
+  /** Mia speech bubble — single id or several ids merged in the parent (e.g. disclaimer notes). */
+  miaMessageId: string | string[];
 }
 
 export const initialState: WizardState = {
@@ -174,7 +174,7 @@ export type WizardAction =
   | { type: 'SET_CONTACT_REDIRECT'; payload: WizardState['contactRedirectReason'] }
   | { type: 'SET_LEAD_ID'; payload: string }
   | { type: 'SET_CALCULATION_INDEX'; payload: number }
-  | { type: 'SET_MIA_MESSAGE'; payload: string };
+  | { type: 'SET_MIA_MESSAGE'; payload: string | string[] };
 
 export function shouldSkipExemptions(state: WizardState): boolean {
   return state.propertyType === 'business';
@@ -284,7 +284,7 @@ function mergeFeatures(partial?: Partial<CalculatorFeatureConfig>): CalculatorFe
 
 export interface CalculatorWizardProps {
   features?: Partial<CalculatorFeatureConfig>;
-  onMiaMessage?: (messageId: string) => void;
+  onMiaMessage?: (messageId: string | string[]) => void;
 }
 
 export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
