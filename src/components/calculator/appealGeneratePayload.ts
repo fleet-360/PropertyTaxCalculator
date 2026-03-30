@@ -14,6 +14,10 @@ export function buildAppealGeneratePayload(state: WizardState): AppealGenerateRe
     state.citySlug ||
     'לא צוין';
 
+  const additionalAreas =
+    state.additionalAreas?.filter((r) => r.areaType?.trim() && r.areaSqm > 0) ?? [];
+  const selectedFees = state.selectedFees?.map((s) => s.trim()).filter(Boolean) ?? [];
+
   const payload = {
     fullName: state.fullName.trim(),
     idNumber: state.idNumber?.trim() || undefined,
@@ -29,12 +33,35 @@ export function buildAppealGeneratePayload(state: WizardState): AppealGenerateRe
     zone: state.zone?.trim() || undefined,
     subType: state.subType?.trim() || undefined,
     bimonthlyPayment: state.bimonthlyPayment,
+    reportedPayment: state.reportedPayment > 0 ? state.reportedPayment : undefined,
+    paymentPeriod: state.paymentPeriod?.trim() || undefined,
     calculationResult: (state.calculationResult ?? {}) as Record<string, unknown>,
     designations: state.designations?.length ? state.designations : undefined,
     selectedExemptions: state.selectedExemptions?.length ? state.selectedExemptions : undefined,
     householdSize: state.householdSize > 0 ? state.householdSize : undefined,
     childrenCount: state.childrenCount > 0 ? state.childrenCount : undefined,
     leadId: state.leadId ?? undefined,
+    propertyPurpose: state.propertyPurpose?.trim() || undefined,
+    measurementError:
+      state.measurementError != null && state.measurementError.claimed > 0
+        ? {
+            claimed: state.measurementError.claimed,
+            attachment: state.measurementError.attachment?.trim() || undefined,
+          }
+        : undefined,
+    classificationError:
+      state.classificationError?.suggested?.trim() != null &&
+      state.classificationError.suggested.trim().length > 0
+        ? { suggested: state.classificationError.suggested.trim() }
+        : undefined,
+    coveredBalconyArea: state.coveredBalconyArea > 0 ? state.coveredBalconyArea : undefined,
+    storageArea: state.storageArea > 0 ? state.storageArea : undefined,
+    parkingArea: state.parkingArea > 0 ? state.parkingArea : undefined,
+    additionalAreas: additionalAreas.length > 0 ? additionalAreas : undefined,
+    block: state.block?.trim() || undefined,
+    parcel: state.parcel?.trim() || undefined,
+    classificationCode: state.classificationCode?.trim() || undefined,
+    selectedFees: selectedFees.length > 0 ? selectedFees : undefined,
   };
   return payload as AppealGenerateRequest;
 }
