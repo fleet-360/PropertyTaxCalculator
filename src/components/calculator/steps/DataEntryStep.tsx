@@ -1196,7 +1196,9 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
         אם אתה סבור שיש שגיאה בנתוני הנכס שלך, תוכל לדווח כאן
       </Typography>
 
-      <Accordion>
+      <Accordion onChange={(_, expanded) => {
+        if (expanded) dispatch({ type: 'SET_MIA_MESSAGE', payload: 'error-measurement' });
+      }}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography>טעות במדידה</Typography>
         </AccordionSummary>
@@ -1216,7 +1218,9 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
         </AccordionDetails>
       </Accordion>
 
-      <Accordion>
+      <Accordion onChange={(_, expanded) => {
+        if (expanded) dispatch({ type: 'SET_MIA_MESSAGE', payload: 'error-classification' });
+      }}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography>טעות בסיווג</Typography>
         </AccordionSummary>

@@ -33,6 +33,8 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import FormHelperText from '@mui/material/FormHelperText';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import MiaMessagePickerModal from '@/components/common/MiaMessagePickerModal';
 import {
   normalizeCityTariffPayload,
   validateCityTariffPayload,
@@ -79,6 +81,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
   const [saving, setSaving] = React.useState(false);
   const [snackbar, setSnackbar] = React.useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
+  const [miaPickerOpen, setMiaPickerOpen] = React.useState(false);
   const [expandedAccordion, setExpandedAccordion] = React.useState({
     basic: true,
     zones: true,
@@ -162,6 +165,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
 
   const handleSave = async () => {
     const normalized = normalizeCityTariffPayload(data);
+    console.log(normalized);
     const issues = validateCityTariffPayload(normalized);
     if (issues.length > 0) {
       setFieldErrors(validationIssuesToFieldMap(issues));
@@ -370,9 +374,18 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       const types = [...prev.types];
       const subtypes = [...types[ti].subtypes];
       const zones = [...subtypes[si].zones];
+      const prevRanges = [...(zones[zi].sizeRanges || [])];
+      if (prevRanges.length > 0) {
+        const li = prevRanges.length - 1;
+        const last = prevRanges[li];
+        if (last.max === -1) {
+          prevRanges[li] = { ...last, max: last.min };
+        }
+      }
+      prevRanges.push({ min: 0, max: -1, rate: 0 });
       zones[zi] = {
         ...zones[zi],
-        sizeRanges: [...(zones[zi].sizeRanges || []), { min: 0, max: 0, rate: 0 }],
+        sizeRanges: prevRanges,
       };
       subtypes[si] = { ...subtypes[si], zones };
       types[ti] = { ...types[ti], subtypes };
@@ -399,9 +412,15 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       const types = [...prev.types];
       const subtypes = [...types[ti].subtypes];
       const zones = [...subtypes[si].zones];
+      let filtered = (zones[zi].sizeRanges || []).filter((_, i) => i !== ri);
+      if (filtered.length > 0) {
+        const li = filtered.length - 1;
+        filtered = [...filtered];
+        filtered[li] = { ...filtered[li], max: -1 };
+      }
       zones[zi] = {
         ...zones[zi],
-        sizeRanges: (zones[zi].sizeRanges || []).filter((_, i) => i !== ri),
+        sizeRanges: filtered,
       };
       subtypes[si] = { ...subtypes[si], zones };
       types[ti] = { ...types[ti], subtypes };
@@ -416,7 +435,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       newEi = prev.exemptions.length;
       return {
         ...prev,
-        exemptions: [...prev.exemptions, { sectionCode: '', sectionLabel: '', subSections: [] }],
+        exemptions: [...prev.exemptions, { sectionCode: '', sectionLabel: '', miaMessageId: '', subSections: [] }],
       };
     });
     setSelectedExemptionSectionIndex(newEi);
@@ -424,6 +443,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
   };
 
   const updateExemptionSection = (ei: number, field: string, value: string) => {
+    console.log(ei, field, value);
     setData((prev) => {
       const exemptions = [...prev.exemptions];
       exemptions[ei] = { ...exemptions[ei], [field]: value };
@@ -1175,6 +1195,24 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Box>
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 1 }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<ChatBubbleOutlineIcon />}
+                      onClick={() => setMiaPickerOpen(true)}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      הודעת מיה
+                    </Button>
+                    {data.exemptions[selectedExemptionSectionIndex].miaMessageId && (
+                      <Chip
+                        label={data.exemptions[selectedExemptionSectionIndex].miaMessageId}
+                        size="small"
+                        onDelete={() => updateExemptionSection(selectedExemptionSectionIndex, 'miaMessageId', '')}
+                      />
+                    )}
+                  </Box>
                 </Paper>
               )}
 
@@ -1695,6 +1733,23 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Mia message picker for exemption sections */}
+      <MiaMessagePickerModal
+        open={miaPickerOpen}
+        onClose={() => setMiaPickerOpen(false)}
+        onSelect={(messageId) => {
+          if (selectedExemptionSectionIndex !== null) {
+            updateExemptionSection(selectedExemptionSectionIndex, 'miaMessageId', messageId);
+          }
+          setMiaPickerOpen(false);
+        }}
+        currentMessageId={
+          selectedExemptionSectionIndex !== null
+            ? data.exemptions[selectedExemptionSectionIndex]?.miaMessageId
+            : undefined
+        }
+      />
     </Box>
   );
 }

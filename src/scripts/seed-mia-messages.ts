@@ -78,6 +78,18 @@ const DEFAULT_MESSAGES = [
     description: 'רוצה להגיש השגה? אני אעזור לך לנסח מכתב מקצועי על בסיס הנתונים שהזנת.',
     isActive: true,
   },
+  {
+    messageId: 'error-measurement',
+    title: '📏 טעות במדידה?',
+    description: 'אם אתה סבור שהשטח הרשום בעירייה אינו תואם את השטח בפועל, הזן את השטח המתוקן ונבדוק את ההפרש.',
+    isActive: true,
+  },
+  {
+    messageId: 'error-classification',
+    title: '🏷️ טעות בסיווג?',
+    description: 'אם הנכס שלך מסווג בצורה שגויה, בחר את הסיווג הנכון לדעתך. סיווג שגוי עלול לגרום לחיוב יתר משמעותי.',
+    isActive: true,
+  },
 ];
 
 async function main() {
