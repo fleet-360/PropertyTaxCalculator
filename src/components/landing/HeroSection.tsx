@@ -274,7 +274,7 @@ export default function HeroSection() {
           >
             <Button
               component="a"
-              href="#calculator-section"
+              href="/blog"
               sx={{
                 bgcolor: "rgba(255,255,255,0.1)",
                 border: "1.5px solid #194fdb",
@@ -290,7 +290,7 @@ export default function HeroSection() {
               קרא עוד
             </Button>
             <Button
-              component={Link}
+              component={"a"}
               href="#calculator-section"
               sx={{
                 bgcolor: "#1a4fdb",

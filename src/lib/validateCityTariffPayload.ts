@@ -130,28 +130,47 @@ export function validateCityTariffPayload(data: CityTariffPayloadInput): CityTar
         if (s.hasSizeRanges) {
           const ranges = zr.sizeRanges ?? [];
           ranges.forEach((sr, ri) => {
+            const isLast = ri === ranges.length - 1;
+
             if (!Number.isFinite(sr.min)) {
               errors.push({
                 path: `types.${ti}.subtypes.${si}.zones.${zi}.sizeRanges.${ri}.min`,
                 message: 'שדה ״מ-״ (מ״ר) חובה ומספרי',
               });
             }
-            if (!Number.isFinite(sr.max)) {
-              errors.push({
-                path: `types.${ti}.subtypes.${si}.zones.${zi}.sizeRanges.${ri}.max`,
-                message: 'שדה ״עד״ (מ״ר) חובה ומספרי',
-              });
+
+            if (isLast) {
+              if (sr.max !== -1) {
+                errors.push({
+                  path: `types.${ti}.subtypes.${si}.zones.${zi}.sizeRanges.${ri}.max`,
+                  message: 'בטווח האחרון יש להזין ‎-1‎ בשדה ״עד״ (ללא הגבלה)',
+                });
+              }
+            } else {
+              if (!Number.isFinite(sr.max)) {
+                errors.push({
+                  path: `types.${ti}.subtypes.${si}.zones.${zi}.sizeRanges.${ri}.max`,
+                  message: 'שדה ״עד״ (מ״ר) חובה ומספרי',
+                });
+              }
+              if (sr.max === -1) {
+                errors.push({
+                  path: `types.${ti}.subtypes.${si}.zones.${zi}.sizeRanges.${ri}.max`,
+                  message: 'ערך ‎-1‎ מותר רק בטווח האחרון',
+                });
+              }
+              if (Number.isFinite(sr.min) && Number.isFinite(sr.max) && sr.max < sr.min) {
+                errors.push({
+                  path: `types.${ti}.subtypes.${si}.zones.${zi}.sizeRanges.${ri}.max`,
+                  message: 'ערך ״עד״ חייב להיות גדול או שווה ל״מ-״',
+                });
+              }
             }
+
             if (!Number.isFinite(sr.rate)) {
               errors.push({
                 path: `types.${ti}.subtypes.${si}.zones.${zi}.sizeRanges.${ri}.rate`,
                 message: 'תעריף לטווח חובה ומספרי',
-              });
-            }
-            if (Number.isFinite(sr.min) && Number.isFinite(sr.max) && sr.max < sr.min) {
-              errors.push({
-                path: `types.${ti}.subtypes.${si}.zones.${zi}.sizeRanges.${ri}.max`,
-                message: 'ערך ״עד״ חייב להיות גדול או שווה ל״מ-״',
               });
             }
           });

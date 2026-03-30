@@ -79,7 +79,6 @@ export async function PUT(
     }
 
     const body = await request.json();
-
     const updatedCity = await CityTariff.findByIdAndUpdate(
       id,
       { $set: body },

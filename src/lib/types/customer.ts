@@ -26,7 +26,7 @@ export interface ICalculationResult {
   savings: number;
   savingsAnnual: number;
   savings10Year: number;
-  outcome: 'match' | 'overpaying' | 'underpaying';
+  outcome: 'match' | 'overpaying' | 'underpaying' ;
 }
 
 // ── Selected exemption sub-document interface ────────────────────────
