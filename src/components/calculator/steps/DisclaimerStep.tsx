@@ -15,7 +15,7 @@ const DISCLAIMER_MIA_MESSAGE_IDS = ['step-4-note-accuracy', 'step-4-note-ordinan
 
 const DISCLAIMER_TEXT = `הנני מצהיר/ה ומאשר/ת כי מחשבון הארנונה אינו מהווה ייעוץ משפטי ו/או תחליף לייעוץ משפטי, וכי תוצאות החישוב מבוססות על הנתונים שהזנתי במחשבון ולצורך התמצאות בלבד. לאחר שעיינתי בתקנון האתר ובמדיניות הפרטיות, הנני מצהיר/ה כי לא אעלה באופן אישי ו/או באמצעות מי מטעמי כל טענה ו/או תלונה ו/או תביעה כנגד מחשבון הארנונה ומנהליו בכל מקרה של שימוש במחשבון הארנונה ובמקרה של סטייה מהתוצאה המופיעה בצו הארנונה.`;
 
-export default function DisclaimerStep({ state, dispatch }: StepProps) {
+export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
   const { updateLead } = useLeadUpdate();
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function DisclaimerStep({ state, dispatch }: StepProps) {
   }, [dispatch]);
 
   return (
-    <Box>
+    <Box sx={sx}>
       <Typography variant="h5" textAlign="center" mb={3}>
         הצהרה ואישור
       </Typography>

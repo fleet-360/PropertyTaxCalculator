@@ -17,7 +17,7 @@ import { useLeadUpdate } from '@/hooks/useLeadUpdate';
 
 const MAX_ROWS = 3;
 
-export default function ExemptionsStep({ state, dispatch }: StepProps) {
+export default function ExemptionsStep({ state, dispatch ,sx}: StepProps) {
   const { updateLead } = useLeadUpdate();
   const exemptionSections: IExemptionSection[] = state.cityData?.exemptions ?? [];
 
@@ -91,7 +91,7 @@ export default function ExemptionsStep({ state, dispatch }: StepProps) {
   const hasAnySelection = rows.some((r) => r.subSectionCode);
 
   return (
-    <Box>
+    <Box sx={{...sx, justifyContent: 'space-between'}}>
       <Typography variant="h5" textAlign="center" mb={2}>
         הנחות וזכאויות
       </Typography>
@@ -107,7 +107,7 @@ export default function ExemptionsStep({ state, dispatch }: StepProps) {
       )}
 
       {exemptionSections.length > 0 && (
-        <>
+        <Box>
           {rows.map((row, index) => {
             const filteredSubSections = row.sectionCode
               ? exemptionSections.find((s) => s.sectionCode === row.sectionCode)?.subSections ?? []
@@ -220,10 +220,10 @@ export default function ExemptionsStep({ state, dispatch }: StepProps) {
               )}
             </Box>
           )}
-        </>
+        </Box>
       )}
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mt: 4,flex:1 }}>
         <Button variant="outlined" onClick={() => dispatch({ type: 'PREV_STEP' })}>
           חזרה
         </Button>

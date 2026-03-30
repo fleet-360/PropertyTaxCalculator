@@ -23,6 +23,8 @@ import {
 import { priceAfterCoupon } from '@/lib/priceAfterCoupon';
 import { isVercelBlobPublicUrl } from '@/lib/ordinancePdf';
 import type { AppliedWizardCoupon } from './wizardTypes';
+import { SxProps } from '@mui/material';
+import { Theme } from '@emotion/react';
 
 export type { CalculatorFeaturesContextValue } from './CalculatorFeaturesContext';
 export { CalculatorFeaturesContext, useCalculatorFeatures } from './CalculatorFeaturesContext';
@@ -240,6 +242,7 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
 export interface StepProps {
   state: WizardState;
   dispatch: Dispatch<WizardAction>;
+  sx?: SxProps<Theme>;
 }
 
 // ── Validation checks ──
@@ -334,9 +337,9 @@ export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
 
   return (
     <CalculatorFeaturesContext.Provider value={featuresContextValue}>
-      <Container maxWidth="md" sx={{ position: 'relative', flexDirection: 'column', alignItems: 'stretch' }}>
+      <Container maxWidth="md" sx={{ position: 'relative', flexDirection: 'column',  height: '100%' }}>
         {showOrdinanceLink && ordinanceUrl && (
-          <Box sx={{ textAlign: 'center', mb: 2, position: 'absolute', top: 0, left: 0 }}>
+          <Box sx={{ textAlign: 'center', mb: 2, position: 'absolute', top: 0, left: 0}}>
             <DocumentPreviewPopover
               documentUrl={ordinanceUrl}
               previewSrc={
@@ -351,7 +354,7 @@ export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
             />
           </Box>
         )}
-        {StepComponent && <StepComponent key={state.currentStep} state={state} dispatch={dispatch} />}
+        {StepComponent && <StepComponent sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',overflowY: 'scroll' }} key={state.currentStep} state={state} dispatch={dispatch} />}
       </Container>
     </CalculatorFeaturesContext.Provider>
   );
