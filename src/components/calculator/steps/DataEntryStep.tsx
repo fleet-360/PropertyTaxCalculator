@@ -912,9 +912,7 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                 disabled={!watchedSubType}
               >
                 <MenuItem value="">בחר</MenuItem>
-                <MenuItem value={ALL_ZONES_TARIFF_CODE}>
-                  {ALL_ZONES_LABEL_HE} ({ALL_ZONES_TARIFF_CODE})
-                </MenuItem>
+
                 {filteredZones.map((z: IZoneRate) => (
                   <MenuItem key={z.zone} value={z.zone}>
                     {z.zoneLabel}
@@ -1212,9 +1210,7 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
             size="small"
             sx={{ mb: 2 }}
           />
-          <Button variant="outlined" size="small" disabled>
-            צרף קובץ מדידה (בקרוב)
-          </Button>
+
         </AccordionDetails>
       </Accordion>
 

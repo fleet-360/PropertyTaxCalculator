@@ -10,6 +10,26 @@ import type { IMiaMessageData } from "@/lib/types/mia-message";
 import Image from "next/image";
 import miaImage from "@/assets/mia.gif";
 
+function combineMiaBubbleContent(
+  messageIds: string | string[],
+  byId: Record<string, IMiaMessageData>,
+): { title: string; description: string } | undefined {
+  const ids = typeof messageIds === "string" ? [messageIds] : messageIds;
+  const parts = ids
+    .map((id) => byId[id])
+    .filter((m): m is IMiaMessageData => Boolean(m));
+  if (parts.length === 0) return undefined;
+  if (parts.length === 1) {
+    return { title: parts[0].title, description: parts[0].description };
+  }
+  const title = parts[0]?.title ?? "";
+  const description = parts
+    .map((m) => m.description?.trim())
+    .filter((d) => d.length > 0)
+    .join("\n\n");
+  return { title, description };
+}
+
 const CalculatorWizard = dynamic(
   () => import("@/components/calculator/CalculatorWizard"),
   { ssr: false },
@@ -22,7 +42,7 @@ interface CalculatorCTAProps {
 export default function CalculatorSection({ featureConfig }: CalculatorCTAProps) {
   // ── Mia messages from DB ──
   const [miaMessages, setMiaMessages] = useState<Record<string, IMiaMessageData>>({});
-  const [miaMessageId, setMiaMessageId] = useState("step-0-default");
+  const [miaMessageId, setMiaMessageId] = useState<string | string[]>("step-0-default");
 
   useEffect(() => {
     fetch("/api/mia-messages")
@@ -40,12 +60,12 @@ export default function CalculatorSection({ featureConfig }: CalculatorCTAProps)
       });
   }, []);
 
-  const handleMiaMessage = useCallback((messageId: string) => {
+  const handleMiaMessage = useCallback((messageId: string | string[]) => {
     setMiaMessageId(messageId);
   }, []);
 
   const currentMiaMessage = useMemo(
-    () => miaMessages[miaMessageId],
+    () => combineMiaBubbleContent(miaMessageId, miaMessages),
     [miaMessages, miaMessageId],
   );
 

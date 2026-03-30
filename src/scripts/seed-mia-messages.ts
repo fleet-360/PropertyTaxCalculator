@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import MiaMessage from '../lib/models/MiaMessage';
 
 const MONGODB_URI =
-  process.env.MONGODB_URI || 'mongodb://localhost:27017/property-tax-calculator';
+  process.env.MONGODB_URI_MONGODB_URI || 'mongodb+srv://benshuan_db_user:5u6gSXHSXLeMm6LV@taxcalculatordev.dujlziy.mongodb.net/property-tax-calculator-test?appName=taxCalculatorDev';
 
 const DEFAULT_MESSAGES = [
   {
@@ -46,6 +46,20 @@ const DEFAULT_MESSAGES = [
     messageId: 'step-4-default',
     title: '✅ כמעט סיימנו!',
     description: 'רק צריך לאשר את ההצהרה ונוכל לחשב את הארנונה שלך.',
+    isActive: true,
+  },
+  {
+    messageId: 'step-4-note-accuracy',
+    title: '🤔',
+    description:
+      '🤔 התחשיב מסתמך על נכונות הפרטים שהזנת. לפני שתמשיך — בדוק שנית את נכונות הפרטים והתאמה לדוח הארנונה.',
+    isActive: true,
+  },
+  {
+    messageId: 'step-4-note-ordinance',
+    title: '🤔',
+    description:
+      '🤔 התחשיב עלול להשתנות כתוצאה משינויים בתוך צו הארנונה, ולכן נמליץ לך גם לבדוק את החישוב בהתאם לצו הארנונה.',
     isActive: true,
   },
   {

@@ -102,9 +102,6 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
           <Typography variant="body1" mb={2} textAlign="center">
             אין התאמה — תרצה לראות את התוצאות?
           </Typography>
-          {showPaymentBlock && (
-            <CouponPaymentSection state={state} dispatch={dispatch} context="results_gate" />
-          )}
           {paymentEnabled && (
             <Typography variant="body1" mb={2} textAlign="center">
               לצפייה בתוצאות המפורטות:{' '}
@@ -112,9 +109,9 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
             </Typography>
           )}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-            <Button variant="outlined" onClick={() => dispatch({ type: 'RESET_CALCULATOR' })}>
+            {/* <Button variant="outlined" onClick={() => dispatch({ type: 'RESET_CALCULATOR' })}>
               חזרה להתחלה
-            </Button>
+            </Button> */}
             <Button variant="contained" onClick={handlePrimaryClick}>
               {paymentEnabled ? 'תשלום וצפייה בתוצאות' : 'צפה בתוצאות מפורטות'}
             </Button>
@@ -127,9 +124,6 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
           <Alert severity="success" sx={{ mb: 3, fontSize: '1rem' }}>
             {'\u{1F389}'} על פי המחשבון אתה זכאי להנחה!
           </Alert>
-          {showPaymentBlock && (
-            <CouponPaymentSection state={state} dispatch={dispatch} context="results_gate" />
-          )}
           {paymentEnabled ? (
             <Typography variant="body1" mb={2} textAlign="center">
               לצפייה בתוצאות המפורטות:{' '}
@@ -141,9 +135,9 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
             </Typography>
           )}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-            <Button variant="outlined" onClick={() => dispatch({ type: 'RESET_CALCULATOR' })}>
+            {/* <Button variant="outlined" onClick={() => dispatch({ type: 'RESET_CALCULATOR' })}>
               חזרה להתחלה
-            </Button>
+            </Button> */}
             <Button variant="contained" size="large" onClick={handlePrimaryClick}>
               {paymentEnabled ? 'תשלום וצפייה בתוצאות' : 'צפה בתוצאות מפורטות'}
             </Button>
@@ -156,6 +150,9 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
         onClose={() => setPaymentDialogOpen(false)}
         onConfirm={handlePaymentConfirm}
         amountNis={calculatorChargeAmount}
+        state={state}
+        dispatch={dispatch}
+        context="results_gate"
       />
     </Box>
   );

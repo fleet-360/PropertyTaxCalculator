@@ -6,6 +6,9 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import CouponPaymentSection, { CouponPaymentSectionContext } from './CouponPaymentSection';
+import { WizardAction, WizardState } from './CalculatorWizard';
+import { Dispatch } from 'react';
 
 export interface DummyPaymentDialogProps {
   open: boolean;
@@ -14,6 +17,9 @@ export interface DummyPaymentDialogProps {
   /** Amount in ₪ (display only — demo flow) */
   amountNis: number;
   title?: string;
+  state: WizardState;
+  dispatch: Dispatch<WizardAction>;
+  context: CouponPaymentSectionContext;
 }
 
 const DEFAULT_TITLE = 'תשלום (הדגמה)';
@@ -24,6 +30,9 @@ export default function DummyPaymentDialog({
   onConfirm,
   amountNis,
   title = DEFAULT_TITLE,
+  state,
+  dispatch,
+  context,
 }: DummyPaymentDialogProps) {
   const titleId = 'dummy-payment-dialog-title';
   const descId = 'dummy-payment-dialog-desc';
@@ -51,6 +60,8 @@ export default function DummyPaymentDialog({
             סכום להצגה: {amountNis.toLocaleString('he-IL')} ₪
           </strong>
         </DialogContentText>
+        <CouponPaymentSection state={state} dispatch={dispatch} context={context} />
+
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={onClose} color="inherit">
