@@ -1,16 +1,60 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import DummyPaymentDialog from '@/components/calculator/DummyPaymentDialog';
 import CouponPaymentSection from '@/components/calculator/CouponPaymentSection';
+import coffeePastryImage from '@/assets/results-gate-coffee-pastry.png';
 import { useCalculatorFeatures } from '../CalculatorFeaturesContext';
 import { useEmailSend } from '@/hooks/useEmailSend';
 import type { StepProps } from '../CalculatorWizard';
+
+function PaymentUpsellBanner() {
+  return (
+    <Stack spacing={2} sx={{ mt: 4, mb: 2 }}>
+      <Box
+        sx={(theme) => ({
+          border: `1px solid ${theme.palette.divider}`,
+          bgcolor: 'background.paper',
+          borderRadius: 1,
+          px: 2,
+          py: 2,
+          textAlign: 'center',
+        })}
+      >
+        <Typography variant="body1" component="p" sx={{ m: 0 }}>
+          זה לוקח כמה שניות
+        </Typography>
+        <Typography variant="body1" component="p" sx={{ m: 0, mt: 1 }}>
+          והמחיר של כוס קפה ומאפה
+        </Typography>
+      </Box>
+      <Box
+        sx={{
+          position: 'relative',
+          width: '100%',
+          borderRadius: 2,
+          overflow: 'hidden',
+        }}
+      >
+        <Image
+          src={coffeePastryImage}
+          alt="כוס קפה ומאפה על שולחן במסעדה"
+          width={coffeePastryImage.width}
+          height={coffeePastryImage.height}
+          sizes="(max-width: 600px) 100vw, 600px"
+          style={{ width: '100%', height: 'auto' }}
+        />
+      </Box>
+    </Stack>
+  );
+}
 
 export default function ResultsGateStep({ state, dispatch }: StepProps) {
   const { paymentEnabled, calculatorChargeAmount } = useCalculatorFeatures();
@@ -108,7 +152,8 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
               <strong>{calculatorChargeAmount.toLocaleString('he-IL')} ₪</strong>
             </Typography>
           )}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+          {paymentEnabled && <PaymentUpsellBanner />}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: paymentEnabled ? 2 : 4 }}>
             {/* <Button variant="outlined" onClick={() => dispatch({ type: 'RESET_CALCULATOR' })}>
               חזרה להתחלה
             </Button> */}
@@ -134,7 +179,8 @@ export default function ResultsGateStep({ state, dispatch }: StepProps) {
               תרצה לראות את התוצאות המפורטות?
             </Typography>
           )}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+          {paymentEnabled && <PaymentUpsellBanner />}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: paymentEnabled ? 2 : 4 }}>
             {/* <Button variant="outlined" onClick={() => dispatch({ type: 'RESET_CALCULATOR' })}>
               חזרה להתחלה
             </Button> */}

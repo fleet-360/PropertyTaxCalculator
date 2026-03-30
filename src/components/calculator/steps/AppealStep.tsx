@@ -354,6 +354,9 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         onConfirm={handlePaymentConfirm}
         amountNis={appealChargeAmount}
         title="תשלום השגה (הדגמה)"
+        state={state}
+        dispatch={dispatch}
+        context="appeal"
       />
     </Box>
   );
