@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Alert from '@mui/material/Alert';
-import Paper from '@mui/material/Paper';
 import type { Dispatch } from 'react';
 import { useCalculatorFeatures } from '@/components/calculator/CalculatorFeaturesContext';
 import type { WizardAction, WizardState } from './CalculatorWizard';
@@ -31,21 +31,37 @@ function formatDiscount(c: AppliedWizardCoupon): string {
 
 export type CouponPaymentSectionContext = 'results_gate' | 'appeal';
 
+export type CouponPaymentSectionDensity = 'default' | 'checkout';
+
 interface CouponPaymentSectionProps {
   state: WizardState;
   dispatch: Dispatch<WizardAction>;
   context: CouponPaymentSectionContext;
+  /** `checkout`: tighter layout for payment modal */
+  density?: CouponPaymentSectionDensity;
 }
 
-export default function CouponPaymentSection({ state, dispatch, context }: CouponPaymentSectionProps) {
+export default function CouponPaymentSection({
+  state,
+  dispatch,
+  context,
+  density = 'default',
+}: CouponPaymentSectionProps) {
   const { calculatorPrice, appealPrice } = useCalculatorFeatures();
   const [validating, setValidating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const hint =
+  const hintLong =
     context === 'results_gate'
       ? `ניתן להזין קופון לפני התשלום. הקופון יחול על תשלום צפייה בתוצאות המפורטות (${calculatorPrice.toLocaleString('he-IL')} ₪) ועל תשלום הכנת ההשגה (${appealPrice.toLocaleString('he-IL')} ₪).`
       : 'אותו קופון מהשלב הקודם חל על תשלום ההשגה; ניתן לעדכן או להסיר לפני התשלום.';
+
+  const hintCheckout =
+    context === 'results_gate'
+      ? `הקופון חל על צפייה בתוצאות (${calculatorPrice.toLocaleString('he-IL')} ₪) ועל הכנת השגה (${appealPrice.toLocaleString('he-IL')} ₪).`
+      : 'ניתן לעדכן או להסיר את הקופון לפני התשלום.';
+
+  const hint = density === 'checkout' ? hintCheckout : hintLong;
 
   const applyCoupon = async () => {
     const raw = state.couponCodeDraft.trim();
@@ -94,24 +110,47 @@ export default function CouponPaymentSection({ state, dispatch, context }: Coupo
     });
   };
 
-  if(state.appliedCoupon) {
-    return <>
-    {state.appliedCoupon && !error && (
-          <Alert severity="success" sx={{ mt: 2 }}>
-            קופון <strong>{state.appliedCoupon.code}</strong> הוחל — הנחה {formatDiscount(state.appliedCoupon)}
-          </Alert>
-        )}</>;
+  const outerSx = density === 'checkout' ? { mb: 0 } : { mb: 3 };
+  const titleAlign = density === 'checkout' ? 'start' : 'center';
+  const hintAlign = density === 'checkout' ? 'start' : 'center';
+  const titleMb = density === 'checkout' ? 0.5 : 1;
+  const hintMb = density === 'checkout' ? 1.5 : 2;
+
+  if (state.appliedCoupon) {
+    return (
+      <Box sx={outerSx}>
+        <Typography variant="subtitle1" fontWeight={600} textAlign={titleAlign} mb={titleMb}>
+          קוד קופון
+        </Typography>
+        <Alert
+          severity="success"
+          sx={{ alignItems: 'center' }}
+          action={
+            <Button color="inherit" size="small" onClick={clearCoupon} disabled={validating}>
+              הסר קופון
+            </Button>
+          }
+        >
+          קופון <strong>{state.appliedCoupon.code}</strong> הוחל — הנחה {formatDiscount(state.appliedCoupon)}
+        </Alert>
+      </Box>
+    );
   }
 
   return (
-    <Box sx={{ mb: 3 }}>
-      <Typography variant="subtitle1" fontWeight={600} textAlign="center" mb={1}>
+    <Box sx={outerSx}>
+      <Typography variant="subtitle1" fontWeight={600} textAlign={titleAlign} mb={titleMb}>
         קוד קופון
       </Typography>
-      <Typography variant="body2" color="text.secondary" textAlign="center" mb={2}>
+      <Typography variant="body2" color="text.secondary" textAlign={hintAlign} mb={hintMb}>
         {hint}
       </Typography>
-      <Box sx={{ p: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1}
+        alignItems={{ xs: 'stretch', sm: 'flex-start' }}
+        sx={{ p: density === 'checkout' ? 0 : 2 }}
+      >
         <TextField
           label="קוד קופון"
           value={state.couponCodeDraft}
@@ -120,25 +159,24 @@ export default function CouponPaymentSection({ state, dispatch, context }: Coupo
           }
           size="small"
           disabled={validating}
+          fullWidth
+          sx={{ flex: { sm: 1 } }}
           inputProps={{ 'aria-label': 'קוד קופון' }}
         />
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          <Button variant="contained" onClick={applyCoupon} disabled={validating}>
-            {validating ? 'בודק…' : 'החל קופון'}
-          </Button>
-          {state.appliedCoupon && (
-            <Button variant="outlined" color="inherit" onClick={clearCoupon} disabled={validating}>
-              הסר קופון
-            </Button>
-          )}
-        </Box>
-        {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {error}
-          </Alert>
-        )}
-        
-      </Box>
+        <Button
+          variant="contained"
+          onClick={applyCoupon}
+          disabled={validating}
+          sx={{ flexShrink: 0, alignSelf: { xs: 'stretch', sm: 'auto' } }}
+        >
+          {validating ? 'בודק…' : 'החל קופון'}
+        </Button>
+      </Stack>
+      {error && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
+      )}
     </Box>
   );
 }

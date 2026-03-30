@@ -23,8 +23,12 @@ const MESSAGES: Record<ContactRedirectStepProps['reason'], { title: string; body
     body: 'המחשבון אינו תומך בחישוב עבור נכסים בשטח העולה על 1,000 מ"ר. לקבלת חישוב מדויק, אנא צור קשר עם הצוות שלנו.',
   },
   designations: {
-    title: 'מספר ייעודים עסקיים',
-    body: 'כאשר לנכס עסקי יש יותר מייעוד אחד, נדרש חישוב מותאם אישית. אנא צור קשר עם הצוות שלנו.',
+    title: 'יתכן שאתה משלם יותר ממה שצריך !',
+    body: `כאשר לנכס עסקי יש יותר מייעוד אחד, נדרש חישוב מותאם אישית. אנא צור קשר עם הצוות אולם, במקרה של נכס עסקי שיש לו מספר
+סיווגים שונים או שטחים נרחבים נמליץ
+להיעזר במומחה בתחום הארנונה...
+האם תרצה להשאיר פרטים שנציג שלנו יחזור
+אליך?`,
   },
   city: {
     title: 'העיר אינה קיימת במאגר',
@@ -62,22 +66,12 @@ export default function ContactRedirectStep({ reason, dispatch, state }: Contact
       </Alert>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', mb: 4 }}>
-        <Button
-          variant="contained"
-          startIcon={<PhoneIcon />}
-          href="tel:+972000000000"
-          size="large"
-        >
-          התקשר אלינו
-        </Button>
-        <Button
+
+        <Button onClick={() => dispatch({ type: 'RESET_CALCULATOR' })}
           variant="outlined"
-          startIcon={<EmailIcon />}
-          href="mailto:info@example.com"
           size="large"
         >
-          שלח מייל
-        </Button>
+          רוצה שיחזרו אלי       </Button>
       </Box>
 
       <Box textAlign="center">

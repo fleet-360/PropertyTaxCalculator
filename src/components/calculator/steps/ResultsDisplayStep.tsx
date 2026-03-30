@@ -21,7 +21,7 @@ import { usePrint } from "@/hooks/usePrint";
 import { useEmailSend } from "@/hooks/useEmailSend";
 import EmailSendDialog from "@/components/common/EmailSendDialog";
 
-export default function ResultsDisplayStep({ state, dispatch }: StepProps) {
+export default function ResultsDisplayStep({ state, dispatch, sx }: StepProps) {
   useEffect(() => {
     dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-6-default' });
   }, [dispatch]);
@@ -78,7 +78,7 @@ export default function ResultsDisplayStep({ state, dispatch }: StepProps) {
   };
 
   return (
-    <Box>
+    <Box sx={sx}>
       <Box id="results-printable">
         <Typography variant="h5" textAlign="center" mb={4}>
           תוצאות מפורטות
@@ -209,14 +209,6 @@ export default function ResultsDisplayStep({ state, dispatch }: StepProps) {
         </Button>
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 4 }}>
-        <Button
-          variant="outlined"
-          onClick={() => dispatch({ type: "PREV_STEP" })}
-        >
-          חזרה
-        </Button>
-      </Box>
 
       <EmailSendDialog
         open={emailDialogOpen}

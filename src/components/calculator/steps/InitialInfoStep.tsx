@@ -19,7 +19,7 @@ interface CityOption {
   slug: string;
 }
 
-export default function InitialInfoStep({ state, dispatch }: StepProps) {
+export default function InitialInfoStep({ state, dispatch, sx }: StepProps) {
   // ── City list ──
   const [cities, setCities] = useState<CityOption[]>([]);
   const [loadingCities, setLoadingCities] = useState(true);
@@ -135,7 +135,7 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
   const canProceed = state.propertyType && selectedCity && !state.isLoading && !isExtracting;
 
   return (
-    <Box>
+    <Box sx={{...sx}}>
       {/* ── Title ── */}
       <Typography
         sx={{
@@ -154,14 +154,14 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
           fontSize: '15px',
           color: '#0c0c0c',
           textAlign: 'center',
-          mb: 3,
+          mb: 2,
         }}
       >
         הזנת נתוני נכס
       </Typography>
 
       {/* ── 1. Property Type ── */}
-      <ButtonGroup sx={{ display: 'flex', justifyContent: 'center',mb:4, width: '100%' }}>
+      <ButtonGroup sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
         {(['private', 'business'] as const).map((type) => {
           const isSelected = state.propertyType === type;
           const label = type === 'private' ? 'נכס פרטי' : 'נכס עסקי';
@@ -201,7 +201,7 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
           fontSize: '14px',
           color: '#333',
           fontWeight: 600,
-          mb: 1,
+          
         }}
       >
         עיר/ מועצה מקומית
@@ -245,7 +245,6 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
           fontSize: '14px',
           color: '#333',
           fontWeight: 600,
-          mb: 1,
         }}
       >
         העלאת שובר ארנונה

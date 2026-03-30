@@ -300,7 +300,7 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         הגשת השגה
       </Typography>
 
-      {generateError && (
+      {/* {generateError && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setGenerateError(null)}>
           {generateError}
         </Alert>
@@ -308,7 +308,7 @@ export default function AppealStep({ state, dispatch }: StepProps) {
 
       {paymentEnabled && (
         <CouponPaymentSection state={state} dispatch={dispatch} context="appeal" />
-      )}
+      )} */}
 
       {/* <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
         <Typography variant="body1" mb={2}>
