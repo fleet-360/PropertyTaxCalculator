@@ -1,20 +1,7 @@
 import { getVisionModel } from './gemini-client';
 import { getDocumentType, ensureDocumentTypesRegistered } from './document-types/registry';
+import { parseLlmJsonObject } from './parseLlmJson';
 import type { ImageInput, ExtractionResult, ExtractedField, FieldConfidence } from './types';
-
-// ── JSON extraction helper ─────────────────────────────────────────
-
-function extractJsonFromText(text: string): Record<string, unknown> | null {
-  // Try to find JSON in the response (handles markdown code fences)
-  const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/) || text.match(/(\{[\s\S]*\})/);
-  if (!jsonMatch) return null;
-
-  try {
-    return JSON.parse(jsonMatch[1] || jsonMatch[0]);
-  } catch {
-    return null;
-  }
-}
 
 // ── Confidence validation ──────────────────────────────────────────
 
@@ -88,7 +75,7 @@ export async function extractFromDocument<T extends Record<string, unknown>>(
     console.log('[Vision Extractor] Raw Gemini response (first 2000 chars):', responseText.substring(0, 2000));
   }
 
-  const rawParsed = extractJsonFromText(responseText);
+  const rawParsed = parseLlmJsonObject(responseText);
   if (!rawParsed) {
     return {
       success: false,
