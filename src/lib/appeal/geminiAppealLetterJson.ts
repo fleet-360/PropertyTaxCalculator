@@ -122,7 +122,7 @@ function logParsedAppealGeminiPayload(
     }),
   };
 
-  console.log('[appeals/gemini-json] Parsed JSON from Gemini:\n', JSON.stringify(forLog, null, 2));
+  //console.log('[appeals/gemini-json] Parsed JSON from Gemini:\n', JSON.stringify(forLog, null, 2));
 }
 
 function buildJsonInstruction(variant: AppealLetterVariant, userJson: string): string {
