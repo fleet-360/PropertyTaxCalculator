@@ -34,6 +34,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import OrdinanceImportButton from '@/components/admin/OrdinanceImportButton';
 import FormHelperText from '@mui/material/FormHelperText';
+import InputAdornment from '@mui/material/InputAdornment';
+import CircularProgress from '@mui/material/CircularProgress';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import MiaMessagePickerModal from '@/components/common/MiaMessagePickerModal';
 import {
@@ -55,6 +59,7 @@ import type {
   ICityFee,
   ICityTariffData,
 } from '@/lib/types/city-tariff';
+import { CITY_SLUG_PATTERN } from '@/lib/services/blobUploadService';
 
 interface CityTariffEditorProps {
   city?: ICityTariffData;
@@ -92,6 +97,15 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
     areaTypeDiscounts: true,
     cityFees: true,
   });
+
+  const [origin, setOrigin] = React.useState('');
+  const [ordinanceUploading, setOrdinanceUploading] = React.useState(false);
+  const [ordinanceUploadErr, setOrdinanceUploadErr] = React.useState<string | null>(null);
+  const ordinanceFileInputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    setOrigin(typeof window !== 'undefined' ? window.location.origin : '');
+  }, []);
 
   const clearFieldErr = React.useCallback((path: string) => {
     setFieldErrors((prev) => {
@@ -248,6 +262,77 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       setSaving(false);
     }
   };
+
+  const slugTrim = data.slug.trim();
+  const slugValid = CITY_SLUG_PATTERN.test(slugTrim);
+  const hasOrdinance = Boolean(data.ordinanceUrl?.trim());
+  const publicOrdinanceShareUrl =
+    origin && slugValid && hasOrdinance
+      ? `${origin}/api/view-pdf/${encodeURIComponent(slugTrim)}`
+      : '';
+
+  const handleCopyPublicOrdinanceLink = async () => {
+    if (!publicOrdinanceShareUrl) return;
+    try {
+      await navigator.clipboard.writeText(publicOrdinanceShareUrl);
+      setSnackbar({ open: true, message: 'הקישור הועתק ללוח', severity: 'success' });
+    } catch {
+      setSnackbar({ open: true, message: 'לא ניתן להעתיק את הקישור', severity: 'error' });
+    }
+  };
+
+  const handleOrdinanceFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !slugValid) return;
+
+    setOrdinanceUploading(true);
+    setOrdinanceUploadErr(null);
+    clearFieldErr('ordinanceUrl');
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', 'orders');
+    formData.append('citySlug', slugTrim);
+
+    try {
+      const res = await fetch('/api/admin/blob-upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin',
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = typeof body.error === 'string' && body.error ? body.error : 'שגיאה בהעלאת הקובץ';
+        setOrdinanceUploadErr(msg);
+        setSnackbar({ open: true, message: msg, severity: 'error' });
+        return;
+      }
+      const url = typeof body.url === 'string' ? body.url.trim() : '';
+      if (!url) {
+        const msg = 'תגובת השרת לא כללה קישור לקובץ';
+        setOrdinanceUploadErr(msg);
+        setSnackbar({ open: true, message: msg, severity: 'error' });
+        return;
+      }
+      setData((prev) => ({ ...prev, ordinanceUrl: url }));
+      setSnackbar({ open: true, message: 'צו הארנונה הועלה בהצלחה', severity: 'success' });
+    } catch {
+      const msg = 'שגיאת רשת בהעלאת הקובץ';
+      setOrdinanceUploadErr(msg);
+      setSnackbar({ open: true, message: msg, severity: 'error' });
+    } finally {
+      setOrdinanceUploading(false);
+    }
+  };
+
+  const ordinanceFieldHelper = (() => {
+    if (fieldErr('ordinanceUrl')) return fieldErr('ordinanceUrl');
+    if (ordinanceUploadErr) return ordinanceUploadErr;
+    if (!slugValid) return 'נא להגדיר Slug תקין לפני העלאת צו הארנונה';
+    if (isNew && hasOrdinance) return 'הקישור הציבורי יעבוד לאחר שמירת העיר בפעם הראשונה';
+    return undefined;
+  })();
 
   // ── Zone helpers ────────────────────────────────────────────────────
   const addZone = () => {
@@ -684,17 +769,57 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="קישור לצו ארנונה (URL)"
-                value={data.ordinanceUrl || ''}
-                onChange={(e) => {
-                  clearFieldErr('ordinanceUrl');
-                  setData((prev) => ({ ...prev, ordinanceUrl: e.target.value }));
-                }}
-                error={Boolean(fieldErr('ordinanceUrl'))}
-                helperText={fieldErr('ordinanceUrl')}
+              <input
+                ref={ordinanceFileInputRef}
+                type="file"
+                accept="application/pdf"
+                hidden
+                onChange={handleOrdinanceFileSelected}
               />
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'flex-start' }}>
+                <TextField
+                  fullWidth
+                  label="קישור לצו הארנונה (להעתקה)"
+                  value={publicOrdinanceShareUrl}
+                  size="small"
+                  placeholder={
+                    !hasOrdinance
+                      ? 'אין קובץ מקושר — העלו צו ארנונה'
+                      : !slugValid
+                        ? 'הגדירו Slug תקין לקבלת הקישור הציבורי'
+                        : ''
+                  }
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      endAdornment: publicOrdinanceShareUrl ? (
+                        <InputAdornment position="end" >
+                          <IconButton
+                            edge="end"
+                            onClick={handleCopyPublicOrdinanceLink}
+                            aria-label="העתקת לצו הארנונה"
+                            size="small"
+                          >
+                            <ContentCopyIcon fontSize="small" />
+                          </IconButton>
+                        </InputAdornment>
+                      ) : undefined,
+                    },
+                  }}
+                  error={Boolean(fieldErr('ordinanceUrl') || ordinanceUploadErr)}
+                  helperText={ordinanceFieldHelper}
+                />
+                <Button
+                  variant="outlined"
+                  startIcon={ordinanceUploading ? <CircularProgress size={18} color="inherit" /> : <UploadFileIcon />}
+                  onClick={() => ordinanceFileInputRef.current?.click()}
+                  disabled={!slugValid || ordinanceUploading}
+                  sx={{ flexShrink: 0, mt: { xs: 0, sm: 1 } }}
+                  aria-label="העלאת קובץ צו ארנונה"
+                >
+                  {ordinanceUploading ? 'מעלה…' : 'העלאת צו ארנונה'}
+                </Button>
+              </Stack>
             </Grid>
           </Grid>
         </AccordionDetails>
