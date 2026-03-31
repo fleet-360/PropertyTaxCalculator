@@ -11,7 +11,7 @@ import Grid from '@mui/material/Grid';
 import dbConnect from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
 import { BLOG_PATHS, blogCategoryPath } from '@/lib/blog/routes';
-import { formatPostDateHe, formatPostDateISO } from '@/lib/blog/dates';
+import { formatPostDateHe, formatPostDateISO } from '@/lib/dates';
 import { generatePostMetadata, generateJsonLd } from '@/lib/seo';
 import BlockRenderer from '@/components/editor/BlockRenderer';
 import ShareButtons from '@/components/blog/ShareButtons';

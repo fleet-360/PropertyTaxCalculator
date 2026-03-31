@@ -91,7 +91,6 @@ export default function InitialWaiverStep({ state, dispatch, sx }: StepProps) {
           variant="contained"
           disabled={!accepted}
           onClick={() => {
-            submitConsent(state.leadId, state.phone, 'data_retention', true);
             dispatch({ type: "NEXT_STEP" });
           }}
           fullWidth

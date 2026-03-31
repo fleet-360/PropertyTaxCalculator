@@ -12,7 +12,7 @@ export function useConsentSubmit() {
     consentType: ConsentType,
     accepted: boolean
   ) => {
-    if (!phone) return;
+    if (!phone && !leadId) return;
 
     try {
       await fetch('/api/consents', {

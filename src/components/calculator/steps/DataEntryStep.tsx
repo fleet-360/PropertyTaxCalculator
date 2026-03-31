@@ -333,7 +333,7 @@ function DesignationRow({
 
 // ── Main component ────────────────────────────────────────────────
 export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
-  const { linkConsents } = useConsentSubmit();
+  const { submitConsent,linkConsents } = useConsentSubmit();
   const cityData = state.cityData;
   const isBusiness = state.propertyType === "business";
   const hasAreaTypeDiscounts = !!(cityData?.areaTypeDiscounts?.length > 0);
@@ -561,14 +561,16 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
         dispatch({ type: 'SET_LEAD_ID', payload: newLeadId });
         dispatch({ type: 'SET_CALCULATION_INDEX', payload: result.calculationIndex });
         // Link any consent records created before the lead existed
-        linkConsents(phone, newLeadId);
+        submitConsent(newLeadId, phone, 'data_retention', true);
+
+        // linkConsents(phone, newLeadId);
       } else {
         leadSavedRef.current = false; // Allow retry on failure
       }
     } catch {
       leadSavedRef.current = false; // Allow retry on failure
     }
-  }, [state.leadId, state.propertyType, state.citySlug, dispatch, linkConsents]);
+  }, [state.leadId, state.propertyType, state.citySlug, dispatch,submitConsent]);
 
   useEffect(() => {
     const name = watchedFullName?.trim();
