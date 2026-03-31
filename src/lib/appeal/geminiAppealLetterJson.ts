@@ -154,6 +154,11 @@ ${clauseRules}
 - Use correct Hebrew legal abbreviations: עפ"י, דו"ח, מ"ר, סה"כ, הנ"ל, רצ"ב. Do not output :Date or Date:.
 - Keep numbered legal citations (בר"מ, בג"ץ) inside the same clause body as in the example when possible.
 - Do not invent private data from the sample PDF; use user JSON for names, areas, amounts, addresses.
+- Parentheses policy:
+  - NEVER copy instructional text inside parentheses from the example (e.g. "(סדר מספרי ... או אותיות א,ב,ג)").
+  - instructional parentheses are for template notes only, not for the final letter.
+  - If you need to reference an appendix, output ONLY the appendix marker (e.g. "כנספח א׳" or "כנספח 1") without any explanatory parenthetical guidance.
+  - Do not include placeholder punctuation like ",,".
 
 User data (JSON):
 ${userJson}`;
