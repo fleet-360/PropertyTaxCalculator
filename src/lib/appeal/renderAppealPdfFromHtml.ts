@@ -37,9 +37,10 @@ async function getChromiumBrowser(): Promise<Browser> {
     browserLaunchPromise = null;
     browserInstance = null;
     const msg = e instanceof Error ? e.message : String(e);
-    throw new Error(
-      `Failed to launch Chromium for appeal PDF. Install browsers with: npx playwright install chromium. (${msg})`,
-    );
+    // throw new Error(
+    //   `Failed to launch Chromium for appeal PDF. Install browsers with: npx playwright install chromium. (${msg})`,
+    // );
+    return Promise.reject(new Error(`Failed to launch Chromium for appeal PDF. Install browsers with: npx playwright install chromium. (${msg})`));
   }
 }
 
