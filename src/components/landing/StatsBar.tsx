@@ -1,6 +1,7 @@
 'use client';
 
 import { Box, Container, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
   motion,
   animate,
@@ -13,6 +14,7 @@ import { useRef, useEffect, useState } from 'react';
 
 type StatConfig = {
   target: number;
+  ringPercent: number;
   label: string;
   prefix?: string;
   suffix?: string;
@@ -20,10 +22,10 @@ type StatConfig = {
 };
 
 const stats: StatConfig[] = [
-  { target: 100, suffix: '+', label: 'רשויות מקומיות' },
-  { target: 50000, suffix: '+', comma: true, label: 'לקוחות מרוצים' },
-  { target: 2400, prefix: '₪', comma: true, label: 'חיסכון ממוצע' },
-  { target: 98, suffix: '%', label: 'דיוק בחישוב' },
+  { target: 100, ringPercent: 75, suffix: '+', label: 'רשויות מקומיות' },
+  { target: 50000, ringPercent: 85, suffix: '+', comma: true, label: 'לקוחות מרוצים' },
+  { target: 2400, ringPercent: 80, prefix: '₪', comma: true, label: 'חיסכון ממוצע' },
+  { target: 98, ringPercent: 98, suffix: '%', label: 'דיוק בחישוב' },
 ];
 
 function formatStatValue(n: number, comma: boolean): string {
@@ -35,6 +37,7 @@ function RollingStat({ stat, index }: { stat: StatConfig; index: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: '-10%' });
   const reduceMotion = useReducedMotion();
+  const theme = useTheme();
   const count = useMotionValue(0);
   const [display, setDisplay] = useState(0);
 
@@ -62,35 +65,94 @@ function RollingStat({ stat, index }: { stat: StatConfig; index: number }) {
   }, [isInView, stat.target, reduceMotion, index, count]);
 
   const valueText = `${stat.prefix ?? ''}${formatStatValue(display, stat.comma ?? false)}${stat.suffix ?? ''}`;
+  const progress = Math.max(0, Math.min(1, stat.ringPercent / 100));
+
+  const size = 220;
+  const strokeWidth = 8;
+  const r = 38;
 
   return (
-    <Box ref={ref} sx={{ textAlign: 'center' }}>
-      <Typography
+    <Box
+      ref={ref}
+      sx={{
+        position: 'relative',
+        width: { xs: 124, sm: size },
+        height: { xs: 124, sm: size },
+        display: 'grid',
+        placeItems: 'center',
+        textAlign: 'center',
+      }}
+    >
+      <Box
+        component="svg"
+        aria-hidden
+        viewBox="0 0 100 100"
         sx={{
-          color: '#1a4fdb',
-          fontSize: '30px',
-          fontWeight: 700,
-          fontVariantNumeric: 'tabular-nums',
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          transform: 'rotate(-90deg)',
+          transformOrigin: '50% 50%',
         }}
       >
-        {valueText}
-      </Typography>
-      <Typography
-        sx={{
-          color: '#020202',
-          fontSize: '13px',
-          fontWeight: 400,
-        }}
-      >
-        {stat.label}
-      </Typography>
+        <circle
+          cx="50"
+          cy="50"
+          r={r}
+          fill="none"
+          stroke={theme.palette.grey[200]}
+          strokeWidth={strokeWidth}
+        />
+        <motion.circle
+          cx="50"
+          cy="50"
+          r={r}
+          fill="none"
+          stroke={theme.palette.primary.main}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: isInView ? progress : 0 }}
+          transition={
+            reduceMotion
+              ? { duration: 0 }
+              : { duration: 2, ease: [0.22, 1, 0.36, 1], delay: index * 0.1 }
+          }
+        />
+      </Box>
+
+      <Box sx={{ position: 'relative', zIndex: 1 }}>
+        <Typography
+          sx={{
+            color: theme.palette.primary.main,
+            fontSize: { xs: '28px', sm: '30px' },
+            fontWeight: 700,
+            fontVariantNumeric: 'tabular-nums',
+            lineHeight: 1.1,
+          }}
+        >
+          {valueText}
+        </Typography>
+        <Typography
+          sx={{
+            color: theme.palette.text.primary,
+            fontSize: '13px',
+            fontWeight: 400,
+          }}
+        >
+          {stat.label}
+        </Typography>
+      </Box>
     </Box>
   );
 }
 
 export default function StatsBar() {
+  const theme = useTheme();
+
   return (
-    <Box sx={{ py: { xs: 4, md: 5 }, bgcolor: '#fff' }}>
+    <Box sx={{ py: { xs: 4, md: 5 }, bgcolor: theme.palette.background.paper }}>
       <Container maxWidth="lg">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -103,9 +165,9 @@ export default function StatsBar() {
             aria-label="נתונים סטטיסטיים"
             sx={{
               display: 'flex',
-              justifyContent: 'center',
+              justifyContent: 'space-around',
+              gap: { xs: 2, sm: 4, md: 8 },
               alignItems: 'center',
-              gap: { xs: 4, sm: 8, md: 24 },
               flexWrap: 'wrap',
             }}
           >
