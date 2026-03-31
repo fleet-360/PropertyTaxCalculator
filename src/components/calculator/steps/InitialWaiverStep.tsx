@@ -8,10 +8,13 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import Button from "@mui/material/Button";
 import type { StepProps } from "../CalculatorWizard";
+import { CONSENT_TEXTS } from "@/lib/consent/consentTexts";
+import { useConsentSubmit } from "@/hooks/useConsentSubmit";
 
-const INITIAL_WAIVER_TEXT = `הנני מצהיר/ה ומאשר/ת את שמירת הנתונים האישיים שאזין במערכת. הנתונים יישמרו אצל מנהל המערכת, ואני מסכים/ה לכך שמנהל המערכת יוכל לפנות אליי בנוגע לנתונים אלה.`;
+const INITIAL_WAIVER_TEXT = CONSENT_TEXTS.data_retention.text;
 
-export default function InitialWaiverStep({ dispatch, sx }: StepProps) {
+export default function InitialWaiverStep({ state, dispatch, sx }: StepProps) {
+  const { submitConsent } = useConsentSubmit();
   const [accepted, setAccepted] = useState(false);
 
   useEffect(() => {
@@ -87,7 +90,10 @@ export default function InitialWaiverStep({ dispatch, sx }: StepProps) {
         <Button
           variant="contained"
           disabled={!accepted}
-          onClick={() => dispatch({ type: "NEXT_STEP" })}
+          onClick={() => {
+            submitConsent(state.leadId, state.phone, 'data_retention', true);
+            dispatch({ type: "NEXT_STEP" });
+          }}
           fullWidth
           sx={{
             bgcolor: "#1a4fdb",

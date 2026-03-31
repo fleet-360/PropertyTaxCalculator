@@ -24,6 +24,7 @@ import Alert from "@mui/material/Alert";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import type { StepProps } from "../CalculatorWizard";
+import { useConsentSubmit } from "@/hooks/useConsentSubmit";
 import { IPropertyType, ISubType, IZoneRate } from "@/lib/models/CityTariff";
 import { ALL_ZONES_TARIFF_CODE, ALL_ZONES_LABEL_HE } from "@/lib/tariff-constants";
 import { findRate } from "@/lib/calculator";
@@ -332,6 +333,7 @@ function DesignationRow({
 
 // ── Main component ────────────────────────────────────────────────
 export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
+  const { linkConsents } = useConsentSubmit();
   const cityData = state.cityData;
   const isBusiness = state.propertyType === "business";
   const hasAreaTypeDiscounts = !!(cityData?.areaTypeDiscounts?.length > 0);
@@ -555,15 +557,18 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
 
       if (res.ok) {
         const result = await res.json();
-        dispatch({ type: 'SET_LEAD_ID', payload: String(result.lead._id) });
+        const newLeadId = String(result.lead._id);
+        dispatch({ type: 'SET_LEAD_ID', payload: newLeadId });
         dispatch({ type: 'SET_CALCULATION_INDEX', payload: result.calculationIndex });
+        // Link any consent records created before the lead existed
+        linkConsents(phone, newLeadId);
       } else {
         leadSavedRef.current = false; // Allow retry on failure
       }
     } catch {
       leadSavedRef.current = false; // Allow retry on failure
     }
-  }, [state.leadId, state.propertyType, state.citySlug, dispatch]);
+  }, [state.leadId, state.propertyType, state.citySlug, dispatch, linkConsents]);
 
   useEffect(() => {
     const name = watchedFullName?.trim();
@@ -687,8 +692,11 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
 
           if (res.ok) {
             const result = await res.json();
-            dispatch({ type: 'SET_LEAD_ID', payload: String(result.lead._id) });
+            const newLeadId = String(result.lead._id);
+            dispatch({ type: 'SET_LEAD_ID', payload: newLeadId });
             dispatch({ type: 'SET_CALCULATION_INDEX', payload: result.calculationIndex });
+            // Link any consent records created before the lead existed
+            linkConsents(data.phone, newLeadId);
           }
         }
       } catch {
