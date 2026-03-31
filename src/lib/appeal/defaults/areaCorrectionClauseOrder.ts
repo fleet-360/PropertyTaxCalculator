@@ -1,0 +1,32 @@
+/** Stable clause ids and order for תיקון שטחים template (matches municipal examples). */
+export const AREA_CORRECTION_CLAUSE_ORDER = [
+  '1',
+  '2',
+  '3',
+  '4',
+  '4.1',
+  '4.2',
+  '4.3',
+  '4.4',
+  '4.5',
+  '4.6',
+  '5',
+  '6',
+  '7',
+  '8',
+  '8a_checklist_intro',
+  '8b_criteria',
+  '9',
+  '10',
+  '10_calc_block',
+  '11',
+  '12',
+  '13',
+  '14',
+  '15',
+  '16',
+  '17',
+  '18',
+] as const;
+
+export type AreaCorrectionClauseId = (typeof AREA_CORRECTION_CLAUSE_ORDER)[number];

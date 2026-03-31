@@ -1,4 +1,4 @@
-/** Must match `margin` passed to PDFDocument in `renderAppealPdf`. */
+/** Page margins (pt) — must match `@page` margin in `appealLetterHtml` and Playwright PDF. */
 export const APPEAL_PAGE_MARGIN_PT = 56;
 
 /** ~Word default tab stop (pt) — leading `\\t` on a line maps to this indent step. */
@@ -9,8 +9,35 @@ export const APPEAL_LEADING_SPACE_INDENT_PT = 2.4;
 
 export const APPEAL_MAX_LINE_INDENT_PT = 160;
 
-/** PDFKit default A4 height in pt — used to reserve footer space for body text flow. */
+/** Default A4 height in pt (HTML/Playwright PDF). */
 export const APPEAL_A4_HEIGHT_PT = 841.89;
+
+/** A4 width in pt (matches Chromium `page.pdf` / pdf-lib default). */
+export const APPEAL_A4_WIDTH_PT = 595.28;
+
+/** CSS px per PDF pt (browser convention for screen/print CSS). */
+export const APPEAL_CSS_PX_PER_PDF_PT = 96 / 72;
+
+/** Full A4 page height in CSS px (matches `@page size: A4` with Playwright). */
+export const APPEAL_A4_PAGE_HEIGHT_CSS_PX = APPEAL_A4_HEIGHT_PT * APPEAL_CSS_PX_PER_PDF_PT;
+
+/** `@page` margin in CSS px — must match {@link APPEAL_PAGE_MARGIN_PT}. */
+export function appealPageMarginCssPx(): number {
+  return APPEAL_PAGE_MARGIN_PT * APPEAL_CSS_PX_PER_PDF_PT;
+}
+
+/**
+ * Vertical flow height per printed page (px): A4 minus top/bottom `@page` margins.
+ * Used with `getBoundingClientRect` document Y to map the signature anchor to the correct PDF page and Y.
+ */
+export function appealA4ContentHeightCssPx(): number {
+  return APPEAL_A4_PAGE_HEIGHT_CSS_PX - 2 * appealPageMarginCssPx();
+}
+
+/** Printable content width (px), inside `@page` left/right margins — לפריסה כמו ב-PDF. */
+export function appealA4ContentWidthCssPx(): number {
+  return (APPEAL_A4_WIDTH_PT - 2 * APPEAL_PAGE_MARGIN_PT) * APPEAL_CSS_PX_PER_PDF_PT;
+}
 
 /**
  * Bottom page margin so flowing body text stops above the signature block (same geometry as
@@ -22,7 +49,7 @@ export function appealTextFlowBottomMarginPt(pageHeightPt: number = APPEAL_A4_HE
 }
 
 /**
- * Fixed footer block (PDFKit coordinates: origin top-left, y grows downward):
+ * Fixed footer block (top-down pt from page top — used by apply-signature fallback):
  * 1. Body text ends above `bodyContentBottomY`.
  * 2. “חתימת המגיש:” at `labelBaselineY`.
  * 3. Signature image in [signatureSlotTopY, signatureImageBottomY].
