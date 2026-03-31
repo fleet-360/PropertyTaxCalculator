@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatPostDateHe, formatPostDateISO } from '@/lib/blog/dates';
+import { formatPostDateHe, formatPostDateISO } from '@/lib/dates';
 
 describe('formatPostDateHe', () => {
   it('returns empty string for missing date', () => {

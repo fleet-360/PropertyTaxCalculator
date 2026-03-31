@@ -146,6 +146,7 @@ export async function uploadToBlob(input: UploadToBlobInput): Promise<PutBlobRes
   return put(pathname, input.body, {
     access: 'private',
     token,
+    allowOverwrite: true,
     contentType: input.contentType,
     addRandomSuffix,
   });

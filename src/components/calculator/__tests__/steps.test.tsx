@@ -162,7 +162,7 @@ describe('InitialWaiverStep', () => {
 
   it('renders waiver text and checkbox', () => {
     renderWithTheme(<InitialWaiverStep state={state} dispatch={dispatch} />);
-    expect(screen.getByText('אישור תנאים')).toBeInTheDocument();
+    expect(screen.getByText('אישור שמירת פרטים')).toBeInTheDocument();
     expect(screen.getByText('קראתי ואני מסכים/ה')).toBeInTheDocument();
   });
 

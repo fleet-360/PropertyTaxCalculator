@@ -3,7 +3,7 @@ import CityTariff from '../lib/models/CityTariff';
 import seedData from '../data/other-city-seed.json';
 
 const MONGODB_URI =
-  process.env.MONGODB_URI || 'mongodb://localhost:27017/property-tax-calculator-test';
+  process.env.MONGODB_URI_MONGODB_URI || 'mongodb://localhost:27017/property-tax-calculator-test';
 
 async function main() {
   try {
@@ -25,3 +25,5 @@ async function main() {
 }
 
 main();
+
+

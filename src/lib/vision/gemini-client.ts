@@ -3,6 +3,8 @@ import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 // ── Singleton Gemini client (same caching pattern as mongodb.ts) ──
 
 let cachedClient: GoogleGenerativeAI | null = null;
+const DEFAULT_APPEAL_LETTER_MODEL =  'gemini-2.0-flash';
+
 
 function getClient(): GoogleGenerativeAI {
   if (!cachedClient) {
@@ -23,10 +25,9 @@ function getClient(): GoogleGenerativeAI {
  * Uses gemini-2.0-flash — fast, supports vision, cost-effective.
  */
 export function getVisionModel(): GenerativeModel {
-  return getClient().getGenerativeModel({ model: 'gemini-2.0-flash' });
+  return getAppealLetterGenerativeModel();
 }
 
-const DEFAULT_APPEAL_LETTER_MODEL = 'gemini-2.0-flash';
 
 /**
  * Model for appeal-letter generation (PDF examples + long Hebrew output).

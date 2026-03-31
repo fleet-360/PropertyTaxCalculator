@@ -6,7 +6,7 @@ import { GET as GET_BY_ID } from '../cities/[id]/route';
 
 beforeAll(async () => {
   const uri =
-    process.env.MONGODB_URI ||
+    process.env.MONGODB_URI_MONGODB_URI ||
     'mongodb://localhost:27017/property-tax-calculator-test';
   if (mongoose.connection.readyState === 0) {
     await mongoose.connect(uri);
