@@ -116,7 +116,9 @@ export async function applySignatureToPdfBuffer(
   // Legacy 3-field anchor: top-align to measured Y. No anchor: fixed footer geometry.
   let y: number;
   if (anchor?.mode === 'slot' || anchor?.mode === 'slot_center') {
-    y = height - anchor.yTop - imgH;
+    const slotH = Math.max(2, anchor.yBottom - anchor.yTop);
+    const dy = Math.max(0, (slotH - imgH) / 2);
+    y = height - anchor.yTop - imgH - dy;
   } else if (anchor?.mode === 'top') {
     y = height - anchor.yFromTop - imgH;
   } else {

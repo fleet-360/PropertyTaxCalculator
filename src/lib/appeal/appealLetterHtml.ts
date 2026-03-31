@@ -335,7 +335,7 @@ export function buildAppealLetterHtml(doc: NormalizedAppealLetter): string {
   .appeal-signature-paste-zone {
     margin: 0 auto;
     width: 100%;
-    max-width: 140pt;
+    max-width: 180pt;
     min-height: 48pt;
     padding: 0.25em 0 0.35em;
     box-sizing: border-box;
@@ -343,8 +343,8 @@ export function buildAppealLetterHtml(doc: NormalizedAppealLetter): string {
   }
   .appeal-paste-signature-label {
     margin: 0;
-    height: 24pt;
-    line-height: 24pt;
+    height: 56pt;
+    line-height: 56pt;
     text-align: center;
     font-weight: 400;
   }

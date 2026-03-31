@@ -100,10 +100,10 @@ export async function renderAppealPdfFromHtml(html: string): Promise<Buffer> {
       const pdfDoc = await PDFDocument.load(buf);
       const n = pdfDoc.getPageCount();
       if (n > 0) {
-        // Block is always at the end of the letter → always on the PDF’s last page. Using
-        // floor(topDoc / contentH) often disagrees with Chromium’s real page breaks.
-        const pageIndex = n - 1;
         const contentH = appealA4ContentHeightCssPx();
+        // Derive pageIndex from document flow height; clamp to PDF page count.
+        const pageIndexFromDoc = Math.max(0, Math.floor(anchorDocPx.topDoc / contentH));
+        const pageIndex = Math.min(pageIndexFromDoc, n - 1);
         const topOnPagePx = anchorDocPx.topDoc - pageIndex * contentH;
         const bottomOnPagePx = anchorDocPx.bottomDoc - pageIndex * contentH;
         const marginPt = APPEAL_PAGE_MARGIN_PT;
