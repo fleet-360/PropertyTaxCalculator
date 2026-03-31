@@ -30,6 +30,9 @@ const FOLDER_PREFIX: Record<BlobUploadFolder, string> = {
 /** Vercel Blob `list({ prefix })` for the sample-documents folder (includes trailing slash). */
 export const BLOB_SAMPLE_DOCUMENTS_LIST_PREFIX = `${FOLDER_PREFIX[BlobUploadFolder.Samples]}/`;
 
+/** Vercel Blob `list({ prefix })` for the property-tax-orders folder (includes trailing slash). */
+export const BLOB_PROPERTY_TAX_ORDERS_LIST_PREFIX = `${FOLDER_PREFIX[BlobUploadFolder.Orders]}/`;
+
 /** Matches city slugs as stored on `CityTariff` (lowercase, hyphen-separated). */
 export const CITY_SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 

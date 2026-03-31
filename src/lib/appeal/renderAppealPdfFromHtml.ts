@@ -1,5 +1,6 @@
 import { PDFDocument } from 'pdf-lib';
-import { chromium, type Browser } from 'playwright';
+import chromiumLambda from '@sparticuz/chromium';
+import { chromium, type Browser } from 'playwright-core';
 import {
   APPEAL_PAGE_MARGIN_PT,
   appealA4ContentHeightCssPx,
@@ -23,11 +24,19 @@ async function getChromiumBrowser(): Promise<Browser> {
     return browserInstance;
   }
   if (!browserLaunchPromise) {
-    const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?.trim() || undefined;
+    const isVercel = process.env.VERCEL === '1';
+    const executablePath = isVercel
+      ? await chromiumLambda.executablePath()
+      : process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?.trim() || undefined;
+
+    const baseArgs = isVercel ? chromiumLambda.args : ['--no-sandbox', '--disable-setuid-sandbox'];
+    const extraArgs = ['--font-render-hinting=none'];
+    const args = [...baseArgs, ...extraArgs.filter((a) => !baseArgs.includes(a))];
+
     browserLaunchPromise = chromium.launch({
       headless: true,
       executablePath,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--font-render-hinting=none'],
+      args,
     });
   }
   try {

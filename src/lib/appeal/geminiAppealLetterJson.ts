@@ -4,6 +4,7 @@ import { jsonrepair } from 'jsonrepair';
 import { ensureGeminiFileRefs } from '@/lib/gemini/resolveBlobToGeminiFile';
 import { getAppealLetterGenerativeModel } from '@/lib/vision/gemini-client';
 import type { AppealUserContext } from './buildAppealUserContext';
+import { listPropertyTaxOrderBlobSources } from './listPropertyTaxOrderBlobSources';
 import {
   APPEAL_EXAMPLE_PDF_MIME_TYPE,
   getAppealLetterBlobSources,
@@ -17,6 +18,7 @@ import {
 } from './appealLetterPayload';
 import type { AppealLetterVariant } from './appealLetterVariant';
 import { pickAppealBlobExamplesForGemini } from './pickAppealBlobExample';
+import { pickPropertyTaxOrderBlobForCity } from './pickPropertyTaxOrderBlob';
 
 const APPEAL_JSON_GENERATION_CONFIG_BASE = {
   temperature: 0.15,
@@ -120,7 +122,7 @@ function logParsedAppealGeminiPayload(
     }),
   };
 
-  console.log('[appeals/gemini-json] Parsed JSON from Gemini:\n', JSON.stringify(forLog, null, 2));
+  //console.log('[appeals/gemini-json] Parsed JSON from Gemini:\n', JSON.stringify(forLog, null, 2));
 }
 
 function buildJsonInstruction(variant: AppealLetterVariant, userJson: string): string {
@@ -138,7 +140,9 @@ function buildJsonInstruction(variant: AppealLetterVariant, userJson: string): s
 
   return `You are an expert assistant drafting formal Israeli municipal property tax appeals (השגה בארנונה).
 
-Attached PDF: one example appeal letter. Mirror its structure, wording, headings, numbered clauses, subclauses, checklists, and which lines are emphasized — express that using the JSON fields (role, headingLevel, emphasis, items), not HTML.
+Attached PDFs may include:
+- An example appeal letter (template): mirror its structure, wording, headings, numbered clauses, subclauses, checklists, and which lines are emphasized — express that using the JSON fields (role, headingLevel, emphasis, items), not HTML.
+- A municipal property-tax order (צו ארנונה) for the user's city: use it only when needed to verify terminology / classifications / zone names / ordinance-specific details. Do not invent facts if the ordinance is missing.
 
 OUTPUT: a single JSON object (no markdown fences). The server prints the letterhead through "הגשה לשנים", then the two centered main titles, then your clauses (body of the appeal only).
 
@@ -150,6 +154,11 @@ ${clauseRules}
 - Use correct Hebrew legal abbreviations: עפ"י, דו"ח, מ"ר, סה"כ, הנ"ל, רצ"ב. Do not output :Date or Date:.
 - Keep numbered legal citations (בר"מ, בג"ץ) inside the same clause body as in the example when possible.
 - Do not invent private data from the sample PDF; use user JSON for names, areas, amounts, addresses.
+- Parentheses policy:
+  - NEVER copy instructional text inside parentheses from the example (e.g. "(סדר מספרי ... או אותיות א,ב,ג)").
+  - instructional parentheses are for template notes only, not for the final letter.
+  - If you need to reference an appendix, output ONLY the appendix marker (e.g. "כנספח א׳" or "כנספח 1") without any explanatory parenthetical guidance.
+  - Do not include placeholder punctuation like ",,".
 
 User data (JSON):
 ${userJson}`;
@@ -169,8 +178,16 @@ export async function generateAppealLetterGeminiPayload(
   const resolvedBlobRefs =
     pickedBlobs.length > 0 ? await ensureGeminiFileRefs(pickedBlobs) : [];
 
+  const orderSources = await listPropertyTaxOrderBlobSources();
+  const pickedOrder = pickPropertyTaxOrderBlobForCity(orderSources, {
+    slug: context.city.slug,
+    name: context.city.name,
+  });
+  const resolvedOrderRefs = pickedOrder ? await ensureGeminiFileRefs([pickedOrder]) : [];
+
   const pickedPath =
     pickedBlobs[0]?.displayName?.replace(/^blob-sample:/, '') ?? null;
+  const pickedOrderPath = pickedOrder?.displayName?.replace(/^blob-order:/, '') ?? null;
   console.log(
     '[appeals/gemini-json] Example PDF + structured output:',
     JSON.stringify(
@@ -178,7 +195,8 @@ export async function generateAppealLetterGeminiPayload(
         leadId: context.leadId ?? null,
         variant,
         pickedBlobPath: pickedPath,
-        totalPdfFileParts: directUris.length + resolvedBlobRefs.length,
+        pickedOrderPath,
+        totalPdfFileParts: directUris.length + resolvedBlobRefs.length + resolvedOrderRefs.length,
       },
       null,
       2,
@@ -196,6 +214,12 @@ export async function generateAppealLetterGeminiPayload(
       },
     })),
     ...resolvedBlobRefs.map(({ fileUri, mimeType }) => ({
+      fileData: {
+        mimeType,
+        fileUri,
+      },
+    })),
+    ...resolvedOrderRefs.map(({ fileUri, mimeType }) => ({
       fileData: {
         mimeType,
         fileUri,
