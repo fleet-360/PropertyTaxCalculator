@@ -4,6 +4,7 @@ import dbConnect from '@/lib/mongodb';
 import ConsentRecord from '@/lib/models/ConsentRecord';
 import Lead from '@/lib/models/Lead';
 import { CONSENT_TEXTS } from '@/lib/consent/consentTexts';
+import { verifyToken, getTokenFromRequest } from '@/lib/auth';
 import type { ConsentType } from '@/lib/types/consent';
 import mongoose from 'mongoose';
 
@@ -17,6 +18,50 @@ function getClientIp(request: NextRequest): string {
 
 function hashText(text: string): string {
   return createHash('sha256').update(text, 'utf8').digest('hex');
+}
+
+function verifyAdmin(request: NextRequest): boolean {
+  const token = getTokenFromRequest(request);
+  if (!token) return false;
+  return !!verifyToken(token);
+}
+
+// ── GET /api/consents ───────────────────────────────────────────────
+// Fetch consent records for a lead (admin only).
+export async function GET(request: NextRequest) {
+  try {
+    if (!verifyAdmin(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await dbConnect();
+
+    const { searchParams } = new URL(request.url);
+    const leadId = searchParams.get('leadId');
+
+    if (!leadId || !mongoose.Types.ObjectId.isValid(leadId)) {
+      return NextResponse.json({ error: 'Valid leadId is required' }, { status: 400 });
+    }
+
+    const records = await ConsentRecord.find({ leadId: new mongoose.Types.ObjectId(leadId) })
+      .sort({ timestamp: -1 })
+      .lean();
+
+    const mapped = records.map((r) => ({
+      _id: String(r._id),
+      consentType: r.consentType,
+      consentVersion: r.consentVersion,
+      accepted: r.accepted,
+      ipAddress: r.ipAddress,
+      userAgent: r.userAgent,
+      timestamp: r.timestamp instanceof Date ? r.timestamp.toISOString() : String(r.timestamp),
+    }));
+
+    return NextResponse.json(mapped, { status: 200 });
+  } catch (error) {
+    console.error('Error fetching consents:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }
 
 // ── POST /api/consents ──────────────────────────────────────────────

@@ -8,7 +8,7 @@ import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
 import { blogCategoryPath, blogPostPath } from '@/lib/blog/routes';
-import { formatPostDateHe } from '@/lib/blog/dates';
+import { formatPostDateHe } from '@/lib/dates';
 
 interface PostCardProps {
   post: {
