@@ -384,7 +384,7 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         </Typography>
       </Paper> */}
 
-      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      {/* <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Typography variant="subtitle2" fontWeight={600} gutterBottom>
           תיקון שטח במכתב (אופציונלי)
         </Typography>
@@ -402,7 +402,7 @@ export default function AppealStep({ state, dispatch }: StepProps) {
           size="small"
           placeholder={state.propertyArea > 0 ? `למשל אם בשומה ${state.propertyArea} ולדעתכם אחר` : ''}
         />
-      </Paper>
+      </Paper> */}
 
       <Paper variant="outlined" sx={{ p: 2, mb: 2, maxHeight: 320, overflowY: 'auto', lineHeight: 1.8 }}>
         <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
