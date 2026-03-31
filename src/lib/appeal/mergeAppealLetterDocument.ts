@@ -138,6 +138,14 @@ const GENERIC_FALLBACK_CLAUSE_BODY =
   'להלן נימוקי ההשגה והבקשה, בהתאם לנתוני הנכס, לחיוב דו-חודשי של {{bimonthlyPayment}} ₪ ולצו הארנונה בעיר {{cityName}}.';
 
 function buildHeader(ctx: AppealUserContext, variant: AppealLetterVariant, map: Record<string, string>): AppealLetterHeaderModel {
+  const filingRaw = ctx.tax.paymentPeriod?.trim() || '';
+  const looksLikeBillingPeriodToken =
+    filingRaw === 'monthly' ||
+    filingRaw === 'bimonthly' ||
+    filingRaw === 'quarterly' ||
+    filingRaw === 'semi_annual' ||
+    filingRaw === 'annual';
+
   return {
     cityDisplay: ctx.city.name,
     fullName: ctx.fullName,
@@ -149,7 +157,7 @@ function buildHeader(ctx: AppealUserContext, variant: AppealLetterVariant, map: 
     parcel: map.parcel,
     subParcel: map.subParcel,
     appealNature: appealNatureForVariant(variant),
-    filingYearsLine: ctx.tax.paymentPeriod?.trim() || '_________',
+    filingYearsLine: filingRaw && !looksLikeBillingPeriodToken ? filingRaw : '_________',
   };
 }
 
