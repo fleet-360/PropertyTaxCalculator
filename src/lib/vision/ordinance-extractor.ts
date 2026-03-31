@@ -159,7 +159,7 @@ export async function extractOrdinance(
     // ── Pass 1: Metadata ───────────────────────────────────────────
     onProgress?.({ pass: 1, total: TOTAL_PASSES, label: PASS_LABELS[0], percent: 10 });
     try {
-      const metadataResult = await runPass(buildMetadataPrompt(), fileUri, mimeType);
+      const metadataResult = await runPass(await buildMetadataPrompt(), fileUri, mimeType);
       if (metadataResult) {
         if (typeof metadataResult.cityName === 'string') data.cityName = metadataResult.cityName;
         if (typeof metadataResult.cityNameEn === 'string') data.cityNameEn = metadataResult.cityNameEn;
@@ -195,7 +195,7 @@ export async function extractOrdinance(
     // ── Pass 2: Zones ──────────────────────────────────────────────
     onProgress?.({ pass: 2, total: TOTAL_PASSES, label: PASS_LABELS[1], percent: 25 });
     try {
-      const zonesResult = await runPass(buildZonesPrompt(), fileUri, mimeType);
+      const zonesResult = await runPass(await buildZonesPrompt(), fileUri, mimeType);
       if (zonesResult && Array.isArray(zonesResult.availableZones)) {
         data.availableZones = (zonesResult.availableZones as IAvailableZone[]).filter(
           (z) => z && typeof z.code === 'string' && typeof z.label === 'string'
@@ -213,7 +213,7 @@ export async function extractOrdinance(
     // ── Pass 3: Rates ──────────────────────────────────────────────
     onProgress?.({ pass: 3, total: TOTAL_PASSES, label: PASS_LABELS[2], percent: 45 });
     try {
-      const ratesResult = await runPass(buildRatesPrompt(data.availableZones), fileUri, mimeType);
+      const ratesResult = await runPass(await buildRatesPrompt(data.availableZones), fileUri, mimeType);
       if (ratesResult && Array.isArray(ratesResult.types)) {
         data.types = sanitizePropertyTypes(ratesResult.types as IPropertyType[]);
 
@@ -232,7 +232,7 @@ export async function extractOrdinance(
     // ── Pass 4: Exemptions ─────────────────────────────────────────
     onProgress?.({ pass: 4, total: TOTAL_PASSES, label: PASS_LABELS[3], percent: 70 });
     try {
-      const exemptionsResult = await runPass(buildExemptionsPrompt(), fileUri, mimeType);
+      const exemptionsResult = await runPass(await buildExemptionsPrompt(), fileUri, mimeType);
       if (exemptionsResult && Array.isArray(exemptionsResult.exemptions)) {
         data.exemptions = sanitizeExemptions(exemptionsResult.exemptions as IExemptionSection[]);
       }
@@ -246,7 +246,7 @@ export async function extractOrdinance(
     // ── Pass 5: Extras ─────────────────────────────────────────────
     onProgress?.({ pass: 5, total: TOTAL_PASSES, label: PASS_LABELS[4], percent: 88 });
     try {
-      const extrasResult = await runPass(buildExtrasPrompt(), fileUri, mimeType);
+      const extrasResult = await runPass(await buildExtrasPrompt(), fileUri, mimeType);
       if (extrasResult) {
         if (Array.isArray(extrasResult.areaTypeDiscounts)) {
           data.areaTypeDiscounts = (extrasResult.areaTypeDiscounts as IAreaTypeDiscount[]).filter(

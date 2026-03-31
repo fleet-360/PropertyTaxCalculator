@@ -30,7 +30,7 @@ export interface DocumentTypeDefinition<T extends Record<string, unknown> = Reco
   /** Zod schema for validating extracted output */
   schema: z.ZodType<T>;
   /** Build the extraction prompt. Accepts optional runtime context. */
-  buildPrompt: (options?: Record<string, unknown>) => string;
+  buildPrompt: (options?: Record<string, unknown>) => string | Promise<string>;
   /** Optional post-processing hook to normalize extracted values */
   postProcess?: (raw: Partial<T>) => Partial<T>;
 }
