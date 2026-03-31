@@ -53,5 +53,5 @@ export function ensureDocumentTypesRegistered(): void {
   // Import each document type to trigger its registerDocumentType() call.
   // Adding a new document type = add require() here + create file.
   require('./tax-bill');
-  // require('./tax-ordinance');  // uncomment when ready
+  require('./tax-ordinance');
 }

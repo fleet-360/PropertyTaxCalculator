@@ -30,9 +30,27 @@ import SearchIcon from '@mui/icons-material/Search';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import PeopleIcon from '@mui/icons-material/People';
+import CircularProgress from '@mui/material/CircularProgress';
 import type { LeadListItem } from '@/lib/types/admin';
 import type { ICalculationEntry } from '@/lib/types/lead';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { formatDateTimeHe, formatPostDateHe, formatPostDateISO } from '@/lib/dates';
+
+// ── Consent record shape (from GET /api/consents) ───────────────────
+interface ConsentListItem {
+  _id: string;
+  consentType: 'data_retention' | 'legal_disclaimer';
+  consentVersion: string;
+  accepted: boolean;
+  ipAddress: string;
+  userAgent: string;
+  timestamp: string;
+}
+
+const consentTypeLabelMap: Record<string, string> = {
+  data_retention: 'שמירת נתונים',
+  legal_disclaimer: 'הצהרה משפטית',
+};
 
 // ── Label & color maps ──────────────────────────────────────────────
 
@@ -125,13 +143,7 @@ function getLatestCalculation(lead: LeadListItem): ICalculationEntry | undefined
   return lead.calculations[lead.calculations.length - 1];
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('he-IL', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
+
 
 // ── Calculation card (shown in expanded row) ─────────────────────────
 
@@ -156,7 +168,7 @@ function CalculationCard({ calc, index }: { calc: ICalculationEntry; index: numb
             variant="outlined"
           />
           <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
-            {formatDate(String(calc.createdAt))}
+            {formatPostDateHe(String(calc.createdAt))}
           </Typography>
         </Box>
 
@@ -215,7 +227,31 @@ function ExpandableRow({
   onStatusChange: (id: string, newStatus: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [consents, setConsents] = useState<ConsentListItem[]>([]);
+  const [consentsLoading, setConsentsLoading] = useState(false);
+  const consentsFetchedRef = useRef(false);
   const latestCalc = getLatestCalculation(lead);
+
+  const fetchConsents = useCallback(async () => {
+    if (consentsFetchedRef.current) return;
+    consentsFetchedRef.current = true;
+    setConsentsLoading(true);
+    try {
+      const res = await fetch(`/api/consents?leadId=${lead._id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setConsents(data);
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setConsentsLoading(false);
+    }
+  }, [lead._id]);
+
+  useEffect(() => {
+    if (open) fetchConsents();
+  }, [open, fetchConsents]);
 
   return (
     <>
@@ -317,7 +353,7 @@ function ExpandableRow({
         </TableCell>
         <TableCell>
           <Typography variant="body2" color="text.secondary">
-            {formatDate(lead.createdAt)}
+            {formatPostDateHe(new Date(lead.createdAt))}
           </Typography>
         </TableCell>
       </TableRow>
@@ -357,6 +393,65 @@ function ExpandableRow({
                 {lead.calculations.map((calc, idx) => (
                   <CalculationCard key={idx} calc={calc} index={idx} />
                 ))}
+
+                {/* Consent history */}
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, mt: 2 }}>
+                  היסטוריית הסכמות
+                </Typography>
+                {consentsLoading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                    <CircularProgress size={20} />
+                  </Box>
+                ) : consents.length === 0 ? (
+                  <Typography variant="body2" color="text.disabled">
+                    אין הסכמות
+                  </Typography>
+                ) : (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                    {consents.map((c) => (
+                      <Card key={c._id} variant="outlined" sx={{ px: 2, py: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                          <Chip
+                            label={consentTypeLabelMap[c.consentType] || c.consentType}
+                            size="small"
+                            color="default"
+                            variant="outlined"
+                          />
+                          <Chip
+                            label={c.accepted ? '✓ אושר' : '✗ לא אושר'}
+                            size="small"
+                            color={c.accepted ? 'success' : 'error'}
+                          />
+                          <Typography variant="caption" color="text.secondary">
+                            גרסה {c.consentVersion}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {formatDateTimeHe(new Date(c.timestamp))}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" dir="ltr">
+                            IP: {c.ipAddress}
+                          </Typography>
+                          <Tooltip title={c.userAgent} arrow>
+                            <Typography
+                              variant="caption"
+                              color="text.disabled"
+                              dir="ltr"
+                              sx={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                maxWidth: 200,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {c.userAgent}
+                            </Typography>
+                          </Tooltip>
+                        </Box>
+                      </Card>
+                    ))}
+                  </Box>
+                )}
               </Box>
             </Collapse>
           </TableCell>

@@ -40,7 +40,7 @@ function calculateProgressiveAnnual(
     if (coveredSoFar >= totalAreaSqm) break;
 
     // Bracket end — use range.max as cumulative threshold
-    const bracketEnd = range.max === -1 ? totalAreaSqm : range.max+1;
+    const bracketEnd = range.max === -1 ? totalAreaSqm : range.max;
 
     // Area taxed in this bracket
     const areaInBracket = Math.max(0, Math.min(totalAreaSqm, bracketEnd) - coveredSoFar);

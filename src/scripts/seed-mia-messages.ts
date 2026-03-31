@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import MiaMessage from '../lib/models/MiaMessage';
 
 const MONGODB_URI =
-  process.env.MONGODB_URI || 'mongodb://localhost:27017/property-tax-calculator';
+  process.env.MONGODB_URI_MONGODB_URI || 'mongodb+srv://benshuan_db_user:5u6gSXHSXLeMm6LV@taxcalculatordev.dujlziy.mongodb.net/property-tax-calculator-test?appName=taxCalculatorDev';
 
 const DEFAULT_MESSAGES = [
   {
@@ -49,6 +49,20 @@ const DEFAULT_MESSAGES = [
     isActive: true,
   },
   {
+    messageId: 'step-4-note-accuracy',
+    title: '🤔',
+    description:
+      '🤔 התחשיב מסתמך על נכונות הפרטים שהזנת. לפני שתמשיך — בדוק שנית את נכונות הפרטים והתאמה לדוח הארנונה.',
+    isActive: true,
+  },
+  {
+    messageId: 'step-4-note-ordinance',
+    title: '🤔',
+    description:
+      '🤔 התחשיב עלול להשתנות כתוצאה משינויים בתוך צו הארנונה, ולכן נמליץ לך גם לבדוק את החישוב בהתאם לצו הארנונה.',
+    isActive: true,
+  },
+  {
     messageId: 'step-5-overpaying',
     title: '🎉 נמצא חיסכון אפשרי!',
     description: 'לפי הנתונים שהזנת, נראה שאתה משלם יותר מהנדרש. בואו נראה את הפרטים המלאים.',
@@ -76,6 +90,18 @@ const DEFAULT_MESSAGES = [
     messageId: 'step-7-default',
     title: '📝 הגשת השגה',
     description: 'רוצה להגיש השגה? אני אעזור לך לנסח מכתב מקצועי על בסיס הנתונים שהזנת.',
+    isActive: true,
+  },
+  {
+    messageId: 'error-measurement',
+    title: '📏 טעות במדידה?',
+    description: 'אם אתה סבור שהשטח הרשום בעירייה אינו תואם את השטח בפועל, הזן את השטח המתוקן ונבדוק את ההפרש.',
+    isActive: true,
+  },
+  {
+    messageId: 'error-classification',
+    title: '🏷️ טעות בסיווג?',
+    description: 'אם הנכס שלך מסווג בצורה שגויה, בחר את הסיווג הנכון לדעתך. סיווג שגוי עלול לגרום לחיוב יתר משמעותי.',
     isActive: true,
   },
 ];

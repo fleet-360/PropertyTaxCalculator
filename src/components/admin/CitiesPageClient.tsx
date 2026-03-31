@@ -28,6 +28,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CalculateIcon from '@mui/icons-material/Calculate';
+import OrdinanceImportButton from '@/components/admin/OrdinanceImportButton';
 import type { CitySummary } from '@/lib/types/admin';
 
 export default function CitiesPageClient({ initialCities }: { initialCities: CitySummary[] }) {
@@ -103,9 +104,12 @@ export default function CitiesPageClient({ initialCities }: { initialCities: Cit
             ניהול ערים ותעריפי ארנונה
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} component={Link} href="/admin/cities/new">
-          הוסף עיר
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <OrdinanceImportButton mode="create" />
+          <Button variant="contained" startIcon={<AddIcon />} component={Link} href="/admin/cities/new">
+            הוסף עיר
+          </Button>
+        </Box>
       </Box>
 
       <Paper>

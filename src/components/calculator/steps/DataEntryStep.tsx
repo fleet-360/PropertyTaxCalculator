@@ -23,11 +23,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Alert from "@mui/material/Alert";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import Accordion from "@mui/material/Accordion";
-import AccordionSummary from "@mui/material/AccordionSummary";
-import AccordionDetails from "@mui/material/AccordionDetails";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import type { StepProps } from "../CalculatorWizard";
+import { useConsentSubmit } from "@/hooks/useConsentSubmit";
 import { IPropertyType, ISubType, IZoneRate } from "@/lib/models/CityTariff";
 import { ALL_ZONES_TARIFF_CODE, ALL_ZONES_LABEL_HE } from "@/lib/tariff-constants";
 import { findRate } from "@/lib/calculator";
@@ -335,7 +332,8 @@ function DesignationRow({
 }
 
 // ── Main component ────────────────────────────────────────────────
-export default function DataEntryStep({ state, dispatch }: StepProps) {
+export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
+  const { submitConsent,linkConsents } = useConsentSubmit();
   const cityData = state.cityData;
   const isBusiness = state.propertyType === "business";
   const hasAreaTypeDiscounts = !!(cityData?.areaTypeDiscounts?.length > 0);
@@ -559,15 +557,20 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
 
       if (res.ok) {
         const result = await res.json();
-        dispatch({ type: 'SET_LEAD_ID', payload: String(result.lead._id) });
+        const newLeadId = String(result.lead._id);
+        dispatch({ type: 'SET_LEAD_ID', payload: newLeadId });
         dispatch({ type: 'SET_CALCULATION_INDEX', payload: result.calculationIndex });
+        // Link any consent records created before the lead existed
+        submitConsent(newLeadId, phone, 'data_retention', true);
+
+        // linkConsents(phone, newLeadId);
       } else {
         leadSavedRef.current = false; // Allow retry on failure
       }
     } catch {
       leadSavedRef.current = false; // Allow retry on failure
     }
-  }, [state.leadId, state.propertyType, state.citySlug, dispatch]);
+  }, [state.leadId, state.propertyType, state.citySlug, dispatch,submitConsent]);
 
   useEffect(() => {
     const name = watchedFullName?.trim();
@@ -691,8 +694,11 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
 
           if (res.ok) {
             const result = await res.json();
-            dispatch({ type: 'SET_LEAD_ID', payload: String(result.lead._id) });
+            const newLeadId = String(result.lead._id);
+            dispatch({ type: 'SET_LEAD_ID', payload: newLeadId });
             dispatch({ type: 'SET_CALCULATION_INDEX', payload: result.calculationIndex });
+            // Link any consent records created before the lead existed
+            linkConsents(data.phone, newLeadId);
           }
         }
       } catch {
@@ -719,7 +725,8 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
       component="form"
       onSubmit={handleSubmit(onSubmit)}
       noValidate
-      sx={{ minWidth: 0 }}
+      sx={{...sx, minWidth: 0 }}
+
     >
       <Typography variant="h6" component="h2" textAlign="center" sx={{ mb: 2 }}>
         מילוי פרטים
@@ -912,9 +919,7 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
                 disabled={!watchedSubType}
               >
                 <MenuItem value="">בחר</MenuItem>
-                <MenuItem value={ALL_ZONES_TARIFF_CODE}>
-                  {ALL_ZONES_LABEL_HE} ({ALL_ZONES_TARIFF_CODE})
-                </MenuItem>
+
                 {filteredZones.map((z: IZoneRate) => (
                   <MenuItem key={z.zone} value={z.zone}>
                     {z.zoneLabel}
@@ -1196,48 +1201,77 @@ export default function DataEntryStep({ state, dispatch }: StepProps) {
         אם אתה סבור שיש שגיאה בנתוני הנכס שלך, תוכל לדווח כאן
       </Typography>
 
-      <Accordion>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>טעות במדידה</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <TextField
-            label='שטח מתוקן (מ"ר)'
-            type="number"
-            value={claimedArea || ''}
-            onChange={(e) => setClaimedArea(Number(e.target.value))}
-            fullWidth
-            size="small"
-            sx={{ mb: 2 }}
-          />
-          <Button variant="outlined" size="small" disabled>
-            צרף קובץ מדידה (בקרוב)
-          </Button>
-        </AccordionDetails>
-      </Accordion>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+          mb: 2,
+          minWidth: 0,
+        }}
+      >
+        <Typography component="span" variant="body2" sx={{ flexShrink: 0,width: '35%' }}>
+          טעות במדידה
+        </Typography>
+        <TextField
+          type="number"
+          placeholder='שטח מתוקן (מ"ר)'
+          value={claimedArea || ""}
+          onChange={(e) => setClaimedArea(Number(e.target.value))}
+          onFocus={() =>
+            dispatch({ type: "SET_MIA_MESSAGE", payload: "error-measurement" })
+          }
+          inputProps={{
+            "aria-label": 'שטח מתוקן במטרים רבועים',
+          }}
+          size="small"
+          sx={{ flex: 1, minWidth: 0 }}
+        />
+      </Box>
 
-      <Accordion>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>טעות בסיווג</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <TextField
-            label="סיווג מוצע"
-            select
-            value={suggestedClass}
-            onChange={(e) => setSuggestedClass(e.target.value)}
-            fullWidth
-            size="small"
-          >
-            <MenuItem value="">בחר</MenuItem>
-            {allSubtypes.map((s: ISubType) => (
-              <MenuItem key={s.code} value={s.code}>
-                {s.label}
-              </MenuItem>
-            ))}
-          </TextField>
-        </AccordionDetails>
-      </Accordion>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+          mb: 2,
+          minWidth: 0,
+        }}
+      >
+        <Typography component="span" variant="body2" sx={{ flexShrink: 0,width: '35%' }}>
+          טעות בסיווג
+        </Typography>
+        <TextField
+          select
+          value={suggestedClass}
+          onChange={(e) => setSuggestedClass(e.target.value)}
+          onFocus={() =>
+            dispatch({ type: "SET_MIA_MESSAGE", payload: "error-classification" })
+          }
+          size="small"
+          sx={{ flex: 1, minWidth: 0 }}
+          SelectProps={{
+            displayEmpty: true,
+            renderValue: (value: unknown) => {
+              const v = value as string;
+              if (!v) return "בחר";
+              return (
+                allSubtypes.find((s: ISubType) => s.code === v)?.label ?? v
+              );
+            },
+          }}
+          inputProps={{
+            "aria-label": "סיווג מוצע",
+          }}
+        >
+          <MenuItem value="">בחר</MenuItem>
+          {allSubtypes.map((s: ISubType) => (
+            <MenuItem key={s.code} value={s.code}>
+              {s.label}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Box>
 
       <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
         <Button

@@ -32,7 +32,14 @@ import { ALL_ZONES_TARIFF_CODE, ALL_ZONES_LABEL_HE } from '@/lib/tariff-constant
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
+import OrdinanceImportButton from '@/components/admin/OrdinanceImportButton';
 import FormHelperText from '@mui/material/FormHelperText';
+import InputAdornment from '@mui/material/InputAdornment';
+import CircularProgress from '@mui/material/CircularProgress';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import MiaMessagePickerModal from '@/components/common/MiaMessagePickerModal';
 import {
   normalizeCityTariffPayload,
   validateCityTariffPayload,
@@ -52,6 +59,7 @@ import type {
   ICityFee,
   ICityTariffData,
 } from '@/lib/types/city-tariff';
+import { CITY_SLUG_PATTERN } from '@/lib/services/blobUploadService';
 
 interface CityTariffEditorProps {
   city?: ICityTariffData;
@@ -78,7 +86,9 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
   const [data, setData] = React.useState<ICityTariffData>(city || emptyCityData);
   const [saving, setSaving] = React.useState(false);
   const [snackbar, setSnackbar] = React.useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [importedFromOrdinance, setImportedFromOrdinance] = React.useState(false);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
+  const [miaPickerOpen, setMiaPickerOpen] = React.useState(false);
   const [expandedAccordion, setExpandedAccordion] = React.useState({
     basic: true,
     zones: true,
@@ -87,6 +97,15 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
     areaTypeDiscounts: true,
     cityFees: true,
   });
+
+  const [origin, setOrigin] = React.useState('');
+  const [ordinanceUploading, setOrdinanceUploading] = React.useState(false);
+  const [ordinanceUploadErr, setOrdinanceUploadErr] = React.useState<string | null>(null);
+  const ordinanceFileInputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    setOrigin(typeof window !== 'undefined' ? window.location.origin : '');
+  }, []);
 
   const clearFieldErr = React.useCallback((path: string) => {
     setFieldErrors((prev) => {
@@ -149,6 +168,39 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
     );
   }, [selectedExemptionSectionIndex, selectedExemptionSubsLen]);
 
+  // ── Load imported ordinance data from sessionStorage ──────────────
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('fromOrdinance') !== 'true') return;
+
+    try {
+      const stored = sessionStorage.getItem('ordinanceImportData');
+      if (!stored) return;
+
+      const imported: ICityTariffData = JSON.parse(stored);
+      sessionStorage.removeItem('ordinanceImportData');
+
+      // For update mode: merge imported data but keep the _id
+      const merged = city ? { ...imported, _id: city._id } : imported;
+      setData(merged);
+      setImportedFromOrdinance(true);
+
+      // Auto-select first items if available
+      if (merged.types.length > 0) {
+        setSelectedTypeIndex(0);
+        if (merged.types[0].subtypes.length > 0) setSelectedSubtypeIndex(0);
+      }
+      if (merged.exemptions.length > 0) {
+        setSelectedExemptionSectionIndex(0);
+        if (merged.exemptions[0].subSections.length > 0) setSelectedExemptionSubIndex(0);
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Update slug from English name
   const handleCityNameEnChange = (value: string) => {
     clearFieldErr('cityNameEn');
@@ -162,6 +214,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
 
   const handleSave = async () => {
     const normalized = normalizeCityTariffPayload(data);
+    console.log(normalized);
     const issues = validateCityTariffPayload(normalized);
     if (issues.length > 0) {
       setFieldErrors(validationIssuesToFieldMap(issues));
@@ -209,6 +262,77 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       setSaving(false);
     }
   };
+
+  const slugTrim = data.slug.trim();
+  const slugValid = CITY_SLUG_PATTERN.test(slugTrim);
+  const hasOrdinance = Boolean(data.ordinanceUrl?.trim());
+  const publicOrdinanceShareUrl =
+    origin && slugValid && hasOrdinance
+      ? `${origin}/api/view-pdf/${encodeURIComponent(slugTrim)}`
+      : '';
+
+  const handleCopyPublicOrdinanceLink = async () => {
+    if (!publicOrdinanceShareUrl) return;
+    try {
+      await navigator.clipboard.writeText(publicOrdinanceShareUrl);
+      setSnackbar({ open: true, message: 'הקישור הועתק ללוח', severity: 'success' });
+    } catch {
+      setSnackbar({ open: true, message: 'לא ניתן להעתיק את הקישור', severity: 'error' });
+    }
+  };
+
+  const handleOrdinanceFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !slugValid) return;
+
+    setOrdinanceUploading(true);
+    setOrdinanceUploadErr(null);
+    clearFieldErr('ordinanceUrl');
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', 'orders');
+    formData.append('citySlug', slugTrim);
+
+    try {
+      const res = await fetch('/api/admin/blob-upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin',
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = typeof body.error === 'string' && body.error ? body.error : 'שגיאה בהעלאת הקובץ';
+        setOrdinanceUploadErr(msg);
+        setSnackbar({ open: true, message: msg, severity: 'error' });
+        return;
+      }
+      const url = typeof body.url === 'string' ? body.url.trim() : '';
+      if (!url) {
+        const msg = 'תגובת השרת לא כללה קישור לקובץ';
+        setOrdinanceUploadErr(msg);
+        setSnackbar({ open: true, message: msg, severity: 'error' });
+        return;
+      }
+      setData((prev) => ({ ...prev, ordinanceUrl: url }));
+      setSnackbar({ open: true, message: 'צו הארנונה הועלה בהצלחה', severity: 'success' });
+    } catch {
+      const msg = 'שגיאת רשת בהעלאת הקובץ';
+      setOrdinanceUploadErr(msg);
+      setSnackbar({ open: true, message: msg, severity: 'error' });
+    } finally {
+      setOrdinanceUploading(false);
+    }
+  };
+
+  const ordinanceFieldHelper = (() => {
+    if (fieldErr('ordinanceUrl')) return fieldErr('ordinanceUrl');
+    if (ordinanceUploadErr) return ordinanceUploadErr;
+    if (!slugValid) return 'נא להגדיר Slug תקין לפני העלאת צו הארנונה';
+    if (isNew && hasOrdinance) return 'הקישור הציבורי יעבוד לאחר שמירת העיר בפעם הראשונה';
+    return undefined;
+  })();
 
   // ── Zone helpers ────────────────────────────────────────────────────
   const addZone = () => {
@@ -370,9 +494,18 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       const types = [...prev.types];
       const subtypes = [...types[ti].subtypes];
       const zones = [...subtypes[si].zones];
+      const prevRanges = [...(zones[zi].sizeRanges || [])];
+      if (prevRanges.length > 0) {
+        const li = prevRanges.length - 1;
+        const last = prevRanges[li];
+        if (last.max === -1) {
+          prevRanges[li] = { ...last, max: last.min };
+        }
+      }
+      prevRanges.push({ min: 0, max: -1, rate: 0 });
       zones[zi] = {
         ...zones[zi],
-        sizeRanges: [...(zones[zi].sizeRanges || []), { min: 0, max: 0, rate: 0 }],
+        sizeRanges: prevRanges,
       };
       subtypes[si] = { ...subtypes[si], zones };
       types[ti] = { ...types[ti], subtypes };
@@ -399,9 +532,15 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       const types = [...prev.types];
       const subtypes = [...types[ti].subtypes];
       const zones = [...subtypes[si].zones];
+      let filtered = (zones[zi].sizeRanges || []).filter((_, i) => i !== ri);
+      if (filtered.length > 0) {
+        const li = filtered.length - 1;
+        filtered = [...filtered];
+        filtered[li] = { ...filtered[li], max: -1 };
+      }
       zones[zi] = {
         ...zones[zi],
-        sizeRanges: (zones[zi].sizeRanges || []).filter((_, i) => i !== ri),
+        sizeRanges: filtered,
       };
       subtypes[si] = { ...subtypes[si], zones };
       types[ti] = { ...types[ti], subtypes };
@@ -416,7 +555,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       newEi = prev.exemptions.length;
       return {
         ...prev,
-        exemptions: [...prev.exemptions, { sectionCode: '', sectionLabel: '', subSections: [] }],
+        exemptions: [...prev.exemptions, { sectionCode: '', sectionLabel: '', miaMessageId: '', subSections: [] }],
       };
     });
     setSelectedExemptionSectionIndex(newEi);
@@ -424,6 +563,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
   };
 
   const updateExemptionSection = (ei: number, field: string, value: string) => {
+    console.log(ei, field, value);
     setData((prev) => {
       const exemptions = [...prev.exemptions];
       exemptions[ei] = { ...exemptions[ei], [field]: value };
@@ -516,6 +656,13 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
 
   return (
     <Box>
+      {/* Ordinance import banner */}
+      {importedFromOrdinance && (
+        <Alert severity="info" sx={{ mb: 3 }} onClose={() => setImportedFromOrdinance(false)}>
+          נתונים יובאו מצו ארנונה באמצעות AI — נא לסקור ולתקן לפני שמירה
+        </Alert>
+      )}
+
       {/* Header */}
       <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
         <Box>
@@ -526,14 +673,19 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
             {isNew ? 'הגדרת תעריפי ארנונה לעיר חדשה' : 'עריכת תעריפי ארנונה'}
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<SaveIcon />}
-          onClick={handleSave}
-          disabled={saving}
-        >
-          {saving ? 'שומר...' : 'שמור'}
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          {!isNew && city?._id && (
+            <OrdinanceImportButton mode="update" existingCityId={city._id} />
+          )}
+          <Button
+            variant="contained"
+            startIcon={<SaveIcon />}
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? 'שומר...' : 'שמור'}
+          </Button>
+        </Box>
       </Box>
 
       {/* Section 1: Basic Info */}
@@ -617,17 +769,57 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="קישור לצו ארנונה (URL)"
-                value={data.ordinanceUrl || ''}
-                onChange={(e) => {
-                  clearFieldErr('ordinanceUrl');
-                  setData((prev) => ({ ...prev, ordinanceUrl: e.target.value }));
-                }}
-                error={Boolean(fieldErr('ordinanceUrl'))}
-                helperText={fieldErr('ordinanceUrl')}
+              <input
+                ref={ordinanceFileInputRef}
+                type="file"
+                accept="application/pdf"
+                hidden
+                onChange={handleOrdinanceFileSelected}
               />
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'flex-start' }}>
+                <TextField
+                  fullWidth
+                  label="קישור לצו הארנונה (להעתקה)"
+                  value={publicOrdinanceShareUrl}
+                  size="small"
+                  placeholder={
+                    !hasOrdinance
+                      ? 'אין קובץ מקושר — העלו צו ארנונה'
+                      : !slugValid
+                        ? 'הגדירו Slug תקין לקבלת הקישור הציבורי'
+                        : ''
+                  }
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      endAdornment: publicOrdinanceShareUrl ? (
+                        <InputAdornment position="end" >
+                          <IconButton
+                            edge="end"
+                            onClick={handleCopyPublicOrdinanceLink}
+                            aria-label="העתקת לצו הארנונה"
+                            size="small"
+                          >
+                            <ContentCopyIcon fontSize="small" />
+                          </IconButton>
+                        </InputAdornment>
+                      ) : undefined,
+                    },
+                  }}
+                  error={Boolean(fieldErr('ordinanceUrl') || ordinanceUploadErr)}
+                  helperText={ordinanceFieldHelper}
+                />
+                <Button
+                  variant="outlined"
+                  startIcon={ordinanceUploading ? <CircularProgress size={18} color="inherit" /> : <UploadFileIcon />}
+                  onClick={() => ordinanceFileInputRef.current?.click()}
+                  disabled={!slugValid || ordinanceUploading}
+                  sx={{ flexShrink: 0, mt: { xs: 0, sm: 1 } }}
+                  aria-label="העלאת קובץ צו ארנונה"
+                >
+                  {ordinanceUploading ? 'מעלה…' : 'העלאת צו ארנונה'}
+                </Button>
+              </Stack>
             </Grid>
           </Grid>
         </AccordionDetails>
@@ -1175,6 +1367,24 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Box>
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 1 }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<ChatBubbleOutlineIcon />}
+                      onClick={() => setMiaPickerOpen(true)}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      הודעת מיה
+                    </Button>
+                    {data.exemptions[selectedExemptionSectionIndex].miaMessageId && (
+                      <Chip
+                        label={data.exemptions[selectedExemptionSectionIndex].miaMessageId}
+                        size="small"
+                        onDelete={() => updateExemptionSection(selectedExemptionSectionIndex, 'miaMessageId', '')}
+                      />
+                    )}
+                  </Box>
                 </Paper>
               )}
 
@@ -1695,6 +1905,23 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Mia message picker for exemption sections */}
+      <MiaMessagePickerModal
+        open={miaPickerOpen}
+        onClose={() => setMiaPickerOpen(false)}
+        onSelect={(messageId) => {
+          if (selectedExemptionSectionIndex !== null) {
+            updateExemptionSection(selectedExemptionSectionIndex, 'miaMessageId', messageId);
+          }
+          setMiaPickerOpen(false);
+        }}
+        currentMessageId={
+          selectedExemptionSectionIndex !== null
+            ? data.exemptions[selectedExemptionSectionIndex]?.miaMessageId
+            : undefined
+        }
+      />
     </Box>
   );
 }
