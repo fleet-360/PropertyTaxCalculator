@@ -101,7 +101,7 @@ export interface WizardState {
 
 export const initialState: WizardState = {
   currentStep: 0,
-  propertyType: null,
+  propertyType: "private",
   citySlug: '',
   cityData: null,
   fullName: '',
