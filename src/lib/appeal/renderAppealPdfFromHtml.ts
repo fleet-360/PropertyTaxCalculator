@@ -24,10 +24,12 @@ async function getChromiumBrowser(): Promise<Browser> {
     return browserInstance;
   }
   if (!browserLaunchPromise) {
-    const executablePath = await chromiumLambda.executablePath()
+    const isVercel = process.env.VERCEL === '1';
+    const executablePath = isVercel
+      ? await chromiumLambda.executablePath()
+      : process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?.trim() || undefined;
 
-
-    const baseArgs = chromiumLambda.args;
+    const baseArgs = isVercel ? chromiumLambda.args : ['--no-sandbox', '--disable-setuid-sandbox'];
     const extraArgs = ['--font-render-hinting=none'];
     const args = [...baseArgs, ...extraArgs.filter((a) => !baseArgs.includes(a))];
 
