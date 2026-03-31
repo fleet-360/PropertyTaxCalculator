@@ -7,6 +7,26 @@ export function isValidAppealEmail(email: string | undefined): boolean {
   return typeof email === 'string' && EMAIL_RE.test(email.trim());
 }
 
+/**
+ * Merge an explicit corrected total area (מ"ר) into the generate payload so the server can use
+ * the structured תיקון שטחים pipeline (`area_correction`). Prefer wizard `measurementError` attachment when present.
+ */
+export function withMeasurementErrorClaimed(
+  payload: AppealGenerateRequest,
+  claimedSqm: number,
+): AppealGenerateRequest {
+  if (!Number.isFinite(claimedSqm) || claimedSqm <= 0) {
+    return payload;
+  }
+  return {
+    ...payload,
+    measurementError: {
+      claimed: claimedSqm,
+      attachment: payload.measurementError?.attachment,
+    },
+  };
+}
+
 /** Build JSON body for POST /api/appeals/generate from wizard state. */
 export function buildAppealGeneratePayload(state: WizardState): AppealGenerateRequest {
   const cityName =
