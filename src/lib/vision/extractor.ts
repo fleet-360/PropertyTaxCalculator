@@ -39,7 +39,7 @@ export async function extractFromDocument<T extends Record<string, unknown>>(
   const docType = getDocumentType<T>(documentTypeId);
 
   // 2. Build the prompt
-  const prompt = docType.buildPrompt(promptOptions);
+  const prompt = await docType.buildPrompt(promptOptions);
 
   // 3. Prepare image for Gemini
   const base64Data = image.type === 'base64'

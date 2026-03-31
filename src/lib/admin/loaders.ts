@@ -6,9 +6,11 @@ import Coupon from '@/lib/models/Coupon';
 import Post from '@/lib/models/Post';
 import SystemConfig from '@/lib/models/SystemConfig';
 import Settings from '@/lib/models/Settings';
+import AiPrompt from '@/lib/models/AiPrompt';
 import { requireAdminSession } from '@/lib/admin/requireAdminSession';
 import type { CitySummary, LeadListItem } from '@/lib/types/admin';
 import type { ICouponData } from '@/lib/types/coupon';
+import type { IAiPromptData } from '@/lib/types/ai-prompt';
 import type { PostListItem, PostSortField, SortDirection } from '@/lib/types/post';
 import {
   DEFAULT_MATCH_TOLERANCE_IS_PERCENT,
@@ -305,4 +307,27 @@ export async function loadPostCategoriesDistinct(): Promise<string[]> {
   await dbConnect();
   const cats = await Post.distinct('category');
   return [...new Set(cats.filter(Boolean) as string[])].sort();
+}
+
+// ── AI Prompts ──────────────────────────────────────────────────────
+
+export async function loadAiPromptsAdmin(): Promise<IAiPromptData[]> {
+  await requireAdminSession();
+  await dbConnect();
+
+  const prompts = await AiPrompt.find().sort({ category: 1, key: 1 }).lean();
+
+  return prompts.map((p) => ({
+    _id: String(p._id),
+    key: p.key,
+    category: p.category,
+    label: p.label,
+    description: p.description,
+    content: p.content,
+    templateVariables: p.templateVariables,
+    isActive: p.isActive,
+    version: p.version,
+    lastModifiedBy: p.lastModifiedBy,
+    updatedAt: toIso(p.updatedAt),
+  }));
 }

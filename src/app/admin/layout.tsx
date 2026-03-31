@@ -25,6 +25,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import ArticleIcon from '@mui/icons-material/Article';
 import TuneIcon from '@mui/icons-material/Tune';
 import SettingsIcon from '@mui/icons-material/Settings';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import MenuIcon from '@mui/icons-material/Menu';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
@@ -42,6 +43,7 @@ const navItems: NavItem[] = [
   { label: 'קופונים', href: '/admin/coupons', icon: <ConfirmationNumberIcon /> },
   { label: 'לידים', href: '/admin/leads', icon: <PeopleIcon /> },
   { label: 'מאמרים', href: '/admin/posts', icon: <ArticleIcon /> },
+  { label: 'פרומפטים AI', href: '/admin/ai-prompts', icon: <SmartToyIcon /> },
   { label: 'הגדרות מערכת', href: '/admin/system-config', icon: <TuneIcon /> },
   { label: 'הגדרות בלוג', href: '/admin/settings', icon: <SettingsIcon /> },
 ];
