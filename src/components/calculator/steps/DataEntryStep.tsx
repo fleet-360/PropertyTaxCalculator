@@ -1229,7 +1229,7 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
         />
       </Box>
 
-      <Box
+      {isBusiness && <Box
         sx={{
           display: "flex",
           alignItems: "center",
@@ -1271,7 +1271,7 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
             </MenuItem>
           ))}
         </TextField>
-      </Box>
+      </Box>}
 
       <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
         <Button

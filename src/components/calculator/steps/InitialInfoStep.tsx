@@ -23,7 +23,11 @@ export default function InitialInfoStep({ state, dispatch, sx }: StepProps) {
   // ── City list ──
   const [cities, setCities] = useState<CityOption[]>([]);
   const [loadingCities, setLoadingCities] = useState(true);
-  const [selectedCity, setSelectedCity] = useState<CityOption | null>(null);
+  const [selectedCity, setSelectedCity] = useState<CityOption | null>(state.cityData ? {
+    _id: state.cityData._id,
+    cityName: state.cityData.cityName,
+    slug: state.cityData.slug,
+  } : null);
 
   // ── Deferred file upload ──
   const [pendingFile, setPendingFile] = useState<File | null>(null);
