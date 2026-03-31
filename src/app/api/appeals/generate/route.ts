@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildAppealUserContext } from '@/lib/appeal/buildAppealUserContext';
-import { generateAppealLetterHebrew } from '@/lib/appeal/geminiAppealLetter';
-import { renderAppealLetterPdf } from '@/lib/appeal/renderAppealPdf';
+import { generateAppealLetterGeminiPayload } from '@/lib/appeal/geminiAppealLetterJson';
+import { buildAppealLetterHtml } from '@/lib/appeal/appealLetterHtml';
+import { mergeAppealLetter } from '@/lib/appeal/mergeAppealLetterDocument';
+import { renderAppealPdfFromHtml } from '@/lib/appeal/renderAppealPdfFromHtml';
 import { appealGenerateRequestSchema } from '@/lib/appeal/schemas';
+import { resolveAppealLetterVariant } from '@/lib/appeal/appealLetterVariant';
 
 export const runtime = 'nodejs';
 
@@ -16,8 +19,13 @@ export async function POST(req: NextRequest) {
     }
 
     const context = buildAppealUserContext(parsed.data);
-    const letterHebrew = await generateAppealLetterHebrew(context);
-    const pdfBuffer = await renderAppealLetterPdf(letterHebrew);
+    const variant = resolveAppealLetterVariant(context);
+
+    const payload = await generateAppealLetterGeminiPayload(context, variant);
+    const doc = mergeAppealLetter(context, payload, variant);
+    const html = buildAppealLetterHtml(doc);
+    const pdfBuffer = await renderAppealPdfFromHtml(html);
+
     const pdfBase64 = pdfBuffer.toString('base64');
 
     return NextResponse.json({

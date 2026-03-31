@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -14,10 +15,14 @@ import EmailIcon from '@mui/icons-material/Email';
 import DummyPaymentDialog from '@/components/calculator/DummyPaymentDialog';
 import CouponPaymentSection from '@/components/calculator/CouponPaymentSection';
 import AppealSignaturePad from '@/components/calculator/AppealSignaturePad';
+import AppealMissingFieldsDialog from '@/components/calculator/AppealMissingFieldsDialog';
+import { getAppealDocumentMissingItems } from '@/components/calculator/appealDocumentCompleteness';
 import {
   buildAppealGeneratePayload,
   isValidAppealEmail,
+  withMeasurementErrorClaimed,
 } from '@/components/calculator/appealGeneratePayload';
+import type { WizardState } from '@/components/calculator/CalculatorWizard';
 import { useCalculatorFeatures } from '../CalculatorFeaturesContext';
 import { useEmailSend } from '@/hooks/useEmailSend';
 import type { StepProps } from '../CalculatorWizard';
@@ -39,6 +44,16 @@ export default function AppealStep({ state, dispatch }: StepProps) {
   const [signatureError, setSignatureError] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  /** Optional override (מ"ר) — enables structured תיקון שטחים letter when > 0 */
+  const [appealCorrectedAreaInput, setAppealCorrectedAreaInput] = useState(() =>
+    state.measurementError != null && state.measurementError.claimed > 0
+      ? String(state.measurementError.claimed)
+      : '',
+  );
+  const [missingFieldsDialogOpen, setMissingFieldsDialogOpen] = useState(false);
+  const [missingDocumentItems, setMissingDocumentItems] = useState<
+    ReturnType<typeof getAppealDocumentMissingItems>
+  >([]);
 
   useEffect(() => {
     dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-7-default' });
@@ -51,19 +66,24 @@ export default function AppealStep({ state, dispatch }: StepProps) {
   const annualSavings = biMonthlySavings * 6;
   const cityName = (state.cityData?.cityName as string | undefined)?.trim() || state.citySlug || '';
 
-  const sendInvoice = useCallback(() => {
-    if (!state.email) return;
-    void sendEmail({
-      type: 'invoice',
-      to: state.email,
-      payload: {
-        fullName: state.fullName,
-        itemDescription: 'הכנת מכתב השגה — מחשבון הארנונה',
-        amountNis: appealChargeAmount,
-        date: new Date().toISOString(),
-      },
-    }).catch(() => {});
-  }, [appealChargeAmount, sendEmail, state.email, state.fullName]);
+  const sendInvoice = useCallback(
+    (from?: Pick<WizardState, 'email' | 'fullName'>) => {
+      const email = from?.email ?? state.email;
+      const fullName = from?.fullName ?? state.fullName;
+      if (!email?.trim()) return;
+      void sendEmail({
+        type: 'invoice',
+        to: email.trim(),
+        payload: {
+          fullName,
+          itemDescription: 'הכנת מכתב השגה — מחשבון הארנונה',
+          amountNis: appealChargeAmount,
+          date: new Date().toISOString(),
+        },
+      }).catch(() => {});
+    },
+    [appealChargeAmount, sendEmail, state.email, state.fullName],
+  );
 
   const sendAppealPdfToUser = useCallback(
     async (pdfBase64: string): Promise<boolean> => {
@@ -94,13 +114,24 @@ export default function AppealStep({ state, dispatch }: StepProps) {
     [annualSavings, calculated, cityName, reported, sendEmail, state.email, state.fullName],
   );
 
-  const beginGenerationFlow = useCallback(async () => {
+  const beginGenerationFlow = useCallback(
+    async (wizardOverride?: WizardState) => {
+    const w = wizardOverride ?? state;
     setGenerateError(null);
     setSignatureError(null);
     setFlow('generating');
-    sendInvoice();
+    sendInvoice({ email: w.email, fullName: w.fullName });
     try {
-      const body = buildAppealGeneratePayload(state);
+      const base = buildAppealGeneratePayload(w);
+      const parsedSqm = parseFloat(appealCorrectedAreaInput.trim().replace(',', '.'));
+      const fromField = Number.isFinite(parsedSqm) && parsedSqm > 0 ? parsedSqm : 0;
+      const fromWizard =
+        w.measurementError != null && w.measurementError.claimed > 0
+          ? w.measurementError.claimed
+          : 0;
+      const claimedSqm = fromField > 0 ? fromField : fromWizard;
+      const body =
+        claimedSqm > 0 ? withMeasurementErrorClaimed(base, claimedSqm) : base;
       const res = await fetch('/api/appeals/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -120,19 +151,50 @@ export default function AppealStep({ state, dispatch }: StepProps) {
       setGenerateError(msg);
       setFlow('intro');
     }
-  }, [sendInvoice, state]);
+  },
+    [appealCorrectedAreaInput, sendInvoice, state],
+  );
+
+  const startGenerationWithCompletenessCheck = () => {
+    const missing = getAppealDocumentMissingItems(state);
+    if (missing.length > 0) {
+      setMissingDocumentItems(missing);
+      setMissingFieldsDialogOpen(true);
+      return;
+    }
+    void beginGenerationFlow();
+  };
 
   const handleSubmit = () => {
     if (paymentEnabled) {
       setPaymentDialogOpen(true);
       return;
     }
-    void beginGenerationFlow();
+    startGenerationWithCompletenessCheck();
   };
 
   const handlePaymentConfirm = () => {
     setPaymentDialogOpen(false);
-    void beginGenerationFlow();
+    startGenerationWithCompletenessCheck();
+  };
+
+  const handleMissingFieldsSubmit = (updates: Partial<WizardState>) => {
+    const merged = { ...state, ...updates } as WizardState;
+    dispatch({ type: 'UPDATE_FIELDS_BULK', payload: updates });
+    setMissingFieldsDialogOpen(false);
+    setMissingDocumentItems([]);
+    void beginGenerationFlow(merged);
+  };
+
+  const handleMissingDialogClose = () => {
+    setMissingFieldsDialogOpen(false);
+    setMissingDocumentItems([]);
+  };
+
+  const handleGoToDataEntryForAppeal = () => {
+    setMissingFieldsDialogOpen(false);
+    setMissingDocumentItems([]);
+    dispatch({ type: 'SET_STEP', step: 2 });
   };
 
   const handleEmptySignature = () => {
@@ -316,6 +378,26 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         </Typography>
       </Paper>
 
+      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+        <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+          תיקון שטח במכתב (אופציונלי)
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+          אם אתם טוענים שהשטח לחיוב בשומה שגוי, הזינו כאן את השטח הנכון במ&quot;ר. כך נפעיל את תבנית מכתב
+          &quot;תיקון שטחים&quot; המעוצבת (HTML). אם השדה ריק והזנת שטח מתוקן בשלב הזנת הנתונים — נשתמש בו.
+        </Typography>
+        <TextField
+          label='שטח נכון לחיוב (מ"ר)'
+          type="text"
+          inputMode="decimal"
+          value={appealCorrectedAreaInput}
+          onChange={(e) => setAppealCorrectedAreaInput(e.target.value.replace(/[^\d.,]/g, ''))}
+          fullWidth
+          size="small"
+          placeholder={state.propertyArea > 0 ? `למשל אם בשומה ${state.propertyArea} ולדעתכם אחר` : ''}
+        />
+      </Paper>
+
       <Paper variant="outlined" sx={{ p: 2, mb: 2, maxHeight: 140, overflowY: 'auto', lineHeight: 1.8 }}>
         <Typography variant="body2">{APPEAL_WAIVER_TEXT}</Typography>
       </Paper>
@@ -346,6 +428,15 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         onConfirm={handlePaymentConfirm}
         amountNis={appealChargeAmount}
         title="תשלום השגה (הדגמה)"
+      />
+
+      <AppealMissingFieldsDialog
+        open={missingFieldsDialogOpen}
+        items={missingDocumentItems}
+        state={state}
+        onClose={handleMissingDialogClose}
+        onSubmit={handleMissingFieldsSubmit}
+        onGoToDataEntry={handleGoToDataEntryForAppeal}
       />
     </Box>
   );

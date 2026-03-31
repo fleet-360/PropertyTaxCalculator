@@ -128,6 +128,7 @@ export function buildAppealUserContext(payload: AppealGenerateRequest): AppealUs
           ? payload.selectedFees
           : undefined,
     },
+    
     exemptions: payload.selectedExemptions,
     designations: payload.designations,
     householdSize: payload.householdSize,
