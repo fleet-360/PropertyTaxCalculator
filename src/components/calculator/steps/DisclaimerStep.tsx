@@ -9,14 +9,17 @@ import Checkbox from '@mui/material/Checkbox';
 import Button from '@mui/material/Button';
 import type { StepProps } from '../CalculatorWizard';
 import { useLeadUpdate } from '@/hooks/useLeadUpdate';
+import { CONSENT_TEXTS } from '@/lib/consent/consentTexts';
+import { useConsentSubmit } from '@/hooks/useConsentSubmit';
 
 /** Mia messages seeded in `seed-mia-messages.ts` — merged into one bubble on the disclaimer step. */
 const DISCLAIMER_MIA_MESSAGE_IDS = ['step-4-note-accuracy', 'step-4-note-ordinance'] as const;
 
-const DISCLAIMER_TEXT = `הנני מצהיר/ה ומאשר/ת כי מחשבון הארנונה אינו מהווה ייעוץ משפטי ו/או תחליף לייעוץ משפטי, וכי תוצאות החישוב מבוססות על הנתונים שהזנתי במחשבון ולצורך התמצאות בלבד. לאחר שעיינתי בתקנון האתר ובמדיניות הפרטיות, הנני מצהיר/ה כי לא אעלה באופן אישי ו/או באמצעות מי מטעמי כל טענה ו/או תלונה ו/או תביעה כנגד מחשבון הארנונה ומנהליו בכל מקרה של שימוש במחשבון הארנונה ובמקרה של סטייה מהתוצאה המופיעה בצו הארנונה.`;
+const DISCLAIMER_TEXT = CONSENT_TEXTS.legal_disclaimer.text;
 
 export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
   const { updateLead } = useLeadUpdate();
+  const { submitConsent } = useConsentSubmit();
 
   useEffect(() => {
     dispatch({
@@ -58,9 +61,10 @@ export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
           variant="contained"
           disabled={!state.consentGiven}
           onClick={() => {
+            submitConsent(state.leadId, state.phone, 'legal_disclaimer', true);
             updateLead(state.leadId, state.calculationIndex, {
               abandonmentStage: 'disclaimer',
-            }, { consentTimestamp: new Date().toISOString() });
+            });
             dispatch({ type: 'SET_LOADING', payload: true });
             if (state.designations.length > 1) {
               dispatch({ type: 'SET_LOADING', payload: false });
