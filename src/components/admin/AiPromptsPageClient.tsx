@@ -301,7 +301,7 @@ export default function AiPromptsPageClient({
                     fontFamily: 'monospace',
                     fontSize: '0.85rem',
                     lineHeight: 1.6,
-                    direction: 'auto',
+                    direction: 'ltr',
                   },
                 },
               }}
