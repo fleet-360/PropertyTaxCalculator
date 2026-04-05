@@ -131,7 +131,7 @@ export default function Navbar({ variant = "landing" }: { variant?: NavbarVarian
             borderRadius: 3,
             overflow: "hidden",
             boxShadow:
-              "0px 8px 32px rgba(26,51,128,0.12), 0px 2px 8px rgba(26,51,128,0.06)",
+              "0px 8px 32px rgba(0,0,0,0.08), 0px 2px 8px rgba(0,0,0,0.04)",
             transition: (theme) =>
               theme.transitions.create(
                 ["border-radius", "box-shadow", "transform"],
@@ -140,7 +140,7 @@ export default function Navbar({ variant = "landing" }: { variant?: NavbarVarian
                   easing: theme.transitions.easing.easeInOut,
                 },
               ),
-            animation: "navbarEnter 0.7s cubic-bezier(0.22, 1, 0.36, 1) both",
+            animation: "navbarEnter 0.98s cubic-bezier(0.22, 1, 0.36, 1) both",
             "@keyframes navbarEnter": {
               "0%": {
                 opacity: 0,
@@ -191,7 +191,7 @@ export default function Navbar({ variant = "landing" }: { variant?: NavbarVarian
                       textDecoration: "none",
                       cursor: "pointer",
                       transition: "color 0.2s",
-                      "&:hover": { color: "#1a4fdb" },
+                      "&:hover": { color: "#F28B00" },
                     }}
                   >
                     {item.label}
@@ -211,7 +211,7 @@ export default function Navbar({ variant = "landing" }: { variant?: NavbarVarian
                   href={ctaHref}
                   variant="contained"
                   sx={{
-                    bgcolor: "#1a4fdb",
+                    bgcolor: "#1a1a1a",
                     color: "#fff",
                     borderRadius: "21px",
                     px: 3.5,
@@ -220,7 +220,7 @@ export default function Navbar({ variant = "landing" }: { variant?: NavbarVarian
                     fontWeight: 700,
                     minWidth: 130,
                     height: 42,
-                    "&:hover": { bgcolor: "#1640b5" },
+                    "&:hover": { bgcolor: "#F28B00" },
                   }}
                 >
                   חשב עכשיו
@@ -298,11 +298,11 @@ export default function Navbar({ variant = "landing" }: { variant?: NavbarVarian
                 fullWidth
                 onClick={() => setMobileOpen(false)}
                 sx={{
-                  bgcolor: "#1a4fdb",
+                  bgcolor: "#1a1a1a",
                   borderRadius: "21px",
                   py: 1.2,
                   fontWeight: 700,
-                  "&:hover": { bgcolor: "#1640b5" },
+                  "&:hover": { bgcolor: "#F28B00" },
                 }}
               >
                 חשב עכשיו

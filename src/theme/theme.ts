@@ -5,17 +5,17 @@ const theme = createTheme({
   direction: 'rtl',
   palette: {
     primary: {
-      main: '#1a4fdb',
-      light: '#4a7aff',
-      dark: '#1a3380',
+      main: '#1a1a1a',
+      light: '#4a4a4a',
+      dark: '#000000',
     },
     secondary: {
-      main: '#00c7a3',
-      light: '#33d4b5',
-      dark: '#009e82',
+      main: '#F28B00',
+      light: '#FFB547',
+      dark: '#C66D00',
     },
     background: {
-      default: '#fafafa',
+      default: '#FAF5EE',
       paper: '#ffffff',
     },
     success: {
@@ -55,6 +55,8 @@ const theme = createTheme({
         root: {
           textTransform: 'none',
           fontWeight: 600,
+          transition:
+            'background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease',
         },
       },
     },

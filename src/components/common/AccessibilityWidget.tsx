@@ -121,13 +121,13 @@ export default function AccessibilityWidget() {
           bottom: { xs: 16, md: 24 },
           left: { xs: 16, md: 24 },
           zIndex: 9999,
-          bgcolor: '#1a4fdb',
+          bgcolor: '#1a1a1a',
           color: '#fff',
           width: { xs: 52, md: 56 },
           height: { xs: 52, md: 56 },
           fontSize: '28px',
-          '&:hover': { bgcolor: '#1640b5' },
-          boxShadow: '0 4px 20px rgba(26,79,219,0.4)',
+          '&:hover': { bgcolor: '#F28B00' },
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
         }}
       >
         <span aria-hidden="true" style={{ fontSize: '28px', lineHeight: 1 }}>♿</span>
@@ -158,7 +158,7 @@ export default function AccessibilityWidget() {
             justifyContent: 'space-between',
             p: 2,
             pb: 1.5,
-            bgcolor: '#1a4fdb',
+            bgcolor: '#1a1a1a',
             color: '#fff',
           }}
         >

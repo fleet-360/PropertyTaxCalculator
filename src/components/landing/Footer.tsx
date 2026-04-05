@@ -27,7 +27,7 @@ export default function Footer() {
       <Box
         sx={{
           height: 2,
-          background: 'linear-gradient(to right, rgba(26,79,219,0), #194fdb 50%, rgba(26,79,219,0))',
+          background: 'linear-gradient(to right, rgba(242,139,0,0), #F28B00 50%, rgba(242,139,0,0))',
         }}
       />
 
@@ -115,7 +115,7 @@ export default function Footer() {
                     textDecoration: 'none',
                     wordBreak: 'break-word',
                     lineHeight: 1.45,
-                    '&:hover': { color: '#1a4fdb' },
+                    '&:hover': { color: '#F28B00' },
                   }}
                 >
                   › {article}
@@ -155,7 +155,7 @@ export default function Footer() {
                     textDecoration: 'none',
                     wordBreak: 'break-word',
                     lineHeight: 1.45,
-                    '&:hover': { color: '#1a4fdb' },
+                    '&:hover': { color: '#F28B00' },
                   }}
                 >
                   › {link.label}
@@ -231,8 +231,8 @@ export default function Footer() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                bgcolor: 'rgba(26,79,219,0.15)',
-                border: '1px solid rgba(26,79,219,0.4)',
+                bgcolor: 'rgba(242,139,0,0.1)',
+                border: '1px solid rgba(242,139,0,0.3)',
                 borderRadius: '12px',
                 minHeight: 46,
                 py: { xs: 1.25, md: 0 },
@@ -243,14 +243,14 @@ export default function Footer() {
                 textDecoration: 'none',
                 cursor: 'pointer',
                 textAlign: 'center',
-                '&:hover': { bgcolor: 'rgba(26,79,219,0.2)' },
+                '&:hover': { bgcolor: 'rgba(242,139,0,0.18)' },
               }}
             >
               <Typography
                 sx={{
                   fontSize: { xs: '13px', md: '14px' },
                   fontWeight: 500,
-                  color: '#4a90e2',
+                  color: '#F28B00',
                   lineHeight: 1.35,
                   wordBreak: 'break-word',
                 }}
@@ -275,7 +275,7 @@ export default function Footer() {
 
         <Box
           sx={{
-            bgcolor: 'rgba(162,213,246,0.2)',
+            bgcolor: 'rgba(242,139,0,0.06)',
             py: { xs: 1.75, md: 2 },
           }}
         >

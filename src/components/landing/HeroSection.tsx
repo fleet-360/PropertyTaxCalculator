@@ -2,6 +2,12 @@
 import { useMemo } from "react";
 import { Box, Container, Typography, Button } from "@mui/material";
 import { motion, useReducedMotion } from "framer-motion";
+import {
+  scaleIn,
+  staggerContainer,
+  fadeSlideUp,
+  reducedMotionVariants,
+} from "@/lib/animations";
 import Image from "next/image";
 import Link from "next/link";
 import { shuffleArray } from "@/lib/helpers";
@@ -173,142 +179,151 @@ function MarqueeRow({
 export default function HeroSection() {
   const reduceMotion = useReducedMotion();
 
+  const animVariants = reduceMotion ? reducedMotionVariants : scaleIn;
+  const contentVariants = reduceMotion ? reducedMotionVariants : staggerContainer;
+  const childVariants = reduceMotion ? reducedMotionVariants : fadeSlideUp;
+
   return (
-    <div
-      id="hero"
-      style={{
-        height: "clamp(720px, 100vh, 1000px)",
-        width: "100%",
-        display: "flex",
-        alignItems: "center",
-        position: "relative",
-        overflow: "hidden",
-        paddingTop: "8rem",
-        paddingBottom: "8rem",
-        background: "linear-gradient(143deg, #FFF 14.29%,rgb(163, 214, 248) 48.28%, #DEE5F6 85.71%)",
-      }}
-    >
-      {/* Background city logos — multi-row alternating infinite marquees */}
-      <Box
-        aria-hidden="true"
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          width: "150%",
-          height: "160%",
-          transform: "translate(-50%, -50%) rotate(21.81deg)",
-          opacity: 0.2,
+    <div style={{ height: "100vh" }}>
+      <motion.div
+        id="hero"
+        variants={animVariants}
+        initial="hidden"
+        animate="visible"
+        style={{
+          height: "clamp(720px, 100vh, 1000px)",
+          width: "100%",
           display: "flex",
-          flexDirection: "column",
-          gap: `${MARQUEE_ROW_GAP}`,
+          justifyContent: "center",
+          alignItems: "center",
+          position: "relative",
           overflow: "hidden",
-          pointerEvents: "none",
-          zIndex: 0,
+          paddingTop: "8rem",
+          paddingBottom: "8rem",
+          background:
+            "linear-gradient(143deg, #FFF 14.29%, rgb(250, 240, 225) 48.28%, #FAF5EE 85.71%)",
+          transformOrigin: "center center",
         }}
       >
-        {Array.from({ length: MARQUEE_ROW_COUNT }, (_, rowIndex) => (
-          <MarqueeRow
-            key={rowIndex}
-            direction={rowIndex % 2 === 0 ? "left" : "right"}
-            duration={300 + rowIndex * 6}
-            reduceMotion={!!reduceMotion}
-          />
-        ))}
-      </Box>
-
-      {/* Content */}
-      <Container
-        maxWidth="md"
-        sx={{ textAlign: "center", position: "relative", zIndex: 2 }}
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.15 }}
+        {/* Background city logos — multi-row alternating infinite marquees */}
+        <Box
+          aria-hidden="true"
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            width: "150%",
+            height: "160%",
+            transform: "translate(-50%, -50%) rotate(21.81deg)",
+            opacity: 0.2,
+            display: "flex",
+            flexDirection: "column",
+            gap: `${MARQUEE_ROW_GAP}`,
+            overflow: "hidden",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
         >
-          <Typography
-            component="h1"
-            sx={{
-              fontWeight: 700,
-              fontSize: { xs: "36px", sm: "48px", md: "72px" },
-              lineHeight: { xs: 1.3, md: "90px" },
-              color: "#000",
-              mb: 2,
-            }}
-          >
-            חשב את הארנונה שלך
-            <br />
-            בדייקנות מלאה
-          </Typography>
-        </motion.div>
-
+          {Array.from({ length: MARQUEE_ROW_COUNT }, (_, rowIndex) => (
+            <MarqueeRow
+              key={rowIndex}
+              direction={rowIndex % 2 === 0 ? "left" : "right"}
+              duration={300 + rowIndex * 6}
+              reduceMotion={!!reduceMotion}
+            />
+          ))}
+        </Box>
+        {/* Content */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.3 }}
+          variants={contentVariants}
+          initial="hidden"
+          animate="visible"
         >
-          <Typography
-            sx={{
-              fontSize: { xs: "14px", md: "19px" },
-              color: "#000",
-              mb: 4,
-            }}
+          <Container
+            maxWidth="md"
+            sx={{ textAlign: "center", position: "relative", zIndex: 2 }}
           >
-            מעל 100 ערים ורשויות מקומיות | עדכון שוטף | חיסכון ממוצע של 2,400 ₪
-          </Typography>
+            <motion.div variants={childVariants}>
+              <Typography
+                component="h1"
+                sx={{
+                  fontWeight: 900,
+                  fontSize: { xs: "36px", sm: "48px", md: "72px" },
+                  lineHeight: { xs: 1.3, md: "90px" },
+                  letterSpacing: "-0.5px",
+                  color: "#000",
+                  mb: 2,
+                }}
+              >
+                חשיבה מחדש של ארנונה
+              </Typography>
+            </motion.div>
+            <motion.div variants={childVariants}>
+              <Typography
+                sx={{
+                  fontSize: { xs: "14px", md: "19px" },
+                  color: "#000",
+                  mb: 4,
+                }}
+              >
+                חשב את הארנונה שלך במהירות ובדייקנות
+              </Typography>
+            </motion.div>
+            <motion.div variants={childVariants}>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 3.75,
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                <Button
+                  component="a"
+                  href="/blog"
+                  sx={{
+                    bgcolor: "rgba(255,255,255,0.1)",
+                    border: "1.5px solid #1a1a1a",
+                    color: "#1a1a1a",
+                    borderRadius: "31px",
+                    width: { xs: "100%", sm: 180 },
+                    height: 62,
+                    fontSize: "17px",
+                    fontWeight: 700,
+                    "&:hover": {
+                      bgcolor: "#F28B00",
+                      color: "#fff",
+                      borderColor: "#F28B00",
+                    },
+                  }}
+                >
+                  קרא עוד
+                </Button>
+                <Button
+                  component={"a"}
+                  href="#calculator-section"
+                  sx={{
+                    bgcolor: "#1a1a1a",
+                    color: "#fff",
+                    borderRadius: "31px",
+                    width: { xs: "100%", sm: 240 },
+                    height: 62,
+                    fontSize: "17px",
+                    fontWeight: 700,
+                    boxShadow: "0px 10px 28px rgba(0,0,0,0.2)",
+                    "&:hover": {
+                      bgcolor: "#F28B00",
+                      boxShadow: "0px 10px 28px rgba(242,139,0,0.35)",
+                    },
+                  }}
+                >
+                  חשב עכשיו
+                </Button>
+              </Box>
+            </motion.div>
+          </Container>
         </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.45 }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              gap: 3.75,
-              justifyContent: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            <Button
-              component="a"
-              href="/blog"
-              sx={{
-                bgcolor: "rgba(255,255,255,0.1)",
-                border: "1.5px solid #194fdb",
-                color: "#194fdb",
-                borderRadius: "31px",
-                width: { xs: "100%", sm: 180 },
-                height: 62,
-                fontSize: "17px",
-                fontWeight: 700,
-                "&:hover": { bgcolor: "rgba(25,79,219,0.08)" },
-              }}
-            >
-              קרא עוד
-            </Button>
-            <Button
-              component={"a"}
-              href="#calculator-section"
-              sx={{
-                bgcolor: "#1a4fdb",
-                color: "#fff",
-                borderRadius: "31px",
-                width: { xs: "100%", sm: 240 },
-                height: 62,
-                fontSize: "17px",
-                fontWeight: 700,
-                boxShadow: "0px 10px 28px rgba(26,79,219,0.45)",
-                "&:hover": { bgcolor: "#1640b5" },
-              }}
-            >
-              חשב עכשיו
-            </Button>
-          </Box>
-        </motion.div>
-      </Container>
+      </motion.div>
     </div>
   );
 }

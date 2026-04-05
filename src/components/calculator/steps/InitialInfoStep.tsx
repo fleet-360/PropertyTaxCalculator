@@ -211,10 +211,10 @@ export default function InitialInfoStep({ state, dispatch, sx }: StepProps) {
                 fontSize: '14px',
                 fontWeight: 600,
                 textTransform: 'none',
-                bgcolor: isSelected ? '#1a4fdb' : '#f0f2f5',
+                bgcolor: isSelected ? '#F28B00' : '#f0f2f5',
                 color: isSelected ? '#fff' : '#333',
                 '&:hover': {
-                  bgcolor: isSelected ? '#1540b8' : '#e4e6ea',
+                  bgcolor: isSelected ? '#C66D00' : '#e4e6ea',
                 },
               }}
             >
@@ -298,7 +298,7 @@ export default function InitialInfoStep({ state, dispatch, sx }: StepProps) {
         onClick={handleNext}
         fullWidth
         sx={{
-          bgcolor: '#1a4fdb',
+          bgcolor: '#1a1a1a',
           color: '#fff',
           borderRadius: '12px',
           py: 1.5,
@@ -306,10 +306,10 @@ export default function InitialInfoStep({ state, dispatch, sx }: StepProps) {
           fontWeight: 700,
           textTransform: 'none',
           '&:hover': {
-            bgcolor: '#1540b8',
+            bgcolor: '#F28B00',
           },
           '&.Mui-disabled': {
-            bgcolor: '#b0c4f5',
+            bgcolor: '#d4d4d4',
             color: '#fff',
           },
         }}
