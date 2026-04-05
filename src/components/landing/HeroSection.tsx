@@ -1,5 +1,5 @@
 "use client";
-import { useMemo } from "react";
+import { useMemo } from 'react';
 import { Box, Container, Typography, Button } from "@mui/material";
 import { motion, useReducedMotion } from "framer-motion";
 import {
@@ -10,7 +10,6 @@ import {
 } from "@/lib/animations";
 import Image from "next/image";
 import Link from "next/link";
-import { shuffleArray } from "@/lib/helpers";
 import {
   municipalityEmblems,
   type MunicipalityEmblem,
@@ -114,17 +113,25 @@ function CityLogoCell({ emblem }: { emblem: MunicipalityEmblem }) {
   );
 }
 
+const EMBLEMS_PER_ROW = 12;
+
 function MarqueeRow({
   direction,
   duration,
   reduceMotion,
+  seed,
 }: {
   direction: "left" | "right";
   duration: number;
   reduceMotion: boolean;
+  seed: number;
 }) {
-  /** One shuffled order per row; duplicated in the DOM for a seamless loop. */
-  const cities = municipalityEmblems;
+  /** Show a deterministic subset of emblems per row (offset by seed); duplicated for seamless loop. */
+  const cities = useMemo(() => {
+    const offset = (seed * EMBLEMS_PER_ROW) % municipalityEmblems.length;
+    const doubled = [...municipalityEmblems, ...municipalityEmblems];
+    return doubled.slice(offset, offset + EMBLEMS_PER_ROW);
+  }, [seed]);
   const loop = [...cities, ...cities];
 
   return (
@@ -230,6 +237,7 @@ export default function HeroSection() {
               direction={rowIndex % 2 === 0 ? "left" : "right"}
               duration={300 + rowIndex * 6}
               reduceMotion={!!reduceMotion}
+              seed={rowIndex}
             />
           ))}
         </Box>

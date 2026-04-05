@@ -28,7 +28,7 @@ export const fadeSlideUp: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: createTransition(0.7,1.5),
+    transition: createTransition(0.7),
   },
 };
 
