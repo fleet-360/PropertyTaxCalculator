@@ -238,6 +238,7 @@ export default function HeroSection() {
           variants={contentVariants}
           initial="hidden"
           animate="visible"
+          
         >
           <Container
             maxWidth="md"
@@ -247,7 +248,9 @@ export default function HeroSection() {
               <Typography
                 component="h1"
                 sx={{
-                  fontWeight: 900,
+                  fontFamily:
+                    'var(--font-varela-round), "Varela Round", "Heebo", sans-serif',
+                  fontWeight: 400,
                   fontSize: { xs: "36px", sm: "48px", md: "72px" },
                   lineHeight: { xs: 1.3, md: "90px" },
                   letterSpacing: "-0.5px",

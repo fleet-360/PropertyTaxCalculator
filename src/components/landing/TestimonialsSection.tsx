@@ -41,7 +41,9 @@ export default function TestimonialsSection() {
           <Typography
             component="h2"
             sx={{
-              fontWeight: 700,
+              fontFamily:
+                'var(--font-varela-round), "Varela Round", "Heebo", sans-serif',
+              fontWeight: 400,
               fontSize: { xs: '24px', sm: '28px', md: '38px' },
               color: '#080808',
               textAlign: 'center',
