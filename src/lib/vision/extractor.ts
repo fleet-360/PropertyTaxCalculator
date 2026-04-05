@@ -1,3 +1,4 @@
+import { evaluateTaxBillDocumentValidation } from '@/lib/vision/tax-bill-validation';
 import { getVisionModel } from './gemini-client';
 import { getDocumentType, ensureDocumentTypesRegistered } from './document-types/registry';
 import { parseLlmJsonObject } from './parseLlmJson';
@@ -39,7 +40,7 @@ export async function extractFromDocument<T extends Record<string, unknown>>(
   const docType = getDocumentType<T>(documentTypeId);
 
   // 2. Build the prompt
-  const prompt = docType.buildPrompt(promptOptions);
+  const prompt = await docType.buildPrompt(promptOptions);
 
   // 3. Prepare image for Gemini
   const base64Data = image.type === 'base64'
@@ -84,6 +85,19 @@ export async function extractFromDocument<T extends Record<string, unknown>>(
       documentType: documentTypeId,
       processingTimeMs: Date.now() - startTime,
     };
+  }
+
+  if (documentTypeId === 'tax_bill') {
+    const validation = evaluateTaxBillDocumentValidation(rawParsed, promptOptions);
+    if (!validation.ok) {
+      return {
+        success: false,
+        data: {} as ExtractionResult<T>['data'],
+        warnings: validation.warnings,
+        documentType: documentTypeId,
+        processingTimeMs: Date.now() - startTime,
+      };
+    }
   }
 
   // 6. Extract fields with confidence

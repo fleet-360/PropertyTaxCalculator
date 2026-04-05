@@ -3,6 +3,7 @@ import { SchemaType } from '@google/generative-ai';
 import { jsonrepair } from 'jsonrepair';
 import { ensureGeminiFileRefs } from '@/lib/gemini/resolveBlobToGeminiFile';
 import { getAppealLetterGenerativeModel } from '@/lib/vision/gemini-client';
+import { getPrompt } from '@/lib/prompts/getPrompt';
 import type { AppealUserContext } from './buildAppealUserContext';
 import { listPropertyTaxOrderBlobSources } from './listPropertyTaxOrderBlobSources';
 import {
@@ -125,43 +126,12 @@ function logParsedAppealGeminiPayload(
   //console.log('[appeals/gemini-json] Parsed JSON from Gemini:\n', JSON.stringify(forLog, null, 2));
 }
 
-function buildJsonInstruction(variant: AppealLetterVariant, userJson: string): string {
-  const clauseRules = `
-- Each clause object may include (all optional except id + body, see below):
-  - "role": "paragraph" | "heading" — use "heading" for section titles that match the example (כותרות משנה / כותרת מסמך).
-  - "headingLevel": 1 | 2 | 3 when role is "heading". Level 1 = centered. Do NOT use level 1 for the two main document titles — the server prints them centered after the addressee block. Use level 2–3 for section headings inside the letter (usually right-aligned). If heading level omitted, default 2.
-  - "emphasis": true to render the whole block in bold (like emphasized lines in the example).
-  - "items": array of strings for checklist lines with ✓ (same idea as criterion lists in the example); if "items" is non-empty, "body" can be "".
-- "body": plain Hebrew only, no HTML, no markdown. Multiple paragraphs: use the two-character sequence \\n inside the JSON string (escaped newline), never a real line break inside quotes — invalid JSON breaks the server.
-- Numbering: put "1.", "2.", "4.1." etc. inside "body" text exactly as in the example — clause "id" is only for ordering in the array; the server does not add a separate numbered column.
-- Produce a complete letter matching the example's hierarchy, spacing feel, and emphasis patterns using these fields — the server maps them to print styles (headings, bold, checklist).
-- Do not duplicate any server-printed header: the "לכבוד" + date line; "מנהל הארנונה"; "עיריית …"; the form rows (שם המשיג/ים, תעודת זהות/ח.פ., פרטי הנכס, כתובת הנכס); "(להלן – \"הנכס\")"; "מהות ההשגה"; "הגשה לשנים"; the two centered titles after that ("כתב השגה על חיובי ארנונה" and the matching subtitle). Start your clauses where the numbered legal body begins in the example.
-- Do not write "הדבק חתימה", a signature strip, the signer's printed name line under the signature, or a final "העתק" line (e.g. "העתק: ועדת הנחות…") — the server prints those after the body for PDF/signing.`;
-
-  return `You are an expert assistant drafting formal Israeli municipal property tax appeals (השגה בארנונה).
-
-Attached PDFs may include:
-- An example appeal letter (template): mirror its structure, wording, headings, numbered clauses, subclauses, checklists, and which lines are emphasized — express that using the JSON fields (role, headingLevel, emphasis, items), not HTML.
-- A municipal property-tax order (צו ארנונה) for the user's city: use it only when needed to verify terminology / classifications / zone names / ordinance-specific details. Do not invent facts if the ordinance is missing.
-
-OUTPUT: a single JSON object (no markdown fences). The server prints the letterhead through "הגשה לשנים", then the two centered main titles, then your clauses (body of the appeal only).
-
-RULES
-- schemaVersion must be ${1}.
-- variant must be exactly: "${variant}"
-- clauses: array of objects with required "id" and "body" (body may be empty string only when "items" is a non-empty array).
-${clauseRules}
-- Use correct Hebrew legal abbreviations: עפ"י, דו"ח, מ"ר, סה"כ, הנ"ל, רצ"ב. Do not output :Date or Date:.
-- Keep numbered legal citations (בר"מ, בג"ץ) inside the same clause body as in the example when possible.
-- Do not invent private data from the sample PDF; use user JSON for names, areas, amounts, addresses.
-- Parentheses policy:
-  - NEVER copy instructional text inside parentheses from the example (e.g. "(סדר מספרי ... או אותיות א,ב,ג)").
-  - instructional parentheses are for template notes only, not for the final letter.
-  - If you need to reference an appendix, output ONLY the appendix marker (e.g. "כנספח א׳" or "כנספח 1") without any explanatory parenthetical guidance.
-  - Do not include placeholder punctuation like ",,".
-
-User data (JSON):
-${userJson}`;
+async function buildJsonInstruction(variant: AppealLetterVariant, userJson: string): Promise<string> {
+  return getPrompt('appeal_letter_json', {
+    variant,
+    userJson,
+    schemaVersion: '1',
+  });
 }
 
 /**
@@ -204,7 +174,7 @@ export async function generateAppealLetterGeminiPayload(
   );
 
   const userJson = JSON.stringify(context, null, 2);
-  const instruction = buildJsonInstruction(variant, userJson);
+  const instruction = await buildJsonInstruction(variant, userJson);
 
   const parts: Part[] = [
     ...directUris.map((fileUri) => ({

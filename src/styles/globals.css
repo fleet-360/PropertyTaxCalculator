@@ -23,7 +23,7 @@ html {
 
 /* ===== Accessibility: Focus Styles ===== */
 *:focus-visible {
-  outline: 3px solid #1a4fdb;
+  outline: 3px solid #F28B00;
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -40,7 +40,7 @@ html {
   left: 50%;
   transform: translateX(-50%);
   z-index: 10000;
-  background: #1a4fdb;
+  background: #1a1a1a;
   color: #fff;
   padding: 12px 24px;
   border-radius: 0 0 8px 8px;
@@ -88,7 +88,7 @@ html.a11y-no-animations *::after {
 
 /* Highlight links */
 html.a11y-highlight-links a {
-  outline: 2px solid #1a4fdb !important;
+  outline: 2px solid #F28B00 !important;
   outline-offset: 2px;
   text-decoration: underline !important;
 }
@@ -156,7 +156,7 @@ html.a11y-big-cursor * {
 .blog-content blockquote {
   margin: 1.5rem 0;
   padding: 1rem 1.5rem;
-  border-left: 4px solid #1976d2;
+  border-left: 4px solid #F28B00;
   background-color: #f8f9fa;
   border-radius: 0 8px 8px 0;
   font-style: italic;
@@ -211,18 +211,18 @@ html.a11y-big-cursor * {
 }
 
 .blog-content a {
-  color: #1976d2;
+  color: #F28B00;
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: border-color 0.2s ease;
 }
 
 .blog-content a:hover {
-  border-bottom-color: #1976d2;
+  border-bottom-color: #F28B00;
 }
 
 .blog-content a:focus-visible {
-  outline: 3px solid #1976d2;
+  outline: 3px solid #F28B00;
   outline-offset: 2px;
   border-radius: 2px;
 }

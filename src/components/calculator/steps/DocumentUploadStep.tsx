@@ -44,7 +44,11 @@ export default function DocumentUploadStep({ state, dispatch }: StepProps) {
         ניתן להעלות צילום של שובר הארנונה למילוי אוטומטי של הפרטים, או לדלג ולמלא ידנית.
       </Typography>
 
-      <TaxBillUpload dispatch={dispatch} onExtracted={handleExtracted} />
+      <TaxBillUpload
+        dispatch={dispatch}
+        onExtracted={handleExtracted}
+        expectedCityName={state.cityData?.cityName}
+      />
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
         <Button variant="outlined" onClick={() => dispatch({ type: 'PREV_STEP' })}>

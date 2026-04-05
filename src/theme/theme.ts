@@ -5,17 +5,17 @@ const theme = createTheme({
   direction: 'rtl',
   palette: {
     primary: {
-      main: '#1a4fdb',
-      light: '#4a7aff',
-      dark: '#1a3380',
+      main: '#1a1a1a',
+      light: '#4a4a4a',
+      dark: '#000000',
     },
     secondary: {
-      main: '#00c7a3',
-      light: '#33d4b5',
-      dark: '#009e82',
+      main: '#F28B00',
+      light: '#FFB547',
+      dark: '#C66D00',
     },
     background: {
-      default: '#fafafa',
+      default: '#FAF5EE',
       paper: '#ffffff',
     },
     success: {
@@ -29,11 +29,11 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Inter", "Heebo", "Roboto", "Arial", sans-serif',
-    h1: { fontWeight: 700, fontSize: '2.5rem' },
-    h2: { fontWeight: 700, fontSize: '2rem' },
-    h3: { fontWeight: 700, fontSize: '1.75rem' },
-    h4: { fontWeight: 600, fontSize: '1.5rem' },
+    fontFamily: 'var(--font-heebo), "Heebo", "Inter", "Roboto", "Arial", sans-serif',
+    h1: { fontFamily: 'var(--font-varela-round), "Varela Round", "Heebo", sans-serif', fontWeight: 400, fontSize: '2.5rem' },
+    h2: { fontFamily: 'var(--font-varela-round), "Varela Round", "Heebo", sans-serif', fontWeight: 400, fontSize: '2rem' },
+    h3: { fontFamily: 'var(--font-varela-round), "Varela Round", "Heebo", sans-serif', fontWeight: 400, fontSize: '1.75rem' },
+    h4: { fontFamily: 'var(--font-varela-round), "Varela Round", "Heebo", sans-serif', fontWeight: 400, fontSize: '1.5rem' },
     h5: { fontWeight: 500, fontSize: '1.25rem' },
     h6: { fontWeight: 500, fontSize: '1rem' },
   },
@@ -45,9 +45,8 @@ const theme = createTheme({
     MuiTypography: {
       styleOverrides: {
         root: {
-          fontFamily: '"Inter", "Heebo", "Roboto", "Arial", sans-serif',
+          fontFamily: 'var(--font-heebo), "Heebo", "Inter", "Roboto", "Arial", sans-serif',
         },
-        
       },
     },
     MuiButton: {
@@ -55,6 +54,8 @@ const theme = createTheme({
         root: {
           textTransform: 'none',
           fontWeight: 600,
+          transition:
+            'background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease',
         },
       },
     },
