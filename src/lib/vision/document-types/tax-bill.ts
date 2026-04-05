@@ -2,6 +2,13 @@ import { z } from 'zod';
 import { registerDocumentType } from './registry';
 import type { DocumentTypeDefinition } from '../types';
 import { getPrompt } from '@/lib/prompts/getPrompt';
+import {
+  buildTaxBillValidationAppendix,
+  evaluateTaxBillDocumentValidation,
+} from '@/lib/vision/tax-bill-validation';
+
+export { evaluateTaxBillDocumentValidation };
+export type { TaxBillDocumentValidationShape } from '@/lib/vision/tax-bill-validation';
 
 // ── Output schema — all fields optional (partial extraction expected) ──
 
@@ -36,8 +43,12 @@ export type TaxBillData = z.infer<typeof taxBillSchema>;
 
 // ── Hebrew extraction prompt ────────────────────────────────────────
 
-async function buildTaxBillPrompt(): Promise<string> {
-  return getPrompt('tax_bill_extraction');
+async function buildTaxBillPrompt(options?: Record<string, unknown>): Promise<string> {
+  const expected =
+    typeof options?.expectedCityName === 'string' ? options.expectedCityName.trim() : undefined;
+  const appendix = buildTaxBillValidationAppendix(expected);
+  const base = await getPrompt('tax_bill_extraction');
+  return `${appendix}\n\n${base}`;
 }
 
 // ── Post-processing — normalize extracted values ────────────────────

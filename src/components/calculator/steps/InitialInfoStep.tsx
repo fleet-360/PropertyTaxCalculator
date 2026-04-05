@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import CheckIcon from '@mui/icons-material/Check';
 import type { StepProps } from '../CalculatorWizard';
@@ -32,6 +33,7 @@ export default function InitialInfoStep({ state, dispatch, sx }: StepProps) {
   // ── Deferred file upload ──
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [extractionError, setExtractionError] = useState('');
 
   // ── Mia message on mount ──
   useEffect(() => {
@@ -58,6 +60,7 @@ export default function InitialInfoStep({ state, dispatch, sx }: StepProps) {
   // ── City selection ──
   const handleSelectCity = async (city: CityOption | null) => {
     setSelectedCity(city);
+    setExtractionError('');
     if (city) {
       dispatch({ type: 'SET_CITY', payload: { slug: city.slug } });
       try {
@@ -76,65 +79,87 @@ export default function InitialInfoStep({ state, dispatch, sx }: StepProps) {
   // ── File ready callback (deferred mode) ──
   const handleFileReady = useCallback((file: File | null) => {
     setPendingFile(file);
+    setExtractionError('');
   }, []);
 
   // ── Handle "המשך לשלב הבא" click — extract if file pending, then advance ──
   const handleNext = useCallback(async () => {
     if (pendingFile) {
       setIsExtracting(true);
+      setExtractionError('');
       try {
         const formData = new FormData();
         formData.append('file', pendingFile);
         formData.append('documentType', 'tax_bill');
+        const trimmedCity = (selectedCity?.cityName ?? state.cityData?.cityName)?.trim();
+        if (trimmedCity) {
+          formData.append('promptOptions', JSON.stringify({ expectedCityName: trimmedCity }));
+        }
 
         const response = await fetch('/api/vision/extract', {
           method: 'POST',
           body: formData,
         });
 
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success && result.data) {
-            const fieldsToApply: Record<string, unknown> = {};
-            for (const [key, field] of Object.entries(result.data)) {
-              const f = field as { value?: unknown };
-              if (f && f.value !== undefined && f.value !== null) {
-                if (key === 'bimonthlyPayment') {
-                  fieldsToApply['reportedPayment'] = f.value;
-                } else if (key === 'propertyPurposeDescription' || key === 'subTypeDescription' ||
-                           key === 'ratePerSqm' || key === 'annualPayment') {
-                  // display-only fields
-                } else {
-                  fieldsToApply[key] = f.value;
-                }
+        if (!response.ok) {
+          let msg = 'שגיאה בעיבוד המסמך';
+          try {
+            const errData = await response.json();
+            if (typeof errData?.error === 'string') msg = errData.error;
+          } catch {
+            /* ignore */
+          }
+          setExtractionError(msg);
+          return;
+        }
+
+        const result = await response.json();
+        if (!result.success) {
+          const w = Array.isArray(result.warnings) ? result.warnings.join('. ') : '';
+          setExtractionError(w || 'לא ניתן היה לחלץ נתונים מהמסמך');
+          return;
+        }
+
+        if (result.data) {
+          const fieldsToApply: Record<string, unknown> = {};
+          for (const [key, field] of Object.entries(result.data)) {
+            const f = field as { value?: unknown };
+            if (f && f.value !== undefined && f.value !== null) {
+              if (key === 'bimonthlyPayment') {
+                fieldsToApply['reportedPayment'] = f.value;
+              } else if (key === 'propertyPurposeDescription' || key === 'subTypeDescription' ||
+                         key === 'ratePerSqm' || key === 'annualPayment') {
+                // display-only fields
+              } else {
+                fieldsToApply[key] = f.value;
               }
             }
-            dispatch({ type: 'UPDATE_FIELDS_BULK', payload: fieldsToApply });
+          }
+          dispatch({ type: 'UPDATE_FIELDS_BULK', payload: fieldsToApply });
 
-            // Auto-resolve classification
-            if (fieldsToApply.classificationCode && state.cityData) {
-              const match = findByPropertyCode(state.cityData, fieldsToApply.classificationCode as string);
-              if (match) {
-                dispatch({
-                  type: 'UPDATE_FIELDS_BULK',
-                  payload: {
-                    propertyPurpose: match.typeCode,
-                    subType: match.subtypeCode,
-                    zone: match.zoneCode,
-                  },
-                });
-              }
+          if (fieldsToApply.classificationCode && state.cityData) {
+            const match = findByPropertyCode(state.cityData, fieldsToApply.classificationCode as string);
+            if (match) {
+              dispatch({
+                type: 'UPDATE_FIELDS_BULK',
+                payload: {
+                  propertyPurpose: match.typeCode,
+                  subType: match.subtypeCode,
+                  zone: match.zoneCode,
+                },
+              });
             }
           }
         }
       } catch {
-        // Extraction failed — continue without extracted data
+        setExtractionError('שגיאה בעיבוד המסמך');
+        return;
       } finally {
         setIsExtracting(false);
       }
     }
     dispatch({ type: 'NEXT_STEP' });
-  }, [pendingFile, dispatch, state.cityData]);
+  }, [pendingFile, dispatch, state.cityData, selectedCity?.cityName]);
 
   const canProceed = state.propertyType && selectedCity && !state.isLoading && !isExtracting;
 
@@ -257,7 +282,14 @@ export default function InitialInfoStep({ state, dispatch, sx }: StepProps) {
         dispatch={dispatch}
         deferExtraction
         onFileReady={handleFileReady}
+        expectedCityName={selectedCity?.cityName ?? state.cityData?.cityName}
       />
+
+      {extractionError ? (
+        <Alert severity="error" sx={{ mt: 2, mb: 1 }}>
+          {extractionError}
+        </Alert>
+      ) : null}
 
       {/* ── Navigation ── */}
       <Button
