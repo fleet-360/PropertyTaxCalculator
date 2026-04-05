@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Heebo, Inter } from 'next/font/google';
+import { Heebo, Inter, Varela_Round } from 'next/font/google';
 import ThemeRegistry from '@/theme/ThemeRegistry';
 import AccessibilityWidget from '@/components/common/AccessibilityWidget';
 import '@/styles/globals.css';
@@ -16,6 +16,12 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
+const varelaRound = Varela_Round({
+  subsets: ['latin', 'hebrew'],
+  weight: '400',
+  display: 'swap',
+  variable: '--font-varela-round',
+});
 export const metadata: Metadata = {
   title: 'מחשבון ארנונה - בדוק אם אתה משלם יותר מדי',
   description: 'מחשבון ארנונה חכם - בדוק את חיוב הארנונה שלך מול צו הארנונה העירוני וגלה אם אתה זכאי להנחה',
@@ -27,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="he" dir="rtl" className={`${heebo.variable} ${inter.variable}`}>
+    <html lang="he" dir="rtl" className={`${heebo.variable} ${inter.variable} ${varelaRound.variable}`}>
       <body suppressHydrationWarning>
         <a href="#main-content" className="skip-to-content">
           דלג לתוכן הראשי

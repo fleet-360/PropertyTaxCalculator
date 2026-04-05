@@ -45,6 +45,43 @@ export interface OrdinanceExtractionResult {
 
 type ProgressCallback = (progress: OrdinanceExtractionProgress) => void;
 
+// ── Section-level extraction types ──────────────────────────────────
+
+export type SectionKey = 'metadata' | 'zones' | 'rates' | 'exemptions' | 'extras';
+
+export interface SectionExtractionInput {
+  sectionKey: SectionKey;
+  fileBuffers: Array<{ buffer: Buffer; mimeType: string }>;
+  fileName: string;
+  context?: {
+    availableZones?: IAvailableZone[];
+    /** Existing section data — passed to AI as context and used for smart merge. */
+    existingData?: Partial<ICityTariffData>;
+  };
+  customPrompt?: string;
+}
+
+export interface SectionExtractionResult {
+  success: boolean;
+  sectionKey: SectionKey;
+  data: Partial<ICityTariffData>;
+  warnings: string[];
+  errors: string[];
+  processingTimeMs: number;
+}
+
+const SECTION_LABELS: Record<SectionKey, string> = {
+  metadata: 'מחלץ מידע כללי על העיר...',
+  zones: 'מחלץ אזורי ארנונה...',
+  rates: 'מחלץ סוגי נכסים ותעריפים...',
+  exemptions: 'מחלץ הנחות ופטורים...',
+  extras: 'מחלץ הנחות שטח ואגרות...',
+};
+
+export const VALID_SECTION_KEYS: ReadonlySet<string> = new Set<SectionKey>([
+  'metadata', 'zones', 'rates', 'exemptions', 'extras',
+]);
+
 // ── Pass labels (Hebrew) ─────────────────────────────────────────────
 
 const PASS_LABELS = [
@@ -85,20 +122,26 @@ async function withRetry<T>(
   throw lastError;
 }
 
+// ── Media part types for Gemini ──────────────────────────────────────
+
+type GeminiFileDataPart = { fileData: { fileUri: string; mimeType: string } };
+type GeminiInlineDataPart = { inlineData: { data: string; mimeType: string } };
+type GeminiMediaPart = GeminiFileDataPart | GeminiInlineDataPart;
+
 // ── Single pass execution ────────────────────────────────────────────
 
-async function runPass(
+/**
+ * Run a single extraction pass with an array of media parts.
+ * Supports both File API URIs (PDFs) and inline base64 data (images).
+ */
+async function runPassWithMedia(
   prompt: string,
-  fileUri: string,
-  mimeType: string,
+  mediaParts: GeminiMediaPart[],
 ): Promise<Record<string, unknown> | null> {
   const model = getVisionModel();
 
   const result = await withRetry(async () => {
-    return model.generateContent([
-      prompt,
-      { fileData: { fileUri, mimeType } },
-    ]);
+    return model.generateContent([prompt, ...mediaParts]);
   });
 
   const responseText = result.response.text();
@@ -108,6 +151,15 @@ async function runPass(
   }
 
   return parseLlmJsonObject(responseText);
+}
+
+/** Backward-compatible wrapper for full extraction (PDF via File API). */
+async function runPass(
+  prompt: string,
+  fileUri: string,
+  mimeType: string,
+): Promise<Record<string, unknown> | null> {
+  return runPassWithMedia(prompt, [{ fileData: { fileUri, mimeType } }]);
 }
 
 // ── Main extraction function ─────────────────────────────────────────
@@ -159,7 +211,7 @@ export async function extractOrdinance(
     // ── Pass 1: Metadata ───────────────────────────────────────────
     onProgress?.({ pass: 1, total: TOTAL_PASSES, label: PASS_LABELS[0], percent: 10 });
     try {
-      const metadataResult = await runPass(buildMetadataPrompt(), fileUri, mimeType);
+      const metadataResult = await runPass(await buildMetadataPrompt(), fileUri, mimeType);
       if (metadataResult) {
         if (typeof metadataResult.cityName === 'string') data.cityName = metadataResult.cityName;
         if (typeof metadataResult.cityNameEn === 'string') data.cityNameEn = metadataResult.cityNameEn;
@@ -195,7 +247,7 @@ export async function extractOrdinance(
     // ── Pass 2: Zones ──────────────────────────────────────────────
     onProgress?.({ pass: 2, total: TOTAL_PASSES, label: PASS_LABELS[1], percent: 25 });
     try {
-      const zonesResult = await runPass(buildZonesPrompt(), fileUri, mimeType);
+      const zonesResult = await runPass(await buildZonesPrompt(), fileUri, mimeType);
       if (zonesResult && Array.isArray(zonesResult.availableZones)) {
         data.availableZones = (zonesResult.availableZones as IAvailableZone[]).filter(
           (z) => z && typeof z.code === 'string' && typeof z.label === 'string'
@@ -213,7 +265,7 @@ export async function extractOrdinance(
     // ── Pass 3: Rates ──────────────────────────────────────────────
     onProgress?.({ pass: 3, total: TOTAL_PASSES, label: PASS_LABELS[2], percent: 45 });
     try {
-      const ratesResult = await runPass(buildRatesPrompt(data.availableZones), fileUri, mimeType);
+      const ratesResult = await runPass(await buildRatesPrompt(data.availableZones), fileUri, mimeType);
       if (ratesResult && Array.isArray(ratesResult.types)) {
         data.types = sanitizePropertyTypes(ratesResult.types as IPropertyType[]);
 
@@ -232,7 +284,7 @@ export async function extractOrdinance(
     // ── Pass 4: Exemptions ─────────────────────────────────────────
     onProgress?.({ pass: 4, total: TOTAL_PASSES, label: PASS_LABELS[3], percent: 70 });
     try {
-      const exemptionsResult = await runPass(buildExemptionsPrompt(), fileUri, mimeType);
+      const exemptionsResult = await runPass(await buildExemptionsPrompt(), fileUri, mimeType);
       if (exemptionsResult && Array.isArray(exemptionsResult.exemptions)) {
         data.exemptions = sanitizeExemptions(exemptionsResult.exemptions as IExemptionSection[]);
       }
@@ -246,7 +298,7 @@ export async function extractOrdinance(
     // ── Pass 5: Extras ─────────────────────────────────────────────
     onProgress?.({ pass: 5, total: TOTAL_PASSES, label: PASS_LABELS[4], percent: 88 });
     try {
-      const extrasResult = await runPass(buildExtrasPrompt(), fileUri, mimeType);
+      const extrasResult = await runPass(await buildExtrasPrompt(), fileUri, mimeType);
       if (extrasResult) {
         if (Array.isArray(extrasResult.areaTypeDiscounts)) {
           data.areaTypeDiscounts = (extrasResult.areaTypeDiscounts as IAreaTypeDiscount[]).filter(
@@ -285,6 +337,367 @@ export async function extractOrdinance(
     errors,
     processingTimeMs: Date.now() - startTime,
   };
+}
+
+// ── Section-level extraction ────────────────────────────────────────
+
+/**
+ * Build a compact JSON string of existing data for the given section,
+ * so the AI can maintain naming/coding consistency.
+ */
+function buildExistingDataContext(
+  sectionKey: SectionKey,
+  data: Partial<ICityTariffData>,
+): string | null {
+  switch (sectionKey) {
+    case 'zones':
+      if (data.availableZones && data.availableZones.length > 0) {
+        return JSON.stringify(data.availableZones, null, 2);
+      }
+      return null;
+
+    case 'rates':
+      if (data.types && data.types.length > 0) {
+        // Send a compact version: code, label, category, subtype codes
+        const compact = data.types.map((t) => ({
+          code: t.code,
+          label: t.label,
+          category: t.category,
+          subtypes: t.subtypes.map((s) => ({ code: s.code, label: s.label })),
+        }));
+        return JSON.stringify(compact, null, 2);
+      }
+      return null;
+
+    case 'exemptions':
+      if (data.exemptions && data.exemptions.length > 0) {
+        const compact = data.exemptions.map((s) => ({
+          sectionCode: s.sectionCode,
+          sectionLabel: s.sectionLabel,
+          subSections: s.subSections.map((sub) => ({ code: sub.code, description: sub.description })),
+        }));
+        return JSON.stringify(compact, null, 2);
+      }
+      return null;
+
+    case 'extras':
+      if (
+        (data.areaTypeDiscounts && data.areaTypeDiscounts.length > 0) ||
+        (data.cityFees && data.cityFees.length > 0)
+      ) {
+        return JSON.stringify(
+          {
+            areaTypeDiscounts: data.areaTypeDiscounts ?? [],
+            cityFees: data.cityFees ?? [],
+          },
+          null,
+          2,
+        );
+      }
+      return null;
+
+    default:
+      return null;
+  }
+}
+
+/**
+ * Extract a single section from an image or PDF.
+ * Runs only the relevant extraction pass and returns partial city tariff data.
+ */
+export async function extractOrdinanceSection(
+  input: SectionExtractionInput,
+  onProgress?: ProgressCallback,
+): Promise<SectionExtractionResult> {
+  const startTime = Date.now();
+  const warnings: string[] = [];
+  const errors: string[] = [];
+  const { sectionKey, fileBuffers, fileName, context, customPrompt } = input;
+
+  onProgress?.({ pass: 0, total: 1, label: 'מכין קבצים...', percent: 5 });
+
+  // ── Prepare media parts ─────────────────────────────────────────
+  const mediaParts: GeminiMediaPart[] = [];
+  let uploadedFileName: string | null = null;
+
+  try {
+    // Separate PDFs from images
+    const pdfBuffers = fileBuffers.filter((f) => f.mimeType === 'application/pdf');
+    const imageBuffers = fileBuffers.filter((f) => f.mimeType !== 'application/pdf');
+
+    // Upload PDFs to Gemini File API (only 1 PDF expected)
+    if (pdfBuffers.length > 0) {
+      onProgress?.({ pass: 0, total: 1, label: 'מעלה קובץ PDF...', percent: 10 });
+      const fileMetadata = await uploadPdfForExtraction(pdfBuffers[0].buffer, fileName);
+      uploadedFileName = fileMetadata.name;
+      mediaParts.push({ fileData: { fileUri: fileMetadata.uri, mimeType: fileMetadata.mimeType } });
+    }
+
+    // Add inline images
+    for (const img of imageBuffers) {
+      mediaParts.push({
+        inlineData: {
+          data: img.buffer.toString('base64'),
+          mimeType: img.mimeType,
+        },
+      });
+    }
+
+    if (mediaParts.length === 0) {
+      return {
+        success: false,
+        sectionKey,
+        data: {},
+        warnings,
+        errors: ['לא סופקו קבצים לחילוץ'],
+        processingTimeMs: Date.now() - startTime,
+      };
+    }
+
+    // ── Build prompt ──────────────────────────────────────────────
+    onProgress?.({ pass: 1, total: 1, label: SECTION_LABELS[sectionKey], percent: 25 });
+
+    let prompt: string;
+    switch (sectionKey) {
+      case 'metadata':
+        prompt = await buildMetadataPrompt();
+        break;
+      case 'zones':
+        prompt = await buildZonesPrompt();
+        break;
+      case 'rates': {
+        const zones = context?.availableZones;
+        if (!zones || zones.length === 0) {
+          return {
+            success: false,
+            sectionKey,
+            data: {},
+            warnings,
+            errors: ['חילוץ תעריפים דורש רשימת אזורים — הגדר אזורים קודם'],
+            processingTimeMs: Date.now() - startTime,
+          };
+        }
+        prompt = await buildRatesPrompt(zones);
+        break;
+      }
+      case 'exemptions':
+        prompt = await buildExemptionsPrompt();
+        break;
+      case 'extras':
+        prompt = await buildExtrasPrompt();
+        break;
+    }
+
+    // Append existing data as context so the AI can maintain consistency
+    const existingData = context?.existingData;
+    if (existingData) {
+      const existingJson = buildExistingDataContext(sectionKey, existingData);
+      if (existingJson) {
+        prompt += `\n\nנתונים קיימים (לשימוש כהקשר — שמור על קודים ושמות עקביים, הוסף פריטים חדשים ועדכן קיימים):\n${existingJson}`;
+      }
+    }
+
+    // Append custom instructions if provided
+    if (customPrompt?.trim()) {
+      prompt += `\n\nהנחיות נוספות מהמשתמש:\n${customPrompt.trim()}`;
+    }
+
+    // ── Run pass ──────────────────────────────────────────────────
+    onProgress?.({ pass: 1, total: 1, label: SECTION_LABELS[sectionKey], percent: 50 });
+
+    const result = await runPassWithMedia(prompt, mediaParts);
+
+    onProgress?.({ pass: 1, total: 1, label: 'מעבד תוצאות...', percent: 85 });
+
+    // ── Extract & sanitize section data ───────────────────────────
+    const data: Partial<ICityTariffData> = {};
+
+    if (!result) {
+      errors.push(`לא הצלחנו לחלץ ${SECTION_LABELS[sectionKey].replace('מחלץ ', '').replace('...', '')}`);
+    } else {
+      switch (sectionKey) {
+        case 'metadata':
+          if (typeof result.cityName === 'string') data.cityName = result.cityName;
+          if (typeof result.cityNameEn === 'string') data.cityNameEn = result.cityNameEn;
+          if (typeof result.year === 'number') data.year = result.year;
+          if (typeof result.slug === 'string') data.slug = result.slug;
+          break;
+
+        case 'zones':
+          if (Array.isArray(result.availableZones)) {
+            data.availableZones = (result.availableZones as IAvailableZone[]).filter(
+              (z) => z && typeof z.code === 'string' && typeof z.label === 'string',
+            );
+          }
+          if (!data.availableZones || data.availableZones.length === 0) {
+            warnings.push('לא נמצאו אזורי ארנונה');
+          }
+          break;
+
+        case 'rates':
+          if (Array.isArray(result.types)) {
+            data.types = sanitizePropertyTypes(result.types as IPropertyType[]);
+          }
+          if (!data.types || data.types.length === 0) {
+            warnings.push('לא נמצאו סוגי נכסים ותעריפים');
+          }
+          break;
+
+        case 'exemptions':
+          if (Array.isArray(result.exemptions)) {
+            data.exemptions = sanitizeExemptions(result.exemptions as IExemptionSection[]);
+          }
+          if (!data.exemptions || data.exemptions.length === 0) {
+            warnings.push('לא נמצאו הנחות');
+          }
+          break;
+
+        case 'extras':
+          if (Array.isArray(result.areaTypeDiscounts)) {
+            data.areaTypeDiscounts = (result.areaTypeDiscounts as IAreaTypeDiscount[]).filter(
+              (d) => d && typeof d.areaType === 'string' && typeof d.discountPercent === 'number',
+            );
+          }
+          if (Array.isArray(result.cityFees)) {
+            data.cityFees = (result.cityFees as ICityFee[]).filter(
+              (f) => f && typeof f.name === 'string' && typeof f.amount === 'number',
+            );
+          }
+          break;
+      }
+    }
+
+    // ── Merge with existing data ────────────────────────────────────
+    onProgress?.({ pass: 1, total: 1, label: 'ממזג נתונים...', percent: 92 });
+
+    const mergedData = mergeSectionData(sectionKey, existingData, data);
+
+    onProgress?.({ pass: 1, total: 1, label: 'הושלם', percent: 100 });
+
+    const hasData = Object.keys(mergedData).length > 0;
+
+    return {
+      success: hasData && errors.length === 0,
+      sectionKey,
+      data: mergedData,
+      warnings,
+      errors,
+      processingTimeMs: Date.now() - startTime,
+    };
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    return {
+      success: false,
+      sectionKey,
+      data: {},
+      warnings,
+      errors: [`שגיאה בחילוץ: ${msg}`],
+      processingTimeMs: Date.now() - startTime,
+    };
+  } finally {
+    // Clean up uploaded PDF from Gemini File API
+    if (uploadedFileName) {
+      await deleteUploadedFile(uploadedFileName);
+    }
+  }
+}
+
+// ── Merge helpers (smart merge: match by code, overwrite if exists, add if new) ──
+
+/**
+ * Generic array merge: match items by a key field, overwrite matching items,
+ * add new items, keep existing items not present in the new array.
+ */
+function mergeArrayByKey<T>(
+  existing: T[],
+  incoming: T[],
+  keyField: keyof T,
+): T[] {
+  const merged = [...existing];
+  const existingKeyMap = new Map(existing.map((item, idx) => [item[keyField], idx]));
+
+  for (const newItem of incoming) {
+    const key = newItem[keyField];
+    const existingIdx = existingKeyMap.get(key);
+    if (existingIdx !== undefined) {
+      // Overwrite existing item
+      merged[existingIdx] = newItem;
+    } else {
+      // Add new item
+      merged.push(newItem);
+    }
+  }
+
+  return merged;
+}
+
+/**
+ * Merge extracted section data with existing city data.
+ * - Items with matching codes are overwritten by the new extraction.
+ * - New items (not in existing) are added.
+ * - Existing items not in the extraction are preserved.
+ */
+function mergeSectionData(
+  sectionKey: SectionKey,
+  existing: Partial<ICityTariffData> | undefined,
+  extracted: Partial<ICityTariffData>,
+): Partial<ICityTariffData> {
+  if (!existing) return extracted;
+
+  const merged: Partial<ICityTariffData> = { ...extracted };
+
+  switch (sectionKey) {
+    case 'zones':
+      if (extracted.availableZones && existing.availableZones) {
+        merged.availableZones = mergeArrayByKey<IAvailableZone>(
+          existing.availableZones,
+          extracted.availableZones,
+          'code',
+        );
+      }
+      break;
+
+    case 'rates':
+      if (extracted.types && existing.types) {
+        merged.types = mergeArrayByKey<IPropertyType>(
+          existing.types,
+          extracted.types,
+          'code',
+        );
+      }
+      break;
+
+    case 'exemptions':
+      if (extracted.exemptions && existing.exemptions) {
+        merged.exemptions = mergeArrayByKey<IExemptionSection>(
+          existing.exemptions,
+          extracted.exemptions,
+          'sectionCode',
+        );
+      }
+      break;
+
+    case 'extras':
+      if (extracted.areaTypeDiscounts && existing.areaTypeDiscounts) {
+        merged.areaTypeDiscounts = mergeArrayByKey<IAreaTypeDiscount>(
+          existing.areaTypeDiscounts,
+          extracted.areaTypeDiscounts,
+          'areaType',
+        );
+      }
+      if (extracted.cityFees && existing.cityFees) {
+        merged.cityFees = mergeArrayByKey<ICityFee>(
+          existing.cityFees,
+          extracted.cityFees,
+          'name',
+        );
+      }
+      break;
+
+    // metadata: simple overwrite, no merge needed
+  }
+
+  return merged;
 }
 
 // ── Sanitization helpers ─────────────────────────────────────────────

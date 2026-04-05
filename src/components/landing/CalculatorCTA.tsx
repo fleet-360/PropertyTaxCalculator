@@ -1,14 +1,20 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Container, Typography } from "@mui/material";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { CalculatorMiaSpeechBubbleTyping } from "@/components/common/TypingText";
 import CalculatorUnavailableMessage from "@/components/calculator/CalculatorUnavailableMessage";
 import type { CalculatorFeatureConfig } from "@/lib/types/system-config";
 import type { IMiaMessageData } from "@/lib/types/mia-message";
 import Image from "next/image";
-import miaImage from "@/assets/mia.gif";
+import miaImage from "@/assets/mia.png";
+import {
+  fadeSlideUp,
+  staggerContainer,
+  reducedMotionVariants,
+  DURATION_MULTIPLIER,
+} from "@/lib/animations";
 
 function combineMiaBubbleContent(
   messageIds: string | string[],
@@ -39,10 +45,22 @@ interface CalculatorCTAProps {
   featureConfig: CalculatorFeatureConfig;
 }
 
-export default function CalculatorSection({ featureConfig }: CalculatorCTAProps) {
+export default function CalculatorSection({
+  featureConfig,
+}: CalculatorCTAProps) {
+  const reduceMotion = useReducedMotion();
+  const containerVariants = reduceMotion
+    ? reducedMotionVariants
+    : staggerContainer;
+  const childVariants = reduceMotion ? reducedMotionVariants : fadeSlideUp;
+
   // ── Mia messages from DB ──
-  const [miaMessages, setMiaMessages] = useState<Record<string, IMiaMessageData>>({});
-  const [miaMessageId, setMiaMessageId] = useState<string | string[]>("step-0-default");
+  const [miaMessages, setMiaMessages] = useState<
+    Record<string, IMiaMessageData>
+  >({});
+  const [miaMessageId, setMiaMessageId] = useState<string | string[]>(
+    "step-0-default",
+  );
 
   useEffect(() => {
     fetch("/api/mia-messages")
@@ -55,9 +73,7 @@ export default function CalculatorSection({ featureConfig }: CalculatorCTAProps)
         }
         setMiaMessages(map);
       })
-      .catch(() => {
-        // Fallback: empty map — component will use hardcoded defaults
-      });
+      .catch(() => {});
   }, []);
 
   const handleMiaMessage = useCallback((messageId: string | string[]) => {
@@ -78,69 +94,78 @@ export default function CalculatorSection({ featureConfig }: CalculatorCTAProps)
         minHeight: { xs: "auto", md: "100vh" },
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="xl">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
         >
           <Box sx={{ textAlign: "center", mb: { xs: 4, md: 6 } }}>
-            <Typography
-              component="h2"
-              sx={{
-                fontWeight: 700,
-                fontSize: { xs: "24px", sm: "28px", md: "44px" },
-                color: "#000",
-                mb: 1.5,
-                px: { xs: 1, sm: 2, md: 0 },
-                lineHeight: { xs: 1.25, md: 1.2 },
-              }}
-            >
-              מחשבון הארנונה שלך
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: { xs: "14px", sm: "16px", md: "18px" },
-                color: "#000",
-                lineHeight: 1.5,
-                px: { xs: 1, sm: 2, md: 0 },
-                maxWidth: 640,
-                mx: "auto",
-              }}
-            >
-              הזן את פרטי הנכס שלך וקבל חישוב מדויק תוך שניות
-            </Typography>
+            <motion.div variants={childVariants}>
+              <Typography
+                component="h2"
+                sx={{
+                  fontFamily:
+                    'var(--font-varela-round), "Varela Round", "Heebo", sans-serif',
+                  fontWeight: 400,
+                  fontSize: { xs: "24px", sm: "28px", md: "44px" },
+                  color: "#000",
+                  mb: 1.5,
+                  px: { xs: 1, sm: 2, md: 0 },
+                  lineHeight: { xs: 1.25, md: 1.2 },
+                }}
+              >
+                מחשבון הארנונה
+              </Typography>
+            </motion.div>
+            <motion.div variants={childVariants}>
+              <Typography
+                sx={{
+                  fontSize: { xs: "14px", sm: "16px", md: "18px" },
+                  color: "#000",
+                  lineHeight: 1.5,
+                  px: { xs: 1, sm: 2, md: 0 },
+                  maxWidth: 640,
+                  mx: "auto",
+                }}
+              >
+                הזן את פרטי הנכס שלך וקבל חישוב מדויק תוך שניות
+              </Typography>
+            </motion.div>
           </Box>
         </motion.div>
 
-        {/* Content: Calculator + Info bubble */}
+        {/* Content: Calculator (2/3) + Mia bubble (1/3) */}
         <Box
           sx={{
             display: "flex",
-            gap: { xs: 3, sm: 4, md: 7.5 },
+            gap: { xs: 3, sm: 4, md: 5 },
             flexDirection: { xs: "column", md: "row" },
             alignItems: { xs: "stretch", md: "flex-start" },
             justifyContent: "center",
             width: "100%",
           }}
         >
-          {/* Right side — Info bubble + character */}
+          {/* Right side — Mia bubble + character (1/3) */}
           <Box
             sx={{
               width: "100%",
-              maxWidth: { md: 554 },
-              flex: { md: "0 1 554px" },
+              flex: { md: "0 1 33.333%" },
+              maxWidth: { md: "33.333%" },
               minWidth: 0,
             }}
           >
             <motion.div
               style={{ width: "100%" }}
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.35 }}
+              initial={reduceMotion ? undefined : { opacity: 0, x: 30 }}
+              whileInView={reduceMotion ? undefined : { opacity: 1, x: 0 }}
+              viewport={{ once: false }}
+              transition={{
+                duration: 0.6 * DURATION_MULTIPLIER,
+                delay: 0.35 * DURATION_MULTIPLIER,
+              }}
             >
               <Box
                 sx={{
@@ -151,32 +176,38 @@ export default function CalculatorSection({ featureConfig }: CalculatorCTAProps)
                   justifyContent: { xs: "center", md: "flex-start" },
                 }}
               >
-                {/* Character illustration placeholder */}
+                {/* Character illustration */}
                 <Box
                   sx={{
-                    width: 150,
-                    height: 433,
+                    width: "clamp(100px, 100%, 250px)",
                     display: { xs: "none", md: "flex" },
                     alignItems: "flex-end",
                     justifyContent: "center",
                     flexShrink: 0,
+                    mr: { xs: 0, md: 2 },
                   }}
                 >
-                  {/* TODO: Replace with actual character illustration (Lottie animation or image) */}
                   <Box
                     sx={{
-                      width: 120,
-                      height: 350,
                       borderRadius: "60px 60px 10px 10px",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       flexDirection: "column",
+                      width: "100%", height: "100%",
                       gap: 1,
                     }}
                   >
-                    <Image  src={miaImage} alt="Mia" width={120} height={350} />
-
+                    <Image
+                      src={miaImage}
+                      alt="Mia"
+                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33.333vw"
+                      style={{
+                        objectFit: "contain",
+                        width: "100%",
+                        height: "100%",
+                      }}
+                    />
                   </Box>
                 </Box>
                 {/* Speech bubble */}
@@ -224,21 +255,25 @@ export default function CalculatorSection({ featureConfig }: CalculatorCTAProps)
               </Box>
             </motion.div>
           </Box>
-          {/* Left side — Embedded Calculator */}
+
+          {/* Left side — Embedded Calculator (2/3) */}
           <Box
             sx={{
               width: "100%",
-              maxWidth: { md: 500 },
-              flex: { md: "0 1 500px" },
+              flex: { md: "0 1 66.666%" },
+              maxWidth: { md: "66.666%" },
               minWidth: 0,
             }}
           >
             <motion.div
               style={{ width: "100%" }}
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={reduceMotion ? undefined : { opacity: 0, x: -30 }}
+              whileInView={reduceMotion ? undefined : { opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              transition={{
+                duration: 0.6 * DURATION_MULTIPLIER,
+                delay: 0.2 * DURATION_MULTIPLIER,
+              }}
             >
               <Box
                 sx={{
@@ -250,12 +285,15 @@ export default function CalculatorSection({ featureConfig }: CalculatorCTAProps)
                   mx: "auto",
                   width: "100%",
                   height: "600px",
-                  maxWidth: "100%",
+                  maxWidth: "720px",
                   boxSizing: "border-box",
                 }}
               >
                 {featureConfig.systemEnabled ? (
-                  <CalculatorWizard features={featureConfig} onMiaMessage={handleMiaMessage} />
+                  <CalculatorWizard
+                    features={featureConfig}
+                    onMiaMessage={handleMiaMessage}
+                  />
                 ) : (
                   <CalculatorUnavailableMessage variant="embedded" />
                 )}

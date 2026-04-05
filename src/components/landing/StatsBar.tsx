@@ -11,6 +11,7 @@ import {
   useReducedMotion,
 } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
+import { DURATION_MULTIPLIER } from '@/lib/animations';
 
 type StatConfig = {
   target: number;
@@ -22,8 +23,8 @@ type StatConfig = {
 };
 
 const stats: StatConfig[] = [
-  { target: 100, ringPercent: 75, suffix: '+', label: 'רשויות מקומיות' },
-  { target: 50000, ringPercent: 85, suffix: '+', comma: true, label: 'לקוחות מרוצים' },
+  { target: 20, ringPercent: 75, suffix: '+', label: 'רשויות מקומיות' },
+  { target: 1000, ringPercent: 85, suffix: '+', comma: true, label: 'לקוחות מרוצים' },
   { target: 2400, ringPercent: 80, prefix: '₪', comma: true, label: 'חיסכון ממוצע' },
   { target: 98, ringPercent: 98, suffix: '%', label: 'דיוק בחישוב' },
 ];
@@ -57,9 +58,9 @@ function RollingStat({ stat, index }: { stat: StatConfig; index: number }) {
     count.set(0);
     setDisplay(0);
     const controls = animate(count, stat.target, {
-      duration: 2,
+      duration: 2 * DURATION_MULTIPLIER,
       ease: [0.22, 1, 0.36, 1],
-      delay: index * 0.1,
+      delay: index * 0.1 * DURATION_MULTIPLIER,
     });
     return () => controls.stop();
   }, [isInView, stat.target, reduceMotion, index, count]);
@@ -117,7 +118,7 @@ function RollingStat({ stat, index }: { stat: StatConfig; index: number }) {
           transition={
             reduceMotion
               ? { duration: 0 }
-              : { duration: 2, ease: [0.22, 1, 0.36, 1], delay: index * 0.1 }
+              : { duration: 2 * DURATION_MULTIPLIER, ease: [0.22, 1, 0.36, 1], delay: index * 0.1 * DURATION_MULTIPLIER }
           }
         />
       </Box>
@@ -125,8 +126,8 @@ function RollingStat({ stat, index }: { stat: StatConfig; index: number }) {
       <Box sx={{ position: 'relative', zIndex: 1 }}>
         <Typography
           sx={{
-            color: theme.palette.primary.main,
-            fontSize: { xs: '28px', sm: '30px' },
+            color: theme.palette.secondary.main,
+            fontSize: { xs: '16px', sm: '30px' },
             fontWeight: 700,
             fontVariantNumeric: 'tabular-nums',
             lineHeight: 1.1,
@@ -137,7 +138,7 @@ function RollingStat({ stat, index }: { stat: StatConfig; index: number }) {
         <Typography
           sx={{
             color: theme.palette.text.primary,
-            fontSize: '13px',
+            fontSize: { xs: '12px', sm: '15px' },
             fontWeight: 400,
           }}
         >

@@ -91,9 +91,17 @@ interface TaxBillUploadProps {
   deferExtraction?: boolean;
   /** Called when a file is selected (deferred mode) — parent stores the File */
   onFileReady?: (file: File | null) => void;
+  /** When set, the vision model validates the bill matches this municipality name */
+  expectedCityName?: string;
 }
 
-export default function TaxBillUpload({ dispatch, onExtracted, deferExtraction, onFileReady }: TaxBillUploadProps) {
+export default function TaxBillUpload({
+  dispatch,
+  onExtracted,
+  deferExtraction,
+  onFileReady,
+  expectedCityName,
+}: TaxBillUploadProps) {
   const [status, setStatus] = useState<'idle' | 'uploading' | 'ready' | 'success' | 'error'>('idle');
   const [extractionResult, setExtractionResult] = useState<ExtractionResult<TaxBillData> | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -150,6 +158,10 @@ export default function TaxBillUpload({ dispatch, onExtracted, deferExtraction, 
       const formData = new FormData();
       formData.append('file', file);
       formData.append('documentType', 'tax_bill');
+      const trimmedCity = expectedCityName?.trim();
+      if (trimmedCity) {
+        formData.append('promptOptions', JSON.stringify({ expectedCityName: trimmedCity }));
+      }
 
       const response = await fetch('/api/vision/extract', {
         method: 'POST',
@@ -176,7 +188,7 @@ export default function TaxBillUpload({ dispatch, onExtracted, deferExtraction, 
         error instanceof Error ? error.message : 'שגיאה בעיבוד המסמך'
       );
     }
-  }, [applyFields, deferExtraction, onFileReady]);
+  }, [applyFields, deferExtraction, onFileReady, expectedCityName]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

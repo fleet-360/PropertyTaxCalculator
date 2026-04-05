@@ -26,7 +26,10 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import type { StepProps } from "../CalculatorWizard";
 import { useConsentSubmit } from "@/hooks/useConsentSubmit";
 import { IPropertyType, ISubType, IZoneRate } from "@/lib/models/CityTariff";
-import { ALL_ZONES_TARIFF_CODE, ALL_ZONES_LABEL_HE } from "@/lib/tariff-constants";
+import {
+  ALL_ZONES_TARIFF_CODE,
+  ALL_ZONES_LABEL_HE,
+} from "@/lib/tariff-constants";
 import { findRate } from "@/lib/calculator";
 
 // ── Payment period conversion ────────────────────────────────────────
@@ -80,7 +83,11 @@ function createDataEntrySchema(isBusiness: boolean) {
   return z
     .object({
       fullName: z.string().min(1, "שדה חובה"),
-      idNumber: z.string().regex(/^\d+$/, "יש להזין ספרות בלבד").or(z.literal("")).optional(),
+      idNumber: z
+        .string()
+        .regex(/^\d+$/, "יש להזין ספרות בלבד")
+        .or(z.literal(""))
+        .optional(),
       email: z.string().min(1, "שדה חובה").email("כתובת מייל לא תקינה"),
       phone: z.string(),
       propertyPurpose: z.string(),
@@ -101,10 +108,14 @@ function createDataEntrySchema(isBusiness: boolean) {
       reportedPayment: z.coerce.number().positive("סכום חייב להיות גדול מ-0"),
       paymentPeriod: z.string().default("bimonthly"),
       designations: z.array(designationRowSchema).default([]),
-      additionalAreas: z.array(z.object({
-        areaType: z.string(),
-        areaSqm: z.coerce.number().min(0).default(0),
-      })).default([]),
+      additionalAreas: z
+        .array(
+          z.object({
+            areaType: z.string(),
+            areaSqm: z.coerce.number().min(0).default(0),
+          }),
+        )
+        .default([]),
       selectedFees: z.array(z.string()).default([]),
     })
     .superRefine((data, ctx) => {
@@ -201,7 +212,8 @@ function DesignationRow({
     if (prevRowSubtype.current === rowSubtype) return;
     prevRowSubtype.current = rowSubtype;
     const typeObj = types.find((t) => t.code === rowType);
-    const zones = typeObj?.subtypes.find((s) => s.code === rowSubtype)?.zones ?? [];
+    const zones =
+      typeObj?.subtypes.find((s) => s.code === rowSubtype)?.zones ?? [];
     if (rowSubtype && rowType && zones.length === 0) {
       setValue(`designations.${idx}.zone` as const, ALL_ZONES_TARIFF_CODE);
     } else {
@@ -322,7 +334,12 @@ function DesignationRow({
         }}
       >
         {removable && (
-          <IconButton onClick={onRemove} size="small" color="error" aria-label="מחק ייעוד">
+          <IconButton
+            onClick={onRemove}
+            size="small"
+            color="error"
+            aria-label="מחק ייעוד"
+          >
             <DeleteIcon />
           </IconButton>
         )}
@@ -333,7 +350,7 @@ function DesignationRow({
 
 // ── Main component ────────────────────────────────────────────────
 export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
-  const { submitConsent,linkConsents } = useConsentSubmit();
+  const { submitConsent, linkConsents } = useConsentSubmit();
   const cityData = state.cityData;
   const isBusiness = state.propertyType === "business";
   const hasAreaTypeDiscounts = !!(cityData?.areaTypeDiscounts?.length > 0);
@@ -341,7 +358,7 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
 
   // ── Mia message on mount ──
   useEffect(() => {
-    dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-2-default' });
+    dispatch({ type: "SET_MIA_MESSAGE", payload: "step-2-default" });
   }, [dispatch]);
 
   // Extract types from city data
@@ -350,17 +367,14 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
       (t: IPropertyType) => t.category === state.propertyType,
     ) ?? [];
 
-  const schema = useMemo(
-    () => createDataEntrySchema(isBusiness),
-    [isBusiness],
-  );
+  const schema = useMemo(() => createDataEntrySchema(isBusiness), [isBusiness]);
 
   const {
     control,
     handleSubmit,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitted, isSubmitSuccessful },
   } = useForm<FormData>({
     resolver: zodResolver(schema) as any,
     defaultValues: {
@@ -384,9 +398,13 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
       reportedPayment: state.reportedPayment || ("" as any),
       paymentPeriod: state.paymentPeriod || "bimonthly",
       designations: state.designations,
-      additionalAreas: state.additionalAreas?.length > 0
-        ? state.additionalAreas
-        : (cityData?.areaTypeDiscounts ?? []).map((d: any) => ({ areaType: d.areaType, areaSqm: '' as any })),
+      additionalAreas:
+        state.additionalAreas?.length > 0
+          ? state.additionalAreas
+          : (cityData?.areaTypeDiscounts ?? []).map((d: any) => ({
+              areaType: d.areaType,
+              areaSqm: "" as any,
+            })),
       selectedFees: state.selectedFees ?? [],
     },
   });
@@ -521,9 +539,14 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
   }, [watchedSubType, watchedType, setValue, types]);
 
   // ── Error report state ──
-  const [claimedArea, setClaimedArea] = useState<number>(state.measurementError?.claimed ?? 0);
-  const [suggestedClass, setSuggestedClass] = useState(state.classificationError?.suggested ?? '');
-  const allSubtypes: ISubType[] = cityData?.types.flatMap((t: IPropertyType) => t.subtypes) ?? [];
+  const [claimedArea, setClaimedArea] = useState<number>(
+    state.measurementError?.claimed ?? 0,
+  );
+  const [suggestedClass, setSuggestedClass] = useState(
+    state.classificationError?.suggested ?? "",
+  );
+  const allSubtypes: ISubType[] =
+    cityData?.types.flatMap((t: IPropertyType) => t.subtypes) ?? [];
 
   // ── Auto-save lead when name + phone are filled ──
   const watchedFullName = useWatch({ control, name: "fullName" });
@@ -532,45 +555,56 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
   const watchedIdNumber = useWatch({ control, name: "idNumber" });
   const leadSavedRef = useRef(false);
 
-  const saveLeadEarly = useCallback(async (fullName: string, phone: string, email: string, idNumber: string) => {
-    if (state.leadId) return; // Already saved
-    if (leadSavedRef.current) return;
-    leadSavedRef.current = true;
+  const saveLeadEarly = useCallback(
+    async (
+      fullName: string,
+      phone: string,
+      email: string,
+      idNumber: string,
+    ) => {
+      if (state.leadId) return; // Already saved
+      if (leadSavedRef.current) return;
+      leadSavedRef.current = true;
 
-    try {
-      const res = await fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName,
-          phone,
-          email: email || undefined,
-          idNumber: idNumber || undefined,
-          source: 'calculator',
-          calculation: {
-            abandonmentStage: 'data_entry',
-            propertyType: state.propertyType,
-            citySlug: state.citySlug,
-          },
-        }),
-      });
+      try {
+        const res = await fetch("/api/leads", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName,
+            phone,
+            email: email || undefined,
+            idNumber: idNumber || undefined,
+            source: "calculator",
+            calculation: {
+              abandonmentStage: "data_entry",
+              propertyType: state.propertyType,
+              citySlug: state.citySlug,
+            },
+          }),
+        });
 
-      if (res.ok) {
-        const result = await res.json();
-        const newLeadId = String(result.lead._id);
-        dispatch({ type: 'SET_LEAD_ID', payload: newLeadId });
-        dispatch({ type: 'SET_CALCULATION_INDEX', payload: result.calculationIndex });
-        // Link any consent records created before the lead existed
-        submitConsent(newLeadId, phone, 'data_retention', true);
+        if (res.ok) {
+          const result = await res.json();
+          const newLeadId = String(result.lead._id);
+          dispatch({ type: "SET_LEAD_ID", payload: newLeadId });
+          dispatch({
+            type: "SET_CALCULATION_INDEX",
+            payload: result.calculationIndex,
+          });
+          // Link any consent records created before the lead existed
+          submitConsent(newLeadId, phone, "data_retention", true);
 
-        // linkConsents(phone, newLeadId);
-      } else {
+          // linkConsents(phone, newLeadId);
+        } else {
+          leadSavedRef.current = false; // Allow retry on failure
+        }
+      } catch {
         leadSavedRef.current = false; // Allow retry on failure
       }
-    } catch {
-      leadSavedRef.current = false; // Allow retry on failure
-    }
-  }, [state.leadId, state.propertyType, state.citySlug, dispatch,submitConsent]);
+    },
+    [state.leadId, state.propertyType, state.citySlug, dispatch, submitConsent],
+  );
 
   useEffect(() => {
     const name = watchedFullName?.trim();
@@ -578,13 +612,20 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
     if (!name || !phone || name.length < 2 || phone.length < 9) return;
 
     const timeout = setTimeout(() => {
-      saveLeadEarly(name, phone, watchedEmail || '', watchedIdNumber || '');
+      saveLeadEarly(name, phone, watchedEmail || "", watchedIdNumber || "");
     }, 800);
 
     return () => clearTimeout(timeout);
-  }, [watchedFullName, watchedPhone, watchedEmail, watchedIdNumber, saveLeadEarly]);
+  }, [
+    watchedFullName,
+    watchedPhone,
+    watchedEmail,
+    watchedIdNumber,
+    saveLeadEarly,
+  ]);
 
   const onSubmit = async (data: FormData) => {
+    console.log("data", data);
     const fieldKeys = Object.keys(data) as (keyof FormData)[];
     for (const key of fieldKeys) {
       if (key === "designations") {
@@ -594,10 +635,20 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
         });
       } else if (key === "additionalAreas") {
         // Filter out zero-area entries and dispatch
-        const filtered = (data.additionalAreas ?? []).filter((a) => a.areaSqm > 0);
-        dispatch({ type: "UPDATE_FIELD", field: "additionalAreas", value: filtered });
+        const filtered = (data.additionalAreas ?? []).filter(
+          (a) => a.areaSqm > 0,
+        );
+        dispatch({
+          type: "UPDATE_FIELD",
+          field: "additionalAreas",
+          value: filtered,
+        });
       } else if (key === "selectedFees") {
-        dispatch({ type: "UPDATE_FIELD", field: "selectedFees", value: data.selectedFees ?? [] });
+        dispatch({
+          type: "UPDATE_FIELD",
+          field: "selectedFees",
+          value: data.selectedFees ?? [],
+        });
       } else {
         dispatch({ type: "UPDATE_FIELD", field: key as any, value: data[key] });
       }
@@ -615,19 +666,19 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
     // Dispatch error report data
     if (claimedArea > 0) {
       dispatch({
-        type: 'SET_MEASUREMENT_ERROR',
-        payload: { claimed: claimedArea, attachment: '' },
+        type: "SET_MEASUREMENT_ERROR",
+        payload: { claimed: claimedArea, attachment: "" },
       });
     } else {
-      dispatch({ type: 'SET_MEASUREMENT_ERROR', payload: null });
+      dispatch({ type: "SET_MEASUREMENT_ERROR", payload: null });
     }
     if (suggestedClass) {
       dispatch({
-        type: 'SET_CLASSIFICATION_ERROR',
+        type: "SET_CLASSIFICATION_ERROR",
         payload: { suggested: suggestedClass },
       });
     } else {
-      dispatch({ type: 'SET_CLASSIFICATION_ERROR', payload: null });
+      dispatch({ type: "SET_CLASSIFICATION_ERROR", payload: null });
     }
 
     // Update lead with full property details
@@ -636,8 +687,8 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
         if (state.leadId) {
           // Lead already exists (created by auto-save) — update with property details
           await fetch(`/api/leads/${state.leadId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               fullName: data.fullName,
               email: data.email || undefined,
@@ -649,7 +700,10 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
                 propertyNumber: data.propertyNumber || undefined,
                 propertyId: data.propertyId || undefined,
                 address: data.address || undefined,
-                blockParcel: data.block && data.parcel ? { block: data.block, parcel: data.parcel } : undefined,
+                blockParcel:
+                  data.block && data.parcel
+                    ? { block: data.block, parcel: data.parcel }
+                    : undefined,
                 propertyArea: data.propertyArea || undefined,
                 coveredBalconyArea: data.coveredBalconyArea || undefined,
                 storageArea: data.storageArea || undefined,
@@ -663,23 +717,26 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
           });
         } else {
           // Lead not yet created (auto-save didn't fire) — create now with full data
-          const res = await fetch('/api/leads', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+          const res = await fetch("/api/leads", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               fullName: data.fullName,
               phone: data.phone,
               email: data.email || undefined,
               idNumber: data.idNumber || undefined,
-              source: 'calculator',
+              source: "calculator",
               calculation: {
-                abandonmentStage: 'data_entry',
+                abandonmentStage: "data_entry",
                 propertyType: state.propertyType,
                 citySlug: state.citySlug,
                 propertyNumber: data.propertyNumber || undefined,
                 propertyId: data.propertyId || undefined,
                 address: data.address || undefined,
-                blockParcel: data.block && data.parcel ? { block: data.block, parcel: data.parcel } : undefined,
+                blockParcel:
+                  data.block && data.parcel
+                    ? { block: data.block, parcel: data.parcel }
+                    : undefined,
                 propertyArea: data.propertyArea || undefined,
                 coveredBalconyArea: data.coveredBalconyArea || undefined,
                 storageArea: data.storageArea || undefined,
@@ -695,8 +752,11 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
           if (res.ok) {
             const result = await res.json();
             const newLeadId = String(result.lead._id);
-            dispatch({ type: 'SET_LEAD_ID', payload: newLeadId });
-            dispatch({ type: 'SET_CALCULATION_INDEX', payload: result.calculationIndex });
+            dispatch({ type: "SET_LEAD_ID", payload: newLeadId });
+            dispatch({
+              type: "SET_CALCULATION_INDEX",
+              payload: result.calculationIndex,
+            });
             // Link any consent records created before the lead existed
             linkConsents(data.phone, newLeadId);
           }
@@ -709,10 +769,30 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
     dispatch({ type: "NEXT_STEP" });
   };
 
+  const onInvalid = useCallback(() => {
+    requestAnimationFrame(() => {
+      const invalid = document.querySelector<HTMLElement>(
+        '[aria-invalid="true"]',
+      );
+      invalid?.scrollIntoView({ behavior: "smooth", block: "center" });
+      const focusTarget =
+        invalid?.matches("input, select, textarea, button")
+          ? invalid
+          : invalid?.querySelector<HTMLElement>(
+              "input, select, textarea, [tabindex]:not([tabindex='-1'])",
+            );
+      focusTarget?.focus({ preventScroll: true });
+    });
+  }, []);
+
+  const showValidationAlert =
+    isSubmitted &&
+    !isSubmitSuccessful &&
+    Object.keys(errors).length > 0;
+
   const fieldsGridSx = {
     display: "grid",
-    gridTemplateColumns:
-      "repeat(auto-fill, minmax(min(100%, 150px), 1fr))",
+    gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 150px), 1fr))",
     gap: 2,
     width: "100%",
     minWidth: 0,
@@ -723,14 +803,19 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
   return (
     <Box
       component="form"
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, onInvalid)}
       noValidate
-      sx={{...sx, minWidth: 0 }}
-
+      sx={{ ...sx, minWidth: 0 }}
     >
       <Typography variant="h6" component="h2" textAlign="center" sx={{ mb: 2 }}>
         מילוי פרטים
       </Typography>
+
+      {showValidationAlert ? (
+        <Alert severity="error" sx={{ mb: 2 }} role="alert" aria-live="polite">
+          יש שגיאות בטופס. נא לתקן את השדות המסומנים באדום.
+        </Alert>
+      ) : null}
 
       <Box sx={fieldsGridSx}>
         {/* 1. פרטי המשתמש */}
@@ -802,7 +887,6 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
             )}
           />
         </Box>
-   
 
         {/* Business designations */}
         {isBusiness && (
@@ -847,216 +931,225 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
         )}
 
         {/* 2. סיווג הנכס */}
-{!isBusiness &&     <>   <Box sx={fullRowSx}>
-          <Typography
-            variant="subtitle1"
-            color="text.secondary"
-            fontWeight={600}
-            sx={{ mt: 1.5, mb: 0.5 }}
-          >
-            סיווג הנכס
-          </Typography>
-          <Divider sx={{ mb: 0 }} />
-        </Box>
-        
-          <Box sx={{ minWidth: 0 }}>
-            <Controller
-              name="propertyPurpose"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="ייעוד הנכס"
-                  select
-                  fullWidth
-                  size="small"
-                >
-                  <MenuItem value="">בחר</MenuItem>
-                  {types.map((t: IPropertyType) => (
-                    <MenuItem key={t.code} value={t.code}>
-                      {t.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              )}
-            />
-          </Box>
-      
-        <Box sx={{ minWidth: 0 }}>
-          <Controller
-            name="subType"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label="סוג/סיווג"
-                select
-                fullWidth
-                size="small"
-                disabled={!watchedType && !isBusiness}
+        {!isBusiness && (
+          <>
+            {" "}
+            <Box sx={fullRowSx}>
+              <Typography
+                variant="subtitle1"
+                color="text.secondary"
+                fontWeight={600}
+                sx={{ mt: 1.5, mb: 0.5 }}
               >
-                <MenuItem value="">בחר</MenuItem>
-                {filteredSubtypes.map((s: ISubType) => (
-                  <MenuItem key={s.code} value={s.code}>
-                    {s.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
-          />
-        </Box>
-        <Box sx={{ minWidth: 0 }}>
-          <Controller
-            name="zone"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label="אזור"
-                select
-                fullWidth
-                size="small"
-                disabled={!watchedSubType}
-              >
-                <MenuItem value="">בחר</MenuItem>
+                סיווג הנכס
+              </Typography>
+              <Divider sx={{ mb: 0 }} />
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Controller
+                name="propertyPurpose"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="ייעוד הנכס"
+                    select
+                    fullWidth
+                    size="small"
+                  >
+                    <MenuItem value="">בחר</MenuItem>
+                    {types.map((t: IPropertyType) => (
+                      <MenuItem key={t.code} value={t.code}>
+                        {t.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              />
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Controller
+                name="subType"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="סוג/סיווג"
+                    select
+                    fullWidth
+                    size="small"
+                    disabled={!watchedType && !isBusiness}
+                  >
+                    <MenuItem value="">בחר</MenuItem>
+                    {filteredSubtypes.map((s: ISubType) => (
+                      <MenuItem key={s.code} value={s.code}>
+                        {s.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              />
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Controller
+                name="zone"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="אזור"
+                    select
+                    fullWidth
+                    size="small"
+                    disabled={!watchedSubType}
+                  >
+                    <MenuItem value="">בחר</MenuItem>
 
-                {filteredZones.map((z: IZoneRate) => (
-                  <MenuItem key={z.zone} value={z.zone}>
-                    {z.zoneLabel}
-                  </MenuItem>
-                ))}
-              </TextField>
+                    {filteredZones.map((z: IZoneRate) => (
+                      <MenuItem key={z.zone} value={z.zone}>
+                        {z.zoneLabel}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              />
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Controller
+                name="propertyArea"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label='סה"כ שטח הנכס (מ"ר) *'
+                    type="number"
+                    fullWidth
+                    size="small"
+                    error={!!errors.propertyArea}
+                    helperText={errors.propertyArea?.message}
+                  />
+                )}
+              />
+            </Box>
+            {/* Dynamic area type fields OR legacy hardcoded fields */}
+            {hasAreaTypeDiscounts ? (
+              <>
+                {(cityData.areaTypeDiscounts as any[]).map(
+                  (d: any, idx: number) => (
+                    <Box key={d.areaType} sx={{ minWidth: 0 }}>
+                      <Controller
+                        name={`additionalAreas.${idx}.areaSqm` as const}
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            label={`${d.label} (מ"ר)`}
+                            type="number"
+                            fullWidth
+                            size="small"
+                            helperText={`הנחה ${d.discountPercent}%`}
+                          />
+                        )}
+                      />
+                    </Box>
+                  ),
+                )}
+              </>
+            ) : (
+              <>
+                <Box sx={{ minWidth: 0 }}>
+                  <Controller
+                    name="coveredBalconyArea"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label='מרפסת מקורה (מ"ר)'
+                        type="number"
+                        fullWidth
+                        size="small"
+                      />
+                    )}
+                  />
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Controller
+                    name="storageArea"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label='מחסן (מ"ר)'
+                        type="number"
+                        fullWidth
+                        size="small"
+                      />
+                    )}
+                  />
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Controller
+                    name="parkingArea"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label='חניה (מ"ר)'
+                        type="number"
+                        fullWidth
+                        size="small"
+                      />
+                    )}
+                  />
+                </Box>
+              </>
             )}
-          />
-        </Box>
-        <Box sx={{ minWidth: 0 }}>
-          <Controller
-            name="propertyArea"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label='שטח הנכס (מ"ר) *'
-                type="number"
-                fullWidth
-                size="small"
-                error={!!errors.propertyArea}
-                helperText={errors.propertyArea?.message}
-              />
-            )}
-          />
-        </Box>
-        {/* Dynamic area type fields OR legacy hardcoded fields */}
-        {hasAreaTypeDiscounts ? (
-          <>
-            {(cityData.areaTypeDiscounts as any[]).map((d: any, idx: number) => (
-              <Box key={d.areaType} sx={{ minWidth: 0 }}>
-                <Controller
-                  name={`additionalAreas.${idx}.areaSqm` as const}
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label={`${d.label} (מ"ר)`}
-                      type="number"
-                      fullWidth
-                      size="small"
-                      helperText={`הנחה ${d.discountPercent}%`}
-                    />
-                  )}
-                />
-              </Box>
-            ))}
-          </>
-        ) : (
-          <>
-            <Box sx={{ minWidth: 0 }}>
-              <Controller
-                name="coveredBalconyArea"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    label='מרפסת מקורה (מ"ר)'
-                    type="number"
-                    fullWidth
-                    size="small"
-                  />
-                )}
-              />
-            </Box>
-            <Box sx={{ minWidth: 0 }}>
-              <Controller
-                name="storageArea"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    label='מחסן (מ"ר)'
-                    type="number"
-                    fullWidth
-                    size="small"
-                  />
-                )}
-              />
-            </Box>
-            <Box sx={{ minWidth: 0 }}>
-              <Controller
-                name="parkingArea"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    label='חניה (מ"ר)'
-                    type="number"
-                    fullWidth
-                    size="small"
-                  />
-                )}
-              />
-            </Box>
+            {/* City fees selection */}
+            {hasCityFees &&
+              (cityData.cityFees as any[]).some((f: any) => !f.isMandatory) && (
+                <Box sx={fullRowSx}>
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    sx={{ mt: 1, mb: 0.5 }}
+                  >
+                    אגרות נוספות (אופציונלי)
+                  </Typography>
+                  {(cityData.cityFees as any[])
+                    .filter((f: any) => !f.isMandatory)
+                    .map((f: any) => (
+                      <Controller
+                        key={f.name}
+                        name="selectedFees"
+                        control={control}
+                        render={({ field }) => (
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                checked={(field.value ?? []).includes(f.name)}
+                                onChange={(e) => {
+                                  const current = field.value ?? [];
+                                  if (e.target.checked) {
+                                    field.onChange([...current, f.name]);
+                                  } else {
+                                    field.onChange(
+                                      current.filter(
+                                        (n: string) => n !== f.name,
+                                      ),
+                                    );
+                                  }
+                                }}
+                              />
+                            }
+                            label={`${f.name} (₪${f.amount} לדו-חודש)`}
+                          />
+                        )}
+                      />
+                    ))}
+                </Box>
+              )}
           </>
         )}
-
-        {/* City fees selection */}
-        {hasCityFees && (cityData.cityFees as any[]).some((f: any) => !f.isMandatory) && (
-          <Box sx={fullRowSx}>
-            <Typography
-              variant="subtitle2"
-              color="text.secondary"
-              sx={{ mt: 1, mb: 0.5 }}
-            >
-              אגרות נוספות (אופציונלי)
-            </Typography>
-            {(cityData.cityFees as any[])
-              .filter((f: any) => !f.isMandatory)
-              .map((f: any) => (
-                <Controller
-                  key={f.name}
-                  name="selectedFees"
-                  control={control}
-                  render={({ field }) => (
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={(field.value ?? []).includes(f.name)}
-                          onChange={(e) => {
-                            const current = field.value ?? [];
-                            if (e.target.checked) {
-                              field.onChange([...current, f.name]);
-                            } else {
-                              field.onChange(current.filter((n: string) => n !== f.name));
-                            }
-                          }}
-                        />
-                      }
-                      label={`${f.name} (₪${f.amount} לדו-חודש)`}
-                    />
-                  )}
-                />
-              ))}
-          </Box>
-        )}</>}
 
         {liveRate && state.citySlug !== "other" && (
           <Box sx={fullRowSx}>
@@ -1210,7 +1303,11 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
           minWidth: 0,
         }}
       >
-        <Typography component="span" variant="body2" sx={{ flexShrink: 0,width: '35%' }}>
+        <Typography
+          component="span"
+          variant="body2"
+          sx={{ flexShrink: 0, width: "35%" }}
+        >
           טעות במדידה
         </Typography>
         <TextField
@@ -1222,56 +1319,65 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
             dispatch({ type: "SET_MIA_MESSAGE", payload: "error-measurement" })
           }
           inputProps={{
-            "aria-label": 'שטח מתוקן במטרים רבועים',
+            "aria-label": "שטח מתוקן במטרים רבועים",
           }}
           size="small"
           sx={{ flex: 1, minWidth: 0 }}
         />
       </Box>
 
-      {isBusiness && <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 2,
-          mb: 2,
-          minWidth: 0,
-        }}
-      >
-        <Typography component="span" variant="body2" sx={{ flexShrink: 0,width: '35%' }}>
-          טעות בסיווג
-        </Typography>
-        <TextField
-          select
-          value={suggestedClass}
-          onChange={(e) => setSuggestedClass(e.target.value)}
-          onFocus={() =>
-            dispatch({ type: "SET_MIA_MESSAGE", payload: "error-classification" })
-          }
-          size="small"
-          sx={{ flex: 1, minWidth: 0 }}
-          SelectProps={{
-            displayEmpty: true,
-            renderValue: (value: unknown) => {
-              const v = value as string;
-              if (!v) return "בחר";
-              return (
-                allSubtypes.find((s: ISubType) => s.code === v)?.label ?? v
-              );
-            },
-          }}
-          inputProps={{
-            "aria-label": "סיווג מוצע",
+      {isBusiness && (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            mb: 2,
+            minWidth: 0,
           }}
         >
-          <MenuItem value="">בחר</MenuItem>
-          {allSubtypes.map((s: ISubType) => (
-            <MenuItem key={s.code} value={s.code}>
-              {s.label}
-            </MenuItem>
-          ))}
-        </TextField>
-      </Box>}
+          <Typography
+            component="span"
+            variant="body2"
+            sx={{ flexShrink: 0, width: "35%" }}
+          >
+            טעות בסיווג
+          </Typography>
+          <TextField
+            select
+            value={suggestedClass}
+            onChange={(e) => setSuggestedClass(e.target.value)}
+            onFocus={() =>
+              dispatch({
+                type: "SET_MIA_MESSAGE",
+                payload: "error-classification",
+              })
+            }
+            size="small"
+            sx={{ flex: 1, minWidth: 0 }}
+            SelectProps={{
+              displayEmpty: true,
+              renderValue: (value: unknown) => {
+                const v = value as string;
+                if (!v) return "בחר";
+                return (
+                  allSubtypes.find((s: ISubType) => s.code === v)?.label ?? v
+                );
+              },
+            }}
+            inputProps={{
+              "aria-label": "סיווג מוצע",
+            }}
+          >
+            <MenuItem value="">בחר</MenuItem>
+            {allSubtypes.map((s: ISubType) => (
+              <MenuItem key={s.code} value={s.code}>
+                {s.label}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Box>
+      )}
 
       <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
         <Button

@@ -189,7 +189,7 @@ export function CalculatorMiaSpeechBubbleTyping({
         sx={{
           fontWeight: 700,
           fontSize: "13px",
-          color: "#1a3380",
+          color: "#1a1a1a",
           mb: 1.5,
           display: "block",
           textAlign: "left",
@@ -200,7 +200,7 @@ export function CalculatorMiaSpeechBubbleTyping({
 
       {phase >= 1 && (
         <>
-          <Box sx={{ height: 1, bgcolor: "#e5ebf7", mb: 1.5 }} />
+          <Box sx={{ height: 1, bgcolor: "#f0ebe4", mb: 1.5 }} />
           <TypingText
             key={`desc-${contentKey}`}
             text={displayDescription}
