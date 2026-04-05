@@ -123,11 +123,12 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
         sx={{
           display: "flex",
           justifyContent: "center",
+          gap: 2
         }}
       >
-        {/* <Button variant="outlined" onClick={() => dispatch({ type: 'RESET_CALCULATOR' })}>
+      <Button variant="outlined" onClick={() => dispatch({ type: 'SET_STEP', step: 0 })}>
               חזרה להתחלה
-            </Button> */}
+            </Button>
         <Button variant="contained" onClick={handlePrimaryClick}>
           {paymentEnabled ? "תשלום וצפייה בתוצאות" : "צפה בתוצאות מפורטות"}
         </Button>

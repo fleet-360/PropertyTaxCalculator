@@ -585,6 +585,7 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
   }, [watchedFullName, watchedPhone, watchedEmail, watchedIdNumber, saveLeadEarly]);
 
   const onSubmit = async (data: FormData) => {
+    console.log('data', data);
     const fieldKeys = Object.keys(data) as (keyof FormData)[];
     for (const key of fieldKeys) {
       if (key === "designations") {
@@ -936,7 +937,7 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
             render={({ field }) => (
               <TextField
                 {...field}
-                label='שטח הנכס (מ"ר) *'
+                label='סה"כ שטח הנכס (מ"ר) *'
                 type="number"
                 fullWidth
                 size="small"
