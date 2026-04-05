@@ -157,7 +157,6 @@ export default function AiPromptsPageClient({
                     <TableCell>שם</TableCell>
                     <TableCell>מפתח</TableCell>
                     <TableCell>משתנים</TableCell>
-                    <TableCell>גרסה</TableCell>
                     <TableCell>עודכן</TableCell>
                     <TableCell>פעיל</TableCell>
                     <TableCell align="right">פעולות</TableCell>
@@ -202,9 +201,7 @@ export default function AiPromptsPageClient({
                           )}
                         </Box>
                       </TableCell>
-                      <TableCell>
-                        <Chip label={`v${prompt.version}`} size="small" variant="outlined" />
-                      </TableCell>
+
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
                           {new Date(prompt.updatedAt).toLocaleDateString('he-IL')}
