@@ -40,6 +40,9 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import MiaMessagePickerModal from '@/components/common/MiaMessagePickerModal';
+import SectionExtractDialog from '@/components/admin/SectionExtractDialog';
+import SectionExtractTrigger from '@/components/admin/SectionExtractTrigger';
+import type { SectionKey } from '@/lib/vision/ordinance-extractor';
 import {
   normalizeCityTariffPayload,
   validateCityTariffPayload,
@@ -97,6 +100,9 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
     areaTypeDiscounts: true,
     cityFees: true,
   });
+
+  const [sectionExtractOpen, setSectionExtractOpen] = React.useState<SectionKey | null>(null);
+  const [sectionExtractLabel, setSectionExtractLabel] = React.useState('');
 
   const [origin, setOrigin] = React.useState('');
   const [ordinanceUploading, setOrdinanceUploading] = React.useState(false);
@@ -168,6 +174,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
     );
   }, [selectedExemptionSectionIndex, selectedExemptionSubsLen]);
 
+  // const hasOrdinanceImportData = typeof window !== 'undefined' && !!sessionStorage?.getItem('ordinanceImportData');
   // ── Load imported ordinance data from sessionStorage ──────────────
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -177,7 +184,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
     try {
       const stored = sessionStorage.getItem('ordinanceImportData');
       if (!stored) return;
-
+      console.log('stored', stored);
       const imported: ICityTariffData = JSON.parse(stored);
       sessionStorage.removeItem('ordinanceImportData');
 
@@ -210,6 +217,22 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       cityNameEn: value,
       slug: isNew ? value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : prev.slug,
     }));
+  };
+
+  // ── Section extraction handlers ──────────────────────────────────
+  const openSectionExtract = (key: SectionKey, label: string) => {
+    if (key === 'rates' && data.availableZones.length === 0) {
+      setSnackbar({ open: true, message: 'יש להגדיר אזורים לפני חילוץ תעריפים', severity: 'error' });
+      return;
+    }
+    setSectionExtractLabel(label);
+    setSectionExtractOpen(key);
+  };
+
+  const handleSectionExtracted = (sectionData: Partial<ICityTariffData>) => {
+    setData((prev) => ({ ...prev, ...sectionData }));
+    setSectionExtractOpen(null);
+    setSnackbar({ open: true, message: 'הנתונים חולצו בהצלחה — בדוק ושמור', severity: 'success' });
   };
 
   const handleSave = async () => {
@@ -831,9 +854,12 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
         onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, zones: exp }))}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            אזורים <Chip label={data.availableZones.length} size="small" sx={{ ml: 1 }} />
-          </Typography>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              אזורים <Chip label={data.availableZones.length} size="small" sx={{ ml: 1 }} />
+            </Typography>
+            <SectionExtractTrigger sectionKey="zones" sectionLabel="אזורים" onOpen={openSectionExtract} />
+          </Stack>  
         </AccordionSummary>
         <AccordionDetails>
           {data.availableZones.map((zone, zi) => (
@@ -879,9 +905,16 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
         onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, types: exp }))}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            סוגי נכס ותעריפים <Chip label={data.types.length} size="small" sx={{ ml: 1 }} />
-          </Typography>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              סוגי נכס ותעריפים <Chip label={data.types.length} size="small" sx={{ ml: 1 }} />
+            </Typography>
+            <SectionExtractTrigger
+              sectionKey="rates"
+              sectionLabel="סוגי נכס ותעריפים"
+              onOpen={openSectionExtract}
+            />
+          </Stack>
         </AccordionSummary>
         <AccordionDetails>
           {data.types.length === 0 ? (
@@ -1317,9 +1350,16 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
         onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, exemptions: exp }))}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            הנחות / פטורים <Chip label={data.exemptions.length} size="small" sx={{ ml: 1 }} />
-          </Typography>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              הנחות / פטורים <Chip label={data.exemptions.length} size="small" sx={{ ml: 1 }} />
+            </Typography>
+            <SectionExtractTrigger
+              sectionKey="exemptions"
+              sectionLabel="הנחות ופטורים"
+              onOpen={openSectionExtract}
+            />
+          </Stack>
         </AccordionSummary>
         <AccordionDetails>
           {data.exemptions.length === 0 ? (
@@ -1677,9 +1717,16 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
         onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, areaTypeDiscounts: exp }))}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            הנחות שטח <Chip label={(data.areaTypeDiscounts ?? []).length} size="small" sx={{ ml: 1 }} />
-          </Typography>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              הנחות שטח <Chip label={(data.areaTypeDiscounts ?? []).length} size="small" sx={{ ml: 1 }} />
+            </Typography>
+            <SectionExtractTrigger
+              sectionKey="extras"
+              sectionLabel="הנחות שטח ואגרות"
+              onOpen={openSectionExtract}
+            />
+          </Stack>
         </AccordionSummary>
         <AccordionDetails>
           {(data.areaTypeDiscounts ?? []).map((d, di) => (
@@ -1791,9 +1838,16 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
         onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, cityFees: exp }))}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            אגרות נוספות <Chip label={(data.cityFees ?? []).length} size="small" sx={{ ml: 1 }} />
-          </Typography>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              אגרות נוספות <Chip label={(data.cityFees ?? []).length} size="small" sx={{ ml: 1 }} />
+            </Typography>
+            <SectionExtractTrigger
+              sectionKey="extras"
+              sectionLabel="הנחות שטח ואגרות"
+              onOpen={openSectionExtract}
+            />
+          </Stack>
         </AccordionSummary>
         <AccordionDetails>
           {(data.cityFees ?? []).map((f, fi) => (
@@ -1905,6 +1959,18 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Section extract dialog */}
+      {sectionExtractOpen && (
+        <SectionExtractDialog
+          open
+          onClose={() => setSectionExtractOpen(null)}
+          sectionKey={sectionExtractOpen}
+          sectionLabel={sectionExtractLabel}
+          existingData={data}
+          onSectionExtracted={handleSectionExtracted}
+        />
+      )}
 
       {/* Mia message picker for exemption sections */}
       <MiaMessagePickerModal

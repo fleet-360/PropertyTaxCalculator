@@ -8,7 +8,7 @@ import CalculatorUnavailableMessage from "@/components/calculator/CalculatorUnav
 import type { CalculatorFeatureConfig } from "@/lib/types/system-config";
 import type { IMiaMessageData } from "@/lib/types/mia-message";
 import Image from "next/image";
-import miaImage from "@/assets/mia.gif";
+import miaImage from "@/assets/mia.png";
 import {
   fadeSlideUp,
   staggerContainer,
@@ -94,13 +94,13 @@ export default function CalculatorSection({
         minHeight: { xs: "auto", md: "100vh" },
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="xl">
         {/* Header */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: false }}
+          viewport={{ once: true }}
         >
           <Box sx={{ textAlign: "center", mb: { xs: 4, md: 6 } }}>
             <motion.div variants={childVariants}>
@@ -179,31 +179,34 @@ export default function CalculatorSection({
                 {/* Character illustration */}
                 <Box
                   sx={{
-                    width: 150,
-                    height: 433,
+                    width: "clamp(100px, 100%, 250px)",
                     display: { xs: "none", md: "flex" },
                     alignItems: "flex-end",
                     justifyContent: "center",
                     flexShrink: 0,
+                    mr: { xs: 0, md: 2 },
                   }}
                 >
                   <Box
                     sx={{
-                      width: 120,
-                      height: 350,
                       borderRadius: "60px 60px 10px 10px",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       flexDirection: "column",
+                      width: "100%", height: "100%",
                       gap: 1,
                     }}
                   >
                     <Image
                       src={miaImage}
                       alt="Mia"
-                      width={120}
-                      height={350}
+                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33.333vw"
+                      style={{
+                        objectFit: "contain",
+                        width: "100%",
+                        height: "100%",
+                      }}
                     />
                   </Box>
                 </Box>
@@ -282,7 +285,7 @@ export default function CalculatorSection({
                   mx: "auto",
                   width: "100%",
                   height: "600px",
-                  maxWidth: "100%",
+                  maxWidth: "720px",
                   boxSizing: "border-box",
                 }}
               >
