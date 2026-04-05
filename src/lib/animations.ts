@@ -28,7 +28,7 @@ export const fadeSlideUp: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: createTransition(0.7),
+    transition: createTransition(0.7,1.5),
   },
 };
 
@@ -58,7 +58,7 @@ export const scaleIn: Variants = {
   visible: {
     scale: 1,
     opacity: 1,
-    transition: createTransition(1.0),
+    transition: createTransition(2),
   },
 };
 
