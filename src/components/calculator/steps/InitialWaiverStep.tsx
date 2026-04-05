@@ -96,7 +96,7 @@ export default function InitialWaiverStep({ state, dispatch, sx }: StepProps) {
           }}
           fullWidth
           sx={{
-            bgcolor: "#1a4fdb",
+            bgcolor: "#1a1a1a",
             color: "#fff",
             borderRadius: "12px",
             py: 1.5,
@@ -104,10 +104,10 @@ export default function InitialWaiverStep({ state, dispatch, sx }: StepProps) {
             fontWeight: 700,
             textTransform: "none",
             "&:hover": {
-              bgcolor: "#1540b8",
+              bgcolor: "#F28B00",
             },
             "&.Mui-disabled": {
-              bgcolor: "#b0c4f5",
+              bgcolor: "#d4d4d4",
               color: "#fff",
             },
           }}

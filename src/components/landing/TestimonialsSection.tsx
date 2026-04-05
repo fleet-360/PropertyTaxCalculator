@@ -172,7 +172,7 @@ export default function TestimonialsSection() {
                 >
                   <PlayArrowIcon
                     sx={{
-                      color: '#1a4fdb',
+                      color: '#F28B00',
                       fontSize: { xs: 32, md: 40 },
                       ml: 0.5,
                     }}
@@ -252,7 +252,7 @@ export default function TestimonialsSection() {
                         height: { xs: 40, md: 44 },
                         borderRadius: '22px',
                         flexShrink: 0,
-                        background: 'linear-gradient(to right, #1a4fdb, #00c7a3)',
+                        background: 'linear-gradient(to right, #F28B00, #FFB547)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -285,7 +285,7 @@ export default function TestimonialsSection() {
             flexWrap: 'wrap',
           }}
         >
-          <Box sx={{ width: 24, height: 8, borderRadius: 4, bgcolor: '#1a4fdb' }} />
+          <Box sx={{ width: 24, height: 8, borderRadius: 4, bgcolor: '#F28B00' }} />
           <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#d0d0d0' }} />
           <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#d0d0d0' }} />
           <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#d0d0d0' }} />

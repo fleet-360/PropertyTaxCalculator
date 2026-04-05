@@ -42,9 +42,9 @@ export interface InvoiceEmailParams {
 /* ------------------------------------------------------------------ */
 
 const COLORS = {
-  primary: '#1a4fdb',
-  primaryDark: '#1a3380',
-  secondary: '#00c7a3',
+  primary: '#1a1a1a',
+  primaryDark: '#000000',
+  secondary: '#F28B00',
   success: '#2e7d32',
   textPrimary: '#1a1a2e',
   textSecondary: '#555555',
