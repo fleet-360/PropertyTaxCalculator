@@ -73,8 +73,10 @@ const PROMPT_DEFINITIONS: PromptSeedData[] = [
   },
 ];
 
+const forceUpdate = process.argv.includes('--force');
+
 async function seed() {
-  console.log('Connecting to MongoDB...');
+  console.log(`Connecting to MongoDB...${forceUpdate ? ' (--force: will overwrite existing prompts)' : ''}`);
   await mongoose.connect(MONGODB_URI, {
     dbName: 'property-tax-calculator',
     bufferCommands: false,
@@ -82,6 +84,7 @@ async function seed() {
   console.log('Connected.');
 
   let created = 0;
+  let updated = 0;
   let skipped = 0;
 
   for (const def of PROMPT_DEFINITIONS) {
@@ -94,8 +97,27 @@ async function seed() {
 
     const existing = await AiPrompt.findOne({ key: def.key });
     if (existing) {
-      console.log(`  SKIP: "${def.key}" already exists (version ${existing.version})`);
-      skipped++;
+      if (forceUpdate) {
+        await AiPrompt.updateOne(
+          { key: def.key },
+          {
+            $set: {
+              content,
+              label: def.label,
+              description: def.description,
+              category: def.category,
+              templateVariables: def.templateVariables,
+              lastModifiedBy: 'seed-script',
+            },
+            $inc: { version: 1 },
+          },
+        );
+        console.log(`  UPDATE: "${def.key}" (version ${existing.version} → ${existing.version + 1}) ✓`);
+        updated++;
+      } else {
+        console.log(`  SKIP: "${def.key}" already exists (version ${existing.version})`);
+        skipped++;
+      }
       continue;
     }
 
@@ -115,7 +137,7 @@ async function seed() {
     created++;
   }
 
-  console.log(`\nDone. Created: ${created}, Skipped: ${skipped}`);
+  console.log(`\nDone. Created: ${created}, Updated: ${updated}, Skipped: ${skipped}`);
   await mongoose.disconnect();
 }
 
