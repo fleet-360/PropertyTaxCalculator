@@ -78,6 +78,8 @@ export interface WizardState {
   childrenCount: number;
   // Consent
   consentGiven: boolean;
+  //
+  saveInfoPremission: boolean;
   // Results
   calculationResult: any | null;
   // Loading
@@ -141,6 +143,7 @@ export const initialState: WizardState = {
   leadId: null,
   calculationIndex: 0,
   miaMessageId: 'step-0-default',
+  saveInfoPremission: false,
 };
 
 // ── Step definitions ──

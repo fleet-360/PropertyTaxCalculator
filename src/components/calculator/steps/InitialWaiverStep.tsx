@@ -15,7 +15,7 @@ const INITIAL_WAIVER_TEXT = CONSENT_TEXTS.data_retention.text;
 
 export default function InitialWaiverStep({ state, dispatch, sx }: StepProps) {
   const { submitConsent } = useConsentSubmit();
-  const [accepted, setAccepted] = useState(false);
+  const [accepted, setAccepted] = useState(state.saveInfoPremission);
 
   useEffect(() => {
     dispatch({ type: "SET_MIA_MESSAGE", payload: "step-1-default" });
@@ -91,6 +91,7 @@ export default function InitialWaiverStep({ state, dispatch, sx }: StepProps) {
           variant="contained"
           disabled={!accepted}
           onClick={() => {
+            dispatch({ type: "UPDATE_FIELD", field: "saveInfoPremission", value: accepted });
             dispatch({ type: "NEXT_STEP" });
           }}
           fullWidth
