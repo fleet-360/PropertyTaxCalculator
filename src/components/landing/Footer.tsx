@@ -3,6 +3,7 @@ import Link from 'next/link';
 import logo from '@/assets/icon-with-text-no-background.png';
 import { BLOG_PATHS } from '@/lib/blog/routes';
 import { getPosts } from '@/app/(public)/blog/page';
+import FooterLegalLinks from '@/components/landing/FooterLegalLinks';
 
 const quickLinks = [
   { label: 'דף הבית', href: '/#hero' },
@@ -274,17 +275,7 @@ export default async function Footer() {
                 width: '100%',
               }}
             >
-              <Typography
-                sx={{
-                  fontSize: { xs: '12px', sm: '13px' },
-                  color: '#141414',
-                  lineHeight: 1.5,
-                  wordBreak: 'break-word',
-                  maxWidth: '100%',
-                }}
-              >
-                מדיניות פרטיות&nbsp;&nbsp;|&nbsp;&nbsp;תנאי שימוש&nbsp;&nbsp;|&nbsp;&nbsp;נגישות
-              </Typography>
+              <FooterLegalLinks />
               <Typography
                 sx={{
                   fontSize: { xs: '12px', sm: '13px' },
