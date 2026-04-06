@@ -174,7 +174,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
     );
   }, [selectedExemptionSectionIndex, selectedExemptionSubsLen]);
 
-  // const hasOrdinanceImportData = typeof window !== 'undefined' && !!sessionStorage?.getItem('ordinanceImportData');
+  const hasOrdinanceImportData = typeof window !== 'undefined' && !!sessionStorage?.getItem('ordinanceImportData');
   // ── Load imported ordinance data from sessionStorage ──────────────
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -206,7 +206,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       // Ignore parse errors
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [hasOrdinanceImportData]);
 
   // Update slug from English name
   const handleCityNameEnChange = (value: string) => {
@@ -506,6 +506,26 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
         ...subtypes[si],
         zones: subtypes[si].zones.filter((_, i) => i !== zi),
       };
+      types[ti] = { ...types[ti], subtypes };
+      return { ...prev, types };
+    });
+  };
+
+  const duplicateZoneRate = (ti: number, si: number, zi: number) => {
+    setData((prev) => {
+      const types = [...prev.types];
+      const subtypes = [...types[ti].subtypes];
+      const zones = [...subtypes[si].zones];
+      const src = zones[zi];
+      const hasZone = Boolean(src.zone?.trim());
+      const copy: IZoneRate = {
+        ...src,
+        zone: hasZone ? '' : src.zone,
+        zoneLabel: hasZone ? '' : src.zoneLabel,
+        sizeRanges: src.sizeRanges?.map((sr) => ({ ...sr })),
+      };
+      zones.splice(zi + 1, 0, copy);
+      subtypes[si] = { ...subtypes[si], zones };
       types[ti] = { ...types[ti], subtypes };
       return { ...prev, types };
     });
@@ -914,7 +934,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
               sectionLabel="סוגי נכס ותעריפים"
               onOpen={openSectionExtract}
             />
-          </Stack>
+          </Stack>  
         </AccordionSummary>
         <AccordionDetails>
           {data.types.length === 0 ? (
@@ -1010,7 +1030,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                     </Button>
                   </Box>
                   <List dense disablePadding aria-label="רשימת סוגי נכס">
-                    {data.types.map((type, ti) => (
+                    {data.types.sort((a, b) => a.code.localeCompare(b.code)).map((type, ti) => (
                       <ListItemButton
                         key={ti}
                         selected={selectedTypeIndex === ti}
@@ -1088,7 +1108,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                           selected={selectedSubtypeIndex === si}
                           onClick={() => setSelectedSubtypeIndex(si)}
                           aria-current={selectedSubtypeIndex === si ? 'true' : undefined}
-                          aria-label={`בחר תת־סוג ${sub.label || sub.code || si}`}
+                          aria-label={`בחר תת־סוג ${sub.label || sub?.code || si}`}
                         >
                           <ListItemText
                             primary={`${sub.code || '—'} · ${sub.label || 'ללא שם'}`}
@@ -1122,7 +1142,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                       return (
                         <Box>
                           <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
-                            תעריף: {sub.label || sub.code || 'תת־סוג'}
+                            תעריף: {sub?.label || sub?.code || 'תת־סוג'}
                           </Typography>
                           <Box sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                             <TextField
@@ -1256,12 +1276,21 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                                 />
                                 <IconButton
                                   size="small"
+                                  color="primary"
+                                  onClick={() => duplicateZoneRate(ti, si, zi)}
+                                  aria-label="שכפול שורת אזור"
+                                >
+                                  <ContentCopyIcon fontSize="small" />
+                                </IconButton>
+                                <IconButton
+                                  size="small"
                                   color="error"
                                   onClick={() => removeZoneRate(ti, si, zi)}
                                   aria-label="מחק שורת אזור"
                                 >
                                   <DeleteIcon fontSize="small" />
                                 </IconButton>
+
                               </Box>
 
                               {sub.hasSizeRanges && (
