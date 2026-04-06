@@ -136,7 +136,7 @@ export default function ExemptionsStep({ state, dispatch ,sx}: StepProps) {
                     בחר קטגוריה
                   </MenuItem>
                   {exemptionSections.map((section) => (
-                    <MenuItem key={section.sectionCode} value={section.sectionCode}>
+                    <MenuItem key={section.sectionLabel + section.sectionCode} value={section.sectionCode}>
                       {section.sectionLabel}
                     </MenuItem>
                   ))}

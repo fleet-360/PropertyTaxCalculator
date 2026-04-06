@@ -70,6 +70,21 @@ export async function loadCouponsAdmin(): Promise<ICouponData[]> {
   }));
 }
 
+
+export async function loadSystemConfigForPublic(): Promise<Partial<ISystemConfigData> | null> {
+  await dbConnect();
+  const data = await SystemConfig.getConfig();
+  if (!data) return null;
+  const config = {
+    contactEmails: {
+      noreply: data.contactEmails?.noreply || '',
+      calculator: data.contactEmails?.calculator || '',
+      service: data.contactEmails?.service || '',
+    },
+  };
+  return JSON.parse(JSON.stringify(config)) as Partial<ISystemConfigData>;
+}
+
 export async function loadSystemConfigForAdmin(): Promise<ISystemConfigData> {
   await requireAdminSession();
   await dbConnect();

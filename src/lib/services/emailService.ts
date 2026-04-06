@@ -10,12 +10,15 @@ import {
   type AppealPdfEmailParams,
   type InvoiceEmailParams,
 } from './emailTemplates';
+import { loadSystemConfigForPublic
+ } from '../admin/loaders';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
 export interface EmailOptions {
+  from: string;
   to: string;
   subject: string;
   html: string;
@@ -83,10 +86,10 @@ function getTransporter(): Transporter {
 export async function sendEmail(options: EmailOptions): Promise<SendEmailResult> {
   try {
     const transporter = getTransporter();
-    const from = process.env.SMTP_FROM || 'מחשבון ארנונה <noreply@example.co.il>';
+    console.log('[sendEmail] from:', options.from, '| to:', options.to, '| subject:', options.subject);
 
     const info = await transporter.sendMail({
-      from,
+      from:options.from,
       to: options.to,
       subject: options.subject,
       html: options.html,
@@ -107,7 +110,11 @@ export async function sendEmail(options: EmailOptions): Promise<SendEmailResult>
 /* ------------------------------------------------------------------ */
 
 export async function sendResultsEmail(params: ResultsEmailParams): Promise<SendEmailResult> {
+  const settings = await loadSystemConfigForPublic
+();
+  const from = settings?.contactEmails?.calculator || '';
   return sendEmail({
+    from,
     to: params.to,
     subject: 'תוצאות מחשבון הארנונה',
     html: buildResultsEmailHtml(params),
@@ -115,7 +122,11 @@ export async function sendResultsEmail(params: ResultsEmailParams): Promise<Send
 }
 
 export async function sendAppealEmail(params: AppealEmailParams): Promise<SendEmailResult> {
+  const settings = await loadSystemConfigForPublic
+();
+  const from = settings?.contactEmails?.calculator || '';
   return sendEmail({
+    from,
     to: params.to,
     subject: 'אישור הגשת השגה — מחשבון הארנונה',
     html: buildAppealEmailHtml(params),
@@ -140,7 +151,11 @@ export async function sendAppealPdfEmail(
     return { success: false, error: 'קובץ PDF גדול מדי לשליחה במייל' };
   }
 
+  const settings = await loadSystemConfigForPublic
+();
+  const from = settings?.contactEmails?.calculator || '';
   return sendEmail({
+    from,
     to: params.to,
     subject: 'מכתב השגה חתום — מחשבון הארנונה',
     html: buildAppealPdfEmailHtml(params),
@@ -155,7 +170,12 @@ export async function sendAppealPdfEmail(
 }
 
 export async function sendInvoiceEmail(params: InvoiceEmailParams): Promise<SendEmailResult> {
+  const settings = await loadSystemConfigForPublic
+();
+  const from = settings?.contactEmails?.noreply || '';
+  console.log('[sendInvoiceEmail] resolved from:', JSON.stringify(from), '| noreply field:', JSON.stringify(settings?.contactEmails?.noreply), '| all contactEmails:', JSON.stringify(settings?.contactEmails));
   return sendEmail({
+    from,
     to: params.to,
     subject: `חשבונית — מחשבון הארנונה`,
     html: buildInvoiceEmailHtml(params),
