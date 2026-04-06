@@ -1,9 +1,11 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Container, Typography } from "@mui/material";
-import { motion, useReducedMotion } from "framer-motion";
+import { alpha } from "@mui/material/styles";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { CalculatorMiaSpeechBubbleTyping } from "@/components/common/TypingText";
+import DocumentPreviewPopover from "@/components/common/DocumentPreviewPopover";
 import CalculatorUnavailableMessage from "@/components/calculator/CalculatorUnavailableMessage";
 import type { CalculatorFeatureConfig } from "@/lib/types/system-config";
 import type { IMiaMessageData } from "@/lib/types/mia-message";
@@ -62,6 +64,9 @@ export default function CalculatorSection({
     "step-0-default",
   );
 
+  // ── Ordinance URL from wizard (available after city selection) ──
+  const [ordinanceUrl, setOrdinanceUrl] = useState<string | undefined>();
+
   useEffect(() => {
     fetch("/api/mia-messages")
       .then((r) => r.json())
@@ -80,6 +85,10 @@ export default function CalculatorSection({
     setMiaMessageId(messageId);
   }, []);
 
+  const handleOrdinanceUrl = useCallback((url: string | undefined) => {
+    setOrdinanceUrl(url);
+  }, []);
+
   const currentMiaMessage = useMemo(
     () => combineMiaBubbleContent(miaMessageId, miaMessages),
     [miaMessages, miaMessageId],
@@ -90,7 +99,7 @@ export default function CalculatorSection({
       id="calculator-section"
       sx={{
         py: { xs: 6, md: 10 },
-        bgcolor: "#fff",
+        bgcolor: "background.default",
         minHeight: { xs: "auto", md: "100vh" },
       }}
     >
@@ -111,20 +120,20 @@ export default function CalculatorSection({
                     'var(--font-varela-round), "Varela Round", "Heebo", sans-serif',
                   fontWeight: 400,
                   fontSize: { xs: "24px", sm: "28px", md: "44px" },
-                  color: "#000",
+                  color: "text.primary",
                   mb: 1.5,
                   px: { xs: 1, sm: 2, md: 0 },
                   lineHeight: { xs: 1.25, md: 1.2 },
                 }}
               >
-                מחשבון הארנונה
+                מחשבון חכם
               </Typography>
             </motion.div>
             <motion.div variants={childVariants}>
               <Typography
                 sx={{
                   fontSize: { xs: "14px", sm: "16px", md: "18px" },
-                  color: "#000",
+                  color: "text.primary",
                   lineHeight: 1.5,
                   px: { xs: 1, sm: 2, md: 0 },
                   maxWidth: 640,
@@ -194,14 +203,15 @@ export default function CalculatorSection({
                       alignItems: "center",
                       justifyContent: "center",
                       flexDirection: "column",
-                      width: "100%", height: "100%",
+                      width: "100%",
+                      height: "100%",
                       gap: 1,
                     }}
                   >
                     <Image
                       src={miaImage}
                       alt="Mia"
-                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33.333vw"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33.333vw"
                       style={{
                         objectFit: "contain",
                         width: "100%",
@@ -220,16 +230,17 @@ export default function CalculatorSection({
                   }}
                 >
                   <Box
-                    sx={{
-                      bgcolor: "rgba(255,255,255,0.96)",
+                    sx={(theme) => ({
+                      bgcolor: "background.paper",
                       borderRadius: "20px",
-                      boxShadow: "0px 12px 30px rgba(0,0,0,0.2)",
+                      border: `1.5px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
+                      boxShadow: "0px 8px 24px rgba(0,0,0,0.12)",
                       p: { xs: 2, sm: 2.5 },
                       width: "100%",
                       textAlign: "right",
                       wordBreak: "break-word",
                       overflowWrap: "break-word",
-                    }}
+                    })}
                   >
                     <CalculatorMiaSpeechBubbleTyping
                       title={currentMiaMessage?.title}
@@ -247,7 +258,8 @@ export default function CalculatorSection({
                       height: 0,
                       borderTop: "15px solid transparent",
                       borderBottom: "15px solid transparent",
-                      borderRight: "20px solid rgba(255,255,255,0.96)",
+                      borderRight: "20px solid",
+                      borderRightColor: "background.paper",
                       display: { xs: "none", md: "block" },
                     }}
                   />
@@ -256,7 +268,7 @@ export default function CalculatorSection({
             </motion.div>
           </Box>
 
-          {/* Left side — Embedded Calculator (2/3) */}
+          {/* Left side — Calculator Device Frame (2/3) */}
           <Box
             sx={{
               width: "100%",
@@ -267,36 +279,156 @@ export default function CalculatorSection({
           >
             <motion.div
               style={{ width: "100%" }}
-              initial={reduceMotion ? undefined : { opacity: 0, x: -30 }}
-              whileInView={reduceMotion ? undefined : { opacity: 1, x: 0 }}
+              initial={
+                reduceMotion ? undefined : { opacity: 0, scale: 0.97 }
+              }
+              whileInView={
+                reduceMotion ? undefined : { opacity: 1, scale: 1 }
+              }
               viewport={{ once: true }}
               transition={{
-                duration: 0.6 * DURATION_MULTIPLIER,
-                delay: 0.2 * DURATION_MULTIPLIER,
+                duration: 0.7 * DURATION_MULTIPLIER,
+                ease: [0.22, 1, 0.36, 1],
               }}
             >
+              {/* CalcBody — dark gradient with 3D shadows (CodePen style) */}
               <Box
                 sx={{
-                  bgcolor: "#f1f5f9",
-                  border: "1px solid #d2d2d2",
+                  background:
+                    "linear-gradient(45deg, rgb(0,0,0), rgb(16,15,15), rgb(42,41,41), rgb(60,60,60))",
                   borderRadius: "20px",
-                  overflowY: "scroll",
-                  p: { xs: 1.5, sm: 2, md: 3 },
+                  borderTop: "5px solid rgb(91,90,90)",
+                  borderRight: "4px solid rgb(100,102,100)",
+                  boxShadow: [
+                    "10px 2px 50px rgb(0,0,0)",
+                    "0px -2px 4px 3px rgb(42,42,42)",
+                    "inset 20px -10px 10px rgb(0,0,0)",
+                    "inset 20px 15px 10px rgb(69,69,69)",
+                    "inset -20px 10px 10px rgb(62,62,62)",
+                    "inset -20px 1px 10px rgb(143,144,142)",
+                  ].join(", "),
+                  p: { xs: "10px", sm: "12px", md: "14px" },
+                  pb: { xs: "18px", sm: "22px", md: "26px" },
                   mx: "auto",
                   width: "100%",
-                  height: "600px",
                   maxWidth: "720px",
                   boxSizing: "border-box",
                 }}
               >
-                {featureConfig.systemEnabled ? (
-                  <CalculatorWizard
-                    features={featureConfig}
-                    onMiaMessage={handleMiaMessage}
+                {/* LCD Display — greenish screen above wizard */}
+                <Box
+                  sx={{
+                    bgcolor: "rgb(124,124,124)",
+                    backgroundImage:
+                      "linear-gradient(160deg, rgba(80,90,70,0.5), rgba(100,110,90,0.3))",
+                    backgroundBlendMode: "soft-light",
+                    borderRadius: "5px",
+                    p: { xs: 1, sm: 1.5 },
+                    mx: { xs: 0.5, sm: 1 },
+                    mb: { xs: 1, sm: 1.5 },
+                    boxShadow: "inset -10px 8px 7px rgba(0,0,0,0.7)",
+                    borderBottom: "2px solid #020101",
+                    borderLeft: "2px solid #020101",
+                    color: "rgb(255, 255, 255)",
+                    fontFamily: "monospace",
+                    fontSize: { xs: "16px", sm: "20px", md: "24px" },
+                    fontWeight: 700,
+                    textShadow: "4px 3px 3px rgb(88, 88, 88)",
+                    filter: "sepia(0.6) brightness(0.6)",
+                    minHeight: { xs: "36px", sm: "44px" },
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-start",
+                  }}
+                >
+                  מחשבון חכם
+                </Box>
+
+                {/* Brand label */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    px: { xs: 1, sm: 1.5 },
+                    mb: { xs: 1, sm: 1.5 },
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "12px",
+                      color: "rgb(81,79,79)",
+                      fontFamily:
+                        'var(--font-varela-round), "Varela Round", "Heebo", sans-serif',
+                      letterSpacing: "0.5px",
+                      userSelect: "none",
+                    }}
+                  >
+                    ארנונה חכמה
+                  </Typography>
+                  <Box
+                    sx={(theme) => ({
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      bgcolor: "secondary.main",
+                      boxShadow: `0 0 6px ${alpha(theme.palette.secondary.main, 0.6)}`,
+                    })}
                   />
-                ) : (
-                  <CalculatorUnavailableMessage variant="embedded" />
-                )}
+                </Box>
+
+                {/* Main screen — wizard area */}
+                <Box
+                  sx={{
+                    bgcolor: "#f5f5f0",
+                    borderRadius: "8px",
+                    height: { xs: "500px", sm: "550px", md: "600px" },
+                    overflowY: "auto",
+                    p: { xs: 1.5, sm: 2, md: 3 },
+                    boxShadow: "inset -8px 6px 6px rgba(0,0,0,0.5)",
+                    borderBottom: "2px solid #020101",
+                    borderLeft: "2px solid #020101",
+                  }}
+                >
+                  {featureConfig.systemEnabled ? (
+                    <CalculatorWizard
+                      features={featureConfig}
+                      onMiaMessage={handleMiaMessage}
+                      onOrdinanceUrl={handleOrdinanceUrl}
+                    />
+                  ) : (
+                    <CalculatorUnavailableMessage variant="embedded" />
+                  )}
+                </Box>
+
+                {/* Ordinance button — styled as calculator key */}
+                <AnimatePresence>
+                  {ordinanceUrl && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          pt: { xs: 1.5, sm: 2 },
+                          px: { xs: 1, sm: 1.5 },
+                        }}
+                      >
+                        <DocumentPreviewPopover
+                          documentUrl={ordinanceUrl}
+                          title="צו הארנונה"
+                          triggerLabel="צפייה בצו הארנונה"
+                          triggerAriaLabel="פתיחת תצוגה מקדימה של צו הארנונה"
+                          downloadLabel="הורדת צו הארנונה (PDF)"
+                        />
+                      </Box>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </Box>
             </motion.div>
           </Box>
