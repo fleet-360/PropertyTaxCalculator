@@ -34,6 +34,7 @@ const navItemsLanding = [
   { label: "מחשבון", href: "#calculator-section" },
   { label: "המלצות", href: "#testimonials" },
   { label: "מאמרים", href: BLOG_PATHS.home },
+  { label: "צור קשר", href: "/contact" },
 ];
 
 const navItemsRoutes = [
@@ -41,6 +42,7 @@ const navItemsRoutes = [
   { label: "מחשבון", href: "/#calculator-section" },
   { label: "המלצות", href: "/#testimonials" },
   { label: "מאמרים", href: BLOG_PATHS.home },
+  { label: "צור קשר", href: "/contact" },
 ];
 
 export type NavbarVariant = "landing" | "routes";

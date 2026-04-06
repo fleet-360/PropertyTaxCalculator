@@ -1,26 +1,22 @@
-'use client';
 import { Box, Container, Typography, Link as MuiLink } from '@mui/material';
 import Link from 'next/link';
+import logo from '@/assets/icon-with-text-no-background.png';
 import { BLOG_PATHS } from '@/lib/blog/routes';
+import { getPosts } from '@/app/(public)/blog/page';
+import FooterLegalLinks from '@/components/landing/FooterLegalLinks';
 
 const quickLinks = [
-  { label: 'דף הבית', href: '/' },
+  { label: 'דף הבית', href: '/#hero' },
   { label: 'מחשבון ארנונה', href: '/#calculator-section' },
-  { label: 'המלצות לקוחות', href: '#testimonials' },
+  { label: 'המלצות לקוחות', href: '/#testimonials' },
   { label: 'מאמרים', href: BLOG_PATHS.home },
-  { label: 'אודות', href: '#' },
-  { label: 'צור קשר', href: '#' },
+  { label: 'צור קשר', href: '/contact' }, 
 ];
 
-const articles = [
-  'כיצד לחשב ארנונה נכון?',
-  'הנחות ארנונה לאזרחים ותיקים',
-  'זכויות שוכרים בנושא ארנונה',
-  'ערעור על חיוב ארנונה',
-  'ארנונה לעסקים: מה צריך לדעת?',
-];
 
-export default function Footer() {
+
+export default async function Footer() {
+  const { posts } = await getPosts(1, 5);
   return (
     <Box component="footer" sx={{ bgcolor: '#fff', position: 'relative' }} >
       {/* Top gradient line */}
@@ -70,7 +66,7 @@ export default function Footer() {
                   wordBreak: 'break-word',
                 }}
               >
-                <span aria-hidden="true">✉</span>&nbsp;&nbsp;support@arnona.co.il
+                <span aria-hidden="true">✉</span>&nbsp;&nbsp;service@arnonacal.com
               </Typography>
               <Typography sx={{ fontSize: { xs: '13px', md: '14px' }, color: '#060606' }}>
                 <span aria-hidden="true">📞</span>&nbsp;&nbsp;03-123-4567
@@ -104,22 +100,19 @@ export default function Footer() {
               מאמרים
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.6 }}>
-              {articles.map((article, i) => (
-                <MuiLink
+              {posts.map((post, i) => (
+                <Link
                   key={i}
-                  component={Link}
                   href={BLOG_PATHS.home}
-                  sx={{
-                    fontSize: { xs: '13px', md: '14px' },
+                  style={{
+                    fontSize: '13px',
                     color: '#060606',
                     textDecoration: 'none',
-                    wordBreak: 'break-word',
-                    lineHeight: 1.45,
-                    '&:hover': { color: '#F28B00' },
+                    wordBreak: 'break-word'
                   }}
                 >
-                  › {article}
-                </MuiLink>
+                  › {post.title}
+                </Link>
               ))}
             </Box>
           </Box>
@@ -145,21 +138,21 @@ export default function Footer() {
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.6 }}>
               {quickLinks.map((link, i) => (
-                <MuiLink
+                <a
                   key={i}
-                  component={link.href.startsWith('/') || link.href.startsWith('#') ? Link : 'a'}
+                  // component={link.href.startsWith('/') || link.href.startsWith('#') ? Link : 'a'}
                   href={link.href}
-                  sx={{
-                    fontSize: { xs: '13px', md: '14px' },
+                  style={{
+                    fontSize: "13px",
                     color: '#060606',
                     textDecoration: 'none',
                     wordBreak: 'break-word',
                     lineHeight: 1.45,
-                    '&:hover': { color: '#F28B00' },
+                    // '&:hover': { color: '#F28B00' },
                   }}
                 >
                   › {link.label}
-                </MuiLink>
+                </a>
               ))}
             </Box>
           </Box>
@@ -183,23 +176,18 @@ export default function Footer() {
                 rowGap: 1,
               }}
             >
-              {/* TODO: Replace with actual logo image */}
               <Box
                 aria-hidden="true"
                 sx={{
                   width: { xs: 64, sm: 75 },
                   height: { xs: 58, sm: 68 },
                   flexShrink: 0,
-                  bgcolor: '#e8eef6',
-                  borderRadius: 2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: { xs: '24px', sm: '28px' },
+                  backgroundImage: `url(${logo.src})`,
+                  backgroundSize: 'contain',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
                 }}
-              >
-                🏠
-              </Box>
+              />
               <Typography
                 sx={{
                   fontWeight: 700,
@@ -224,26 +212,22 @@ export default function Footer() {
               <br />
               חיובי ארנונה ברחבי ישראל
             </Typography>
-            <Box
-              component="a"
-              href="mailto:support@arnona.co.il"
-              sx={{
+            <Link
+              href={"/contact"}
+              style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                bgcolor: 'rgba(242,139,0,0.1)',
+                backgroundColor: 'rgba(242,139,0,0.1)',
                 border: '1px solid rgba(242,139,0,0.3)',
                 borderRadius: '12px',
                 minHeight: 46,
-                py: { xs: 1.25, md: 0 },
-                px: { xs: 1.5, md: 2 },
-                width: { xs: '100%', md: 'auto' },
+                padding: "1.25px 1.5px 0px 2px",
+                width: "100%",
                 maxWidth: '100%',
-                boxSizing: 'border-box',
                 textDecoration: 'none',
                 cursor: 'pointer',
-                textAlign: 'center',
-                '&:hover': { bgcolor: 'rgba(242,139,0,0.18)' },
+                textAlign: 'center'
               }}
             >
               <Typography
@@ -255,9 +239,9 @@ export default function Footer() {
                   wordBreak: 'break-word',
                 }}
               >
-                <span aria-hidden="true">✉</span>&nbsp;&nbsp;שלח לנו מייל לתמיכה
+                <span aria-hidden="true">✉</span>&nbsp;&nbsp;צור קשר
               </Typography>
-            </Box>
+            </Link>
           </Box>
         </Box>
       </Container>
@@ -291,17 +275,7 @@ export default function Footer() {
                 width: '100%',
               }}
             >
-              <Typography
-                sx={{
-                  fontSize: { xs: '12px', sm: '13px' },
-                  color: '#141414',
-                  lineHeight: 1.5,
-                  wordBreak: 'break-word',
-                  maxWidth: '100%',
-                }}
-              >
-                מדיניות פרטיות&nbsp;&nbsp;|&nbsp;&nbsp;תנאי שימוש&nbsp;&nbsp;|&nbsp;&nbsp;נגישות
-              </Typography>
+              <FooterLegalLinks />
               <Typography
                 sx={{
                   fontSize: { xs: '12px', sm: '13px' },

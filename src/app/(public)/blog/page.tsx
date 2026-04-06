@@ -10,8 +10,9 @@ import { BLOG_PATHS } from '@/lib/blog/routes';
 import { getBlogSiteSettings } from '@/lib/blog/settings';
 import PostCard from '@/components/blog/PostCard';
 import Pagination from '@/components/blog/Pagination';
+import { PostsResponse } from '@/lib/types';
 
-async function getPosts(page: number, perPage: number) {
+export async function getPosts(page: number, perPage: number): Promise<PostsResponse> {
   await dbConnect();
   const skip = (page - 1) * perPage;
   const [posts, totalCount] = await Promise.all([
@@ -25,6 +26,7 @@ async function getPosts(page: number, perPage: number) {
   return {
     posts: JSON.parse(JSON.stringify(posts)),
     totalCount,
+    page,
     totalPages: Math.ceil(totalCount / perPage),
   };
 }
