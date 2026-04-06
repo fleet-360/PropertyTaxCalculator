@@ -190,6 +190,7 @@ export default function SystemConfigFormClient({ initialConfig }: { initialConfi
             <TextField
               label="מייל שירות"
               fullWidth
+              // disabled={true}
               value={config.contactEmails?.service || ''}
               onChange={(e) => updateContactEmail('service', e.target.value)}
               placeholder="service@example.com"
@@ -199,6 +200,7 @@ export default function SystemConfigFormClient({ initialConfig }: { initialConfi
             <TextField
               label="מייל noreply"
               fullWidth
+              // disabled={true}
               value={config.contactEmails?.noreply || ''}
               onChange={(e) => updateContactEmail('noreply', e.target.value)}
               placeholder="noreply@example.com"
@@ -208,6 +210,7 @@ export default function SystemConfigFormClient({ initialConfig }: { initialConfi
             <TextField
               label="מייל מחשבון"
               fullWidth
+              // disabled={true}
               value={config.contactEmails?.calculator || ''}
               onChange={(e) => updateContactEmail('calculator', e.target.value)}
               placeholder="calculator@example.com"

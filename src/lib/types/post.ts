@@ -90,7 +90,7 @@ export interface PostListItem {
 // ── Paginated posts response ────────────────────────────────────────
 export interface PostsResponse {
   posts: PostListItem[];
-  total: number;
+  totalCount: number;
   page: number;
   totalPages: number;
 }

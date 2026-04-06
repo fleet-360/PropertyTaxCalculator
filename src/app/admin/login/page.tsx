@@ -93,13 +93,13 @@ export default function LoginPage() {
               variant="h5"
               sx={{ fontWeight: 700, color: '#1a1a1a' }}
             >
-              Blog Manager
+              מערכת מנהל
             </Typography>
             <Typography
               variant="body2"
               sx={{ color: '#666', mt: 0.5 }}
             >
-              Sign in to your admin account
+              התחברות לחשבון המנהל
             </Typography>
           </Box>
 
@@ -153,7 +153,7 @@ export default function LoginPage() {
               {loading ? (
                 <CircularProgress size={24} sx={{ color: '#fff' }} />
               ) : (
-                'Sign In'
+                'התחברות'
               )}
             </Button>
           </Box>
