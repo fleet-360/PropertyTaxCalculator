@@ -359,12 +359,7 @@ function buildExistingDataContext(
     case 'rates':
       if (data.types && data.types.length > 0) {
         // Send a compact version: code, label, category, subtype codes
-        const compact = data.types.map((t) => ({
-          code: t.code,
-          label: t.label,
-          category: t.category,
-          subtypes: t.subtypes.map((s) => ({ code: s.code, label: s.label })),
-        }));
+        const compact = data.types??[]
         return JSON.stringify(compact, null, 2);
       }
       return null;
