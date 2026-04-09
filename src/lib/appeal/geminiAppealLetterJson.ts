@@ -18,7 +18,9 @@ import {
   type AppealLetterGeminiPayload,
 } from './appealLetterPayload';
 import type { AppealLetterVariant } from './appealLetterVariant';
+import type { AppealSubject } from './resolveAppealSubject';
 import { pickAppealBlobExamplesForGemini } from './pickAppealBlobExample';
+import { pickGeneralAppealBlobExamples } from './pickAppealBlobExample';
 import { pickPropertyTaxOrderBlobForCity } from './pickPropertyTaxOrderBlob';
 
 const APPEAL_JSON_GENERATION_CONFIG_BASE = {
@@ -134,6 +136,18 @@ async function buildJsonInstruction(variant: AppealLetterVariant, userJson: stri
   });
 }
 
+async function buildJsonInstructionBySubject(subject: AppealSubject, userJson: string): Promise<string> {
+  return getPrompt('appeal_letter_json', {
+    variant: subject.subjectType,
+    subjectType: subject.subjectType,
+    exemptionDescription: subject.exemptionDescription,
+    letterSubject: subject.letterSubject,
+    savingsAnnual: subject.savingsAnnual > 0 ? String(Math.round(subject.savingsAnnual)) : '___',
+    userJson,
+    schemaVersion: '1',
+  });
+}
+
 /**
  * Calls Gemini with JSON mode + optional responseSchema; validates with Zod; one retry on parse failure.
  */
@@ -239,6 +253,110 @@ export async function generateAppealLetterGeminiPayload(
           false,
         );
         assertVariantMatch(data, variant);
+      }
+    }
+  }
+
+  logParsedAppealGeminiPayload(data, { leadId: context.leadId });
+  return data;
+}
+
+/**
+ * Subject-based generation — picks general examples (not variant-specific) and
+ * uses the new subject-aware prompt.
+ */
+export async function generateAppealLetterBySubject(
+  context: AppealUserContext,
+  subject: AppealSubject,
+): Promise<AppealLetterGeminiPayload> {
+  const model = getAppealLetterGenerativeModel();
+  const directUris = getDirectAppealLetterExampleUris();
+  const blobSources = await getAppealLetterBlobSources();
+
+  // Use general examples instead of variant-specific ones
+  const pickedBlobs = pickGeneralAppealBlobExamples(blobSources);
+  const resolvedBlobRefs =
+    pickedBlobs.length > 0 ? await ensureGeminiFileRefs(pickedBlobs) : [];
+
+  // Municipal ordinance — still sent as before
+  const orderSources = await listPropertyTaxOrderBlobSources();
+  const pickedOrder = pickPropertyTaxOrderBlobForCity(orderSources, {
+    slug: context.city.slug,
+    name: context.city.name,
+  });
+  const resolvedOrderRefs = pickedOrder ? await ensureGeminiFileRefs([pickedOrder]) : [];
+
+  const pickedPaths = pickedBlobs.map((b) => b.displayName?.replace(/^blob-sample:/, '') ?? '?');
+  const pickedOrderPath = pickedOrder?.displayName?.replace(/^blob-order:/, '') ?? null;
+  console.log(
+    '[appeals/gemini-json] Subject-based generation:',
+    JSON.stringify(
+      {
+        leadId: context.leadId ?? null,
+        subjectType: subject.subjectType,
+        exemptionDescription: subject.exemptionDescription,
+        pickedBlobPaths: pickedPaths,
+        pickedOrderPath,
+        totalPdfFileParts: directUris.length + resolvedBlobRefs.length + resolvedOrderRefs.length,
+      },
+      null,
+      2,
+    ),
+  );
+
+  const userJson = JSON.stringify(context, null, 2);
+  const instruction = await buildJsonInstructionBySubject(subject, userJson);
+
+  const parts: Part[] = [
+    ...directUris.map((fileUri) => ({
+      fileData: { mimeType: APPEAL_EXAMPLE_PDF_MIME_TYPE, fileUri },
+    })),
+    ...resolvedBlobRefs.map(({ fileUri, mimeType }) => ({
+      fileData: { mimeType, fileUri },
+    })),
+    ...resolvedOrderRefs.map(({ fileUri, mimeType }) => ({
+      fileData: { mimeType, fileUri },
+    })),
+    { text: instruction },
+  ];
+
+  const callModel = async (
+    userParts: Part[],
+    useResponseSchema: boolean,
+  ): Promise<AppealLetterGeminiPayload> => {
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: userParts }],
+      generationConfig: {
+        ...APPEAL_JSON_GENERATION_CONFIG_BASE,
+        responseMimeType: 'application/json',
+        ...(useResponseSchema ? { responseSchema: appealJsonResponseSchema } : {}),
+      },
+    });
+    const text = result.response.text();
+    const raw = parseJsonFromModelText(text);
+    return parseAppealLetterGeminiPayload(raw);
+  };
+
+  const hintText = (err: unknown) =>
+    err instanceof Error ? err.message.slice(0, 800) : 'unknown error';
+
+  let data: AppealLetterGeminiPayload;
+  try {
+    data = await callModel(parts, true);
+  } catch (firstErr) {
+    try {
+      data = await callModel(
+        [...parts, { text: `\n\nFix your previous JSON. Errors:\n${hintText(firstErr)}` }],
+        true,
+      );
+    } catch {
+      try {
+        data = await callModel(parts, false);
+      } catch (thirdErr) {
+        data = await callModel(
+          [...parts, { text: `\n\nFix your previous JSON. Errors:\n${hintText(thirdErr)}` }],
+          false,
+        );
       }
     }
   }

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildAppealUserContext } from '@/lib/appeal/buildAppealUserContext';
-import { generateAppealLetterGeminiPayload } from '@/lib/appeal/geminiAppealLetterJson';
+import { generateAppealLetterBySubject } from '@/lib/appeal/geminiAppealLetterJson';
 import { buildAppealLetterHtml } from '@/lib/appeal/appealLetterHtml';
-import { mergeAppealLetter } from '@/lib/appeal/mergeAppealLetterDocument';
+import { mergeAppealLetterBySubject } from '@/lib/appeal/mergeAppealLetterDocument';
 import { renderAppealPdfFromHtml } from '@/lib/appeal/renderAppealPdfFromHtml';
 import { appealGenerateRequestSchema } from '@/lib/appeal/schemas';
-import { resolveAppealLetterVariant } from '@/lib/appeal/appealLetterVariant';
+import { resolveAppealSubject } from '@/lib/appeal/resolveAppealSubject';
 
 export const runtime = 'nodejs';
 
@@ -19,10 +19,10 @@ export async function POST(req: NextRequest) {
     }
 
     const context = buildAppealUserContext(parsed.data);
-    const variant = resolveAppealLetterVariant(context);
+    const subject = resolveAppealSubject(context);
 
-    const payload = await generateAppealLetterGeminiPayload(context, variant);
-    const doc = mergeAppealLetter(context, payload, variant);
+    const payload = await generateAppealLetterBySubject(context, subject);
+    const doc = mergeAppealLetterBySubject(context, payload, subject);
     const html = buildAppealLetterHtml(doc);
     const pdfBuffer = await renderAppealPdfFromHtml(html);
 
@@ -31,6 +31,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       pdfBase64,
       mimeType: 'application/pdf',
+      subjectType: subject.subjectType,
+      exemptionDescription: subject.exemptionDescription,
     });
   } catch (err) {
     console.error('[api/appeals/generate]', err);

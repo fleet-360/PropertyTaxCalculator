@@ -11,7 +11,7 @@ import { hardcodedDefaults } from '../lib/prompts/hardcoded-defaults';
 
 const MONGODB_URI =
   process.env.MONGODB_URI_MONGODB_URI ||
-  'mongodb+srv://benshuan_db_user:5u6gSXHSXLeMm6LV@taxcalculatordev.dujlziy.mongodb.net/property-tax-calculator-test?appName=taxCalculatorDev';
+  "mongodb+srv://Vercel-Admin-atlas-purple-prism:oMlxLAeHKMabI8Fq@atlas-purple-prism.4jxx7va.mongodb.net/property-tax-calculator?retryWrites=true&w=majority";
 
 interface PromptSeedData {
   key: string;
@@ -69,7 +69,7 @@ const PROMPT_DEFINITIONS: PromptSeedData[] = [
     category: 'appeal',
     label: 'יצירת מכתב השגה',
     description: 'פרומפט ליצירת מכתב השגה בארנונה בפורמט JSON מובנה',
-    templateVariables: ['variant', 'userJson', 'schemaVersion'],
+    templateVariables: ['variant', 'userJson', 'schemaVersion', 'subjectType', 'exemptionDescription', 'letterSubject', 'savingsAnnual'],
   },
 ];
 

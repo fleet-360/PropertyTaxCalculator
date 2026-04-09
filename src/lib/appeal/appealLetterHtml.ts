@@ -11,9 +11,9 @@ export function escapeHtmlText(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
-/** תווית או ערך בטופס — מודגש (כמו בדוגמת מכתב ההשגה) */
+/** תווית או ערך בטופס — מודגש */
 function metaStrong(s: string): string {
-  return `<strong class="appeal-meta-strong">${escapeHtmlText(s)}</strong>`;
+  return `<strong class="meta-strong">${escapeHtmlText(s)}</strong>`;
 }
 
 function paragraphsFromText(text: string, opts?: { bold?: boolean }): string {
@@ -21,8 +21,8 @@ function paragraphsFromText(text: string, opts?: { bold?: boolean }): string {
   return parts
     .map((p) => {
       const esc = escapeHtmlText(p);
-      const inner = opts?.bold ? `<strong class="appeal-strong">${esc}</strong>` : esc;
-      return `<p class="appeal-body-p">${inner}</p>`;
+      const inner = opts?.bold ? `<strong>${esc}</strong>` : esc;
+      return `<p class="body-p">${inner}</p>`;
     })
     .join('');
 }
@@ -36,39 +36,69 @@ function headingBlockHtml(level: 1 | 2 | 3, text: string): string {
   let inner: string;
   if (level === 1 && lines.length > 1) {
     const [first, ...rest] = lines;
-    inner = `${first}<br />${rest.map((l) => `<span class="appeal-doc-h1-subline">${l}</span>`).join('<br />')}`;
+    inner = `${first}<br />${rest.map((l) => `<span class="h1-subline">${l}</span>`).join('<br />')}`;
   } else {
     inner = lines.join('<br />');
   }
-  return `<h${level} class="appeal-doc-heading appeal-doc-h${level}">${inner}</h${level}>`;
+  const cls = level === 2 ? ' underline' : '';
+  return `<h${level} class="doc-h${level}${cls}">${inner}</h${level}>`;
 }
 
 function buildFixedLetterFrontMatter(doc: NormalizedAppealLetter): string {
   const h = doc.header;
   const addressLine = `${h.addressLine} גוש ${h.block} חלקה ${h.parcel} תת חלקה ${h.subParcel}`;
-  const propertyDetails = `נכס מס': ${h.propertyNumber}`;
 
   const titlesBlock =
     doc.titleLine1.trim() || doc.titleLine2.trim()
-      ? `<div class="appeal-doc-main-titles" role="presentation">
-    <p class="appeal-doc-main-title-line appeal-doc-main-title-primary">${metaStrong(doc.titleLine1)}</p>
-    <p class="appeal-doc-main-title-line appeal-doc-main-title-secondary">${metaStrong(doc.titleLine2)}</p>
+      ? `<div class="main-titles">
+    <p class="main-title primary">${metaStrong(doc.titleLine1)}</p>
+    <p class="main-title secondary">${metaStrong(doc.titleLine2)}</p>
+    <div class="title-rule"></div>
   </div>`
       : '';
 
-  return `<div class="letter-addressee">
-    <p class="letter-addressee-line">${metaStrong('מנהל הארנונה')}</p>
-    <p class="letter-addressee-line">${metaStrong(`עיריית ${h.cityDisplay}`)}</p>
+  return `<!-- Addressee -->
+  <div class="addressee-block">
+    <p class="addressee-line">${metaStrong('לכבוד')}</p>
+    <p class="addressee-line">${metaStrong('מנהל הארנונה')}</p>
+    <p class="addressee-line">${metaStrong(`עיריית ${h.cityDisplay}`)}</p>
   </div>
-  <table class="appeal-meta-table" role="presentation">
-    <tr><td class="appeal-meta-label">${metaStrong('שם המשיג/ים:')}</td><td class="appeal-meta-value">${metaStrong(h.fullName)}</td></tr>
-    <tr><td class="appeal-meta-label">${metaStrong('תעודת זהות/ח.פ.:')}</td><td class="appeal-meta-value">${metaStrong(h.idNumber)}</td></tr>
-    <tr><td class="appeal-meta-label">${metaStrong('פרטי הנכס:')}</td><td class="appeal-meta-value">${metaStrong(propertyDetails)}</td></tr>
-    <tr><td class="appeal-meta-label">${metaStrong('כתובת הנכס:')}</td><td class="appeal-meta-value">${metaStrong(addressLine)}</td></tr>
+
+  <!-- Meta details table -->
+  <table class="meta-table">
+    <tbody>
+      <tr>
+        <td class="meta-label">שם המשיג/ים:</td>
+        <td class="meta-value">${escapeHtmlText(h.fullName)}</td>
+      </tr>
+      <tr>
+        <td class="meta-label">תעודת זהות / ח.פ.:</td>
+        <td class="meta-value">${escapeHtmlText(h.idNumber)}</td>
+      </tr>
+      <tr>
+        <td class="meta-label">נכס מס':</td>
+        <td class="meta-value">${escapeHtmlText(h.propertyNumber)}</td>
+      </tr>
+      <tr>
+        <td class="meta-label">מזהה נכס:</td>
+        <td class="meta-value">${escapeHtmlText(h.propertyId)}</td>
+      </tr>
+      <tr>
+        <td class="meta-label">כתובת הנכס:</td>
+        <td class="meta-value">${escapeHtmlText(addressLine)}</td>
+      </tr>
+    </tbody>
   </table>
-  <p class="appeal-hence-line">${metaStrong('(להלן – "הנכס")')}</p>
-  <p class="appeal-meta-inline">${metaStrong('מהות ההשגה:')} ${metaStrong(h.appealNature)}</p>
-  <p class="appeal-meta-inline appeal-meta-filing-line">${metaStrong('הגשה לשנים:')} ${metaStrong(h.filingYearsLine)}</p>
+
+  <p class="hence-line">(להלן – "הנכס")</p>
+
+  <!-- Appeal nature & filing years -->
+  <div class="nature-block">
+    <p class="nature-line"><span class="nature-label">מהות ההשגה:</span> ${escapeHtmlText(h.appealNature)}</p>
+    <p class="nature-line"><span class="nature-label">הגשה לשנים:</span> ${escapeHtmlText(h.filingYearsLine)}</p>
+  </div>
+
+  <!-- Document titles -->
   ${titlesBlock}`;
 }
 
@@ -80,7 +110,7 @@ function getFontFaceCss(): string {
   const boldPath = getAppealHebrewBoldFontPath();
   if (!fs.existsSync(regPath) || !fs.existsSync(boldPath)) {
     cachedFontFaceCss =
-      "body{font-family:'Segoe UI',Arial,sans-serif;}\n.appeal-strong,.appeal-meta-strong{font-weight:bold;}";
+      "body{font-family:'Segoe UI',Arial,sans-serif;}\nstrong{font-weight:bold;}";
     return cachedFontFaceCss;
   }
   const regB64 = fs.readFileSync(regPath).toString('base64');
@@ -106,12 +136,11 @@ function marginMm(pt: number): string {
 }
 
 /**
- * מסמך HTML להדפסה/PDF: כותרת מכתב קבועה + טופס מודגש + גוף מ-Gemini.
+ * מסמך HTML להדפסה/PDF — עיצוב מכתב רשמי בסגנון Word.
  */
 export function buildAppealLetterHtml(doc: NormalizedAppealLetter): string {
   const m = marginMm(APPEAL_PAGE_MARGIN_PT);
   const dateLineEscaped = escapeHtmlText(doc.dateLine);
-  const lekavodEscaped = escapeHtmlText('לכבוד');
   const fixedFront = buildFixedLetterFrontMatter(doc);
 
   const bodyHtml = doc.bodyRows
@@ -137,19 +166,21 @@ export function buildAppealLetterHtml(doc: NormalizedAppealLetter): string {
   const signerTrim = doc.signerNameLine.trim();
   const signerLineHtml =
     signerTrim.length > 0
-      ? `<p class="appeal-signer-name-line">${escapeHtmlText(signerTrim)}</p>`
+      ? `<p class="signer-name">${escapeHtmlText(signerTrim)}</p>`
       : '';
   const signatureBlock = doc.showSignaturePlaceholder
-    ? `<div class="appeal-signature-cluster" role="presentation">
-      <div class="appeal-signature-paste-zone" role="presentation">
-        <p id="appeal-signature-anchor" class="appeal-paste-signature-label" aria-hidden="true">${pasteLabel}</p>
+    ? `<div class="signature-cluster">
+      <p class="signature-label">בכבוד רב,</p>
+      <div class="signature-paste-zone">
+        <p id="appeal-signature-anchor" class="paste-label" aria-hidden="true">${pasteLabel}</p>
       </div>
+      <div class="signature-line-rule"></div>
       ${signerLineHtml}
     </div>`
     : '';
   const distributionFooter =
     doc.distributionLine.trim().length > 0
-      ? `<p class="appeal-distribution-line">${escapeHtmlText(doc.distributionLine.trim())}</p>`
+      ? `<p class="distribution-line">${escapeHtmlText(doc.distributionLine.trim())}</p>`
       : '';
 
   return `<!DOCTYPE html>
@@ -158,221 +189,265 @@ export function buildAppealLetterHtml(doc: NormalizedAppealLetter): string {
   <meta charset="utf-8" />
   <style>
   ${fontCss}
+
+  /* ── Page & Reset ───────────────────────────────────── */
   @page { size: A4; margin: ${m}; }
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
   html, body {
-    margin: 0;
-    padding: 0;
-    font-family: 'AppealDavid', 'David Libre', 'Segoe UI', sans-serif;
-    font-size: 12.5pt;
-    line-height: 1.5;
+    font-family: 'AppealDavid', 'David Libre', 'Segoe UI', serif;
+    font-size: 12pt;
+    line-height: 1.65;
     color: #000;
     background: #fff;
   }
+
+  /* ── Sheet container ────────────────────────────────── */
   .sheet {
-    padding-bottom: 12mm;
     width: 100%;
     max-width: 100%;
-    box-sizing: border-box;
+    padding-bottom: 10mm;
   }
-  .letter-header-line {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: baseline;
-    width: 100%;
-    max-width: 100%;
-    margin: 0 0 0.55em;
-    box-sizing: border-box;
-    font-size: 12.5pt;
+
+  /* ── Date line (top-right) ──────────────────────────── */
+  .date-header {
+    text-align: left; /* RTL → left = שמאל = end of line visually */
+    margin-bottom: 1.2em;
+    font-size: 12pt;
   }
-  .letter-lekavod {
+
+  /* ── Addressee block ────────────────────────────────── */
+  .addressee-block {
+    margin-bottom: 1em;
+  }
+  .addressee-line {
+    margin: 0.05em 0;
+    font-size: 12pt;
+    line-height: 1.55;
+  }
+
+  /* ── Meta strong (bold labels/values) ───────────────── */
+  .meta-strong {
     font-weight: 700;
-    flex: 0 0 auto;
   }
-  .letter-date-on-line {
-    font-weight: 400;
-    white-space: nowrap;
-    flex: 0 0 auto;
-  }
-  .letter-addressee {
-    margin: 0 0 0.5em;
-  }
-  .letter-addressee-line {
-    margin: 0.1em 0;
-    text-align: right;
-  }
-  .appeal-meta-strong {
-    font-weight: 700;
-    font-family: 'AppealDavid', 'David Libre', 'Segoe UI', sans-serif;
-  }
-  .appeal-meta-filing-line {
-    margin-bottom: 0.45em;
-  }
-  .appeal-doc-main-titles {
-    text-align: center;
-    width: 100%;
-    margin: 0.55em 0 0.75em;
-    padding: 0;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-  .appeal-doc-main-title-line {
-    margin: 0.12em 0;
-    padding: 0;
-    line-height: 1.35;
-  }
-  .appeal-doc-main-title-primary {
-    font-size: 15pt;
-    letter-spacing: 0.02em;
-  }
-  .appeal-doc-main-title-secondary {
-    font-size: 14.5pt;
-    letter-spacing: 0.015em;
-  }
-  .appeal-meta-table {
+
+  /* ── Details table ──────────────────────────────────── */
+  .meta-table {
     width: 100%;
     border-collapse: collapse;
-    margin: 0.35em 0 0.5em;
+    margin: 0.8em 0;
+    border: 1.5pt solid #000;
   }
-  .appeal-meta-table td {
-    padding: 0.2em 0.35em;
+  .meta-table td {
+    padding: 4pt 8pt;
+    font-size: 12pt;
+    line-height: 1.5;
+    border-bottom: 0.75pt solid #999;
     vertical-align: top;
-    font-size: 12.5pt;
-    line-height: 1.45;
   }
-  .appeal-meta-label {
+  .meta-table tr:last-child td {
+    border-bottom: none;
+  }
+  .meta-label {
     white-space: nowrap;
     width: 1%;
+    font-weight: 700;
+    padding-left: 12pt; /* RTL: gap between label & value */
   }
-  .appeal-meta-value {
+  .meta-value {
     word-break: break-word;
   }
-  .appeal-hence-line {
-    margin: 0.35em 0 0.45em;
-    text-align: right;
+
+  /* ── "להלן הנכס" ───────────────────────────────────── */
+  .hence-line {
+    margin: 0.5em 0 0.8em;
+    font-size: 11pt;
+    font-style: italic;
   }
-  .appeal-meta-inline {
-    margin: 0.25em 0;
-    text-align: right;
-    line-height: 1.45;
+
+  /* ── Appeal nature block ────────────────────────────── */
+  .nature-block {
+    margin: 0 0 1em;
+    padding: 6pt 10pt;
+    border-right: 3pt solid #000;
   }
-  .appeal-doc-heading {
-    font-family: 'AppealDavid', 'David Libre', 'Segoe UI', sans-serif;
+  .nature-line {
+    margin: 0.15em 0;
+    font-size: 12pt;
+    line-height: 1.55;
+  }
+  .nature-label {
     font-weight: 700;
-    margin: 0;
-    padding: 0;
+  }
+
+  /* ── Main document titles (centered, underlined) ───── */
+  .main-titles {
+    text-align: center;
+    margin: 1.3em 0 1em;
     break-inside: avoid;
     page-break-inside: avoid;
   }
-  .appeal-doc-h1 {
-    font-size: 15pt;
-    line-height: 1.35;
-    text-align: center;
-    margin: 0.5em 0 0.35em;
-    letter-spacing: 0.01em;
-  }
-  .appeal-doc-h1 .appeal-doc-h1-subline {
-    display: block;
-    font-size: 0.96em;
-    margin-top: 0.2em;
-    letter-spacing: 0.015em;
-  }
-  .appeal-doc-h2 {
-    font-size: 13.5pt;
+  .main-title {
+    margin: 0.1em 0;
     line-height: 1.4;
-    text-align: right;
-    margin: 0.85em 0 0.4em;
   }
-  .appeal-doc-h3 {
-    font-size: 13pt;
-    line-height: 1.4;
-    text-align: right;
-    margin: 0.7em 0 0.35em;
+  .main-title.primary {
+    font-size: 16pt;
+    letter-spacing: 0.03em;
   }
-  .appeal-body-p {
-    margin: 0.28em 0;
+  .main-title.secondary {
+    font-size: 14pt;
+    letter-spacing: 0.02em;
   }
-  .appeal-strong {
+  .title-rule {
+    width: 65%;
+    max-width: 320pt;
+    height: 1.5pt;
+    background: #000;
+    margin: 0.5em auto 0;
+  }
+
+  /* ── Body text ──────────────────────────────────────── */
+  .body-p {
+    margin: 0.35em 0;
+    text-align: justify;
+    text-indent: 0;
+    line-height: 1.65;
+  }
+
+  /* ── Section headings ───────────────────────────────── */
+  .doc-h1 {
+    font-size: 14pt;
     font-weight: 700;
+    text-align: center;
+    margin: 1.2em 0 0.5em;
+    line-height: 1.4;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
-  .plain-block .appeal-body-p { margin: 0.28em 0; }
+  .doc-h1 .h1-subline {
+    display: block;
+    font-size: 0.93em;
+    margin-top: 0.15em;
+  }
+  .doc-h2 {
+    font-size: 13pt;
+    font-weight: 700;
+    text-align: right;
+    margin: 1em 0 0.4em;
+    line-height: 1.45;
+    text-decoration: underline;
+    text-underline-offset: 3pt;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .doc-h3 {
+    font-size: 12.5pt;
+    font-weight: 700;
+    text-align: right;
+    margin: 0.8em 0 0.35em;
+    line-height: 1.45;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* ── Checklist ──────────────────────────────────────── */
   .checklist {
     list-style: none;
     padding: 0;
-    margin: 0.55em 0 0.55em 1.85em;
+    margin: 0.6em 0 0.6em 1.6em;
   }
   .checklist li {
-    margin: 0.28em 0;
+    margin: 0.3em 0;
     position: relative;
-    padding-inline-start: 1.25em;
-    line-height: 1.5;
+    padding-inline-start: 1.4em;
+    line-height: 1.6;
   }
   .checklist li::before {
-    content: '✓';
+    content: '•';
     position: absolute;
     inset-inline-start: 0;
     font-weight: 700;
+    font-size: 1.1em;
   }
+
+  /* ── Date line (in body) ────────────────────────────── */
   .date-line {
     margin: 0.65em 0;
     text-align: right;
-    font-weight: 400;
   }
+
+  /* ── Calculation block (background highlight) ───────── */
   .plain-block.calc-block {
-    background: #f5f5f5;
-    padding: 0.55em 0.7em;
-    border-radius: 2px;
-    margin: 0.55em 0;
-    border: 1px solid #e8e8e8;
+    background: #f7f7f7;
+    padding: 8pt 10pt;
+    margin: 0.7em 0;
+    border: 0.75pt solid #ddd;
+    border-right: 3pt solid #333;
   }
-  .appeal-signature-cluster {
-    margin-top: 2.9em;
+
+  /* ── Signature cluster ──────────────────────────────── */
+  .signature-cluster {
+    margin-top: 2.5em;
     break-inside: avoid;
     page-break-inside: avoid;
+    text-align: right;
+    padding-right: 0;
+  }
+  .signature-label {
+    margin: 0 0 0.8em;
+    font-size: 12pt;
+    font-weight: 400;
+  }
+  .signature-paste-zone {
+    display: inline-block;
+    width: 180pt;
+    min-height: 48pt;
     text-align: center;
   }
-  .appeal-signature-paste-zone {
-    margin: 0 auto;
-    width: 100%;
-    max-width: 180pt;
-    min-height: 48pt;
-    padding: 0.25em 0 0.35em;
-    box-sizing: border-box;
-    border-bottom: 1px solid #000;
-  }
-  .appeal-paste-signature-label {
-    margin: 0;
+  .paste-label {
     height: 56pt;
     line-height: 56pt;
     text-align: center;
-    font-weight: 400;
+    color: #aaa;
+    font-size: 11pt;
   }
-  .appeal-signer-name-line {
-    margin: 0.5em 0 0;
-    text-align: center;
-    font-weight: 400;
-    font-size: 12.5pt;
-    line-height: 1.45;
+  .signature-line-rule {
+    width: 180pt;
+    height: 0;
+    border-bottom: 1pt solid #000;
+    margin: 0 0 0.3em;
   }
-  .appeal-distribution-line {
-    margin: 1.75em 0 0;
-    text-align: right;
-    font-size: 12.5pt;
-    line-height: 1.45;
-    font-weight: 400;
+  .signer-name {
+    margin: 0.3em 0 0;
+    font-size: 12pt;
+    font-weight: 700;
   }
+
+  /* ── Distribution footer ────────────────────────────── */
+  .distribution-line {
+    margin: 2em 0 0;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #333;
+  }
+
   </style>
 </head>
 <body>
   <div class="sheet">
-    <div class="letter-header-line" role="presentation">
-      <span class="letter-lekavod">${lekavodEscaped}</span>
-      <span class="letter-date-on-line">${dateLineEscaped}</span>
-    </div>
+    <!-- Date -->
+    <p class="date-header">${dateLineEscaped}</p>
+
     ${fixedFront}
+
+    <!-- Letter body -->
     ${bodyHtml}
+
+    <!-- Signature -->
     ${signatureBlock}
+
+    <!-- Distribution -->
     ${distributionFooter}
   </div>
 </body>

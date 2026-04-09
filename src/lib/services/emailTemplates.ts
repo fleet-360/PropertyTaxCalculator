@@ -26,8 +26,13 @@ export interface AppealEmailParams {
   annualSavings: number;
 }
 
-/** Same summary as appeal email + signed PDF attached out-of-band in nodemailer. */
-export type AppealPdfEmailParams = AppealEmailParams;
+/** Appeal PDF email — extended with optional subject info for appendices list. */
+export interface AppealPdfEmailParams extends AppealEmailParams {
+  /** e.g. 'area_correction' | 'exemption' */
+  subjectType?: string;
+  /** Human-readable exemption/subject description (Hebrew). */
+  exemptionDescription?: string;
+}
 
 export interface InvoiceEmailParams {
   to: string;
@@ -179,14 +184,103 @@ export function buildAppealEmailHtml(params: AppealEmailParams): string {
   return buildBaseWrapper(content, 'אישור הגשת השגה');
 }
 
+/* ------------------------------------------------------------------ */
+/*  Appendices builder for appeal PDF email                            */
+/* ------------------------------------------------------------------ */
+
+function buildAppealAppendicesList(subjectType?: string): string[] {
+  const items: string[] = [
+    'צילום תעודת זהות / תעודת רישום חברה',
+    'דו"ח חיוב ארנונה (שובר תשלום עדכני)',
+  ];
+
+  if (subjectType === 'area_correction') {
+    items.push('תשריט / מפת מדידה של הנכס (אם קיימים)');
+    items.push('חוזה רכישה או שכירות המציין את שטח הנכס');
+  } else {
+    // exemption or general
+    items.push('מסמכים המעידים על הזכאות לפטור / הנחה (אישורים רלוונטיים)');
+    items.push('חוזה רכישה או שכירות (אם רלוונטי)');
+  }
+
+  items.push('כל מסמך נוסף שיש בו כדי לתמוך בבקשה');
+
+  return items;
+}
+
 export function buildAppealPdfEmailHtml(params: AppealPdfEmailParams): string {
+  const appendices = buildAppealAppendicesList(params.subjectType);
+
+  const appendicesRows = appendices
+    .map(
+      (item, i) => `
+    <tr>
+      <td style="padding:6px 12px;border-bottom:1px solid ${COLORS.border};color:${COLORS.textPrimary};font-size:14px;text-align:right;vertical-align:top;width:28px;font-weight:600;">${i + 1}.</td>
+      <td style="padding:6px 12px;border-bottom:1px solid ${COLORS.border};color:${COLORS.textPrimary};font-size:14px;text-align:right;">${item}</td>
+    </tr>`,
+    )
+    .join('');
+
   const content = `
     <p style="margin:0 0 8px;font-size:16px;color:${COLORS.textPrimary};">שלום ${params.fullName},</p>
     <p style="margin:0 0 16px;font-size:15px;color:${COLORS.textSecondary};">
       מצורף מכתב ההשגה שלך בנוגע לנכס ב${params.cityName}, כולל חתימתך הדיגיטלית בקובץ PDF.
     </p>
-    <p style="margin:0;font-size:14px;color:${COLORS.textSecondary};">
-      שמרו את הקובץ המצורף. לשאלות ניתן ליצור איתנו קשר.
+
+    <!-- Appendices list -->
+    <div style="margin:20px 0;padding:16px 20px;background-color:#fafafa;border-radius:6px;border:1px solid ${COLORS.border};">
+      <p style="margin:0 0 10px;font-size:15px;font-weight:600;color:${COLORS.textPrimary};">
+        📎 נספחים שיש לצרף למכתב ההשגה:
+      </p>
+      <p style="margin:0 0 12px;font-size:13px;color:${COLORS.textSecondary};">
+        לצורך הגשה תקינה, יש לצרף את המסמכים הבאים יחד עם מכתב ההשגה החתום:
+      </p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:0;">
+        ${appendicesRows}
+      </table>
+    </div>
+
+    <!-- Submission instructions -->
+    <div style="margin:20px 0;padding:16px 20px;background-color:#f0f7ff;border-radius:6px;border:1px solid #c8ddf5;">
+      <p style="margin:0 0 10px;font-size:15px;font-weight:600;color:${COLORS.textPrimary};">
+        📋 הנחיות להגשת ההשגה:
+      </p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="padding:5px 12px;color:${COLORS.textPrimary};font-size:14px;text-align:right;vertical-align:top;width:28px;font-weight:600;">1.</td>
+          <td style="padding:5px 12px;color:${COLORS.textPrimary};font-size:14px;text-align:right;">
+            <strong>הדפסת המכתב</strong> — הדפיסו את קובץ ה-PDF המצורף (מכתב ההשגה החתום).
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:5px 12px;color:${COLORS.textPrimary};font-size:14px;text-align:right;vertical-align:top;width:28px;font-weight:600;">2.</td>
+          <td style="padding:5px 12px;color:${COLORS.textPrimary};font-size:14px;text-align:right;">
+            <strong>צירוף הנספחים</strong> — צרפו את כל המסמכים הנדרשים (ראו רשימה למעלה).
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:5px 12px;color:${COLORS.textPrimary};font-size:14px;text-align:right;vertical-align:top;width:28px;font-weight:600;">3.</td>
+          <td style="padding:5px 12px;color:${COLORS.textPrimary};font-size:14px;text-align:right;">
+            <strong>הגשה לעירייה</strong> — הגישו את ההשגה באחת הדרכים הבאות:
+            <br />• <strong>בדואר רשום</strong> — למחלקת הארנונה בעיריית ${params.cityName} (מומלץ לשמור אישור משלוח).
+            <br />• <strong>בפקס</strong> — למספר הפקס של מחלקת הארנונה בעירייה (ניתן לאתר באתר העירייה).
+            <br />• <strong>במסירה ידנית</strong> — במשרדי מחלקת הארנונה. בקשו חותמת "נתקבל" על עותק למעקב.
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:5px 12px;color:${COLORS.textPrimary};font-size:14px;text-align:right;vertical-align:top;width:28px;font-weight:600;">4.</td>
+          <td style="padding:5px 12px;color:${COLORS.textPrimary};font-size:14px;text-align:right;">
+            <strong>מעקב</strong> — העירייה מחויבת להשיב תוך 60 יום ממועד קבלת ההשגה. שמרו עותק של כל המסמכים שהגשתם.
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <p style="margin:16px 0 0;font-size:13px;color:${COLORS.textSecondary};">
+      💡 <strong>טיפ:</strong> מומלץ לשלוח את ההשגה בדואר רשום עם אישור מסירה — כך תוכלו להוכיח שההשגה הוגשה במועד.
+    </p>
+    <p style="margin:8px 0 0;font-size:13px;color:${COLORS.textSecondary};">
+      לשאלות נוספות ניתן ליצור איתנו קשר.
     </p>`;
 
   return buildBaseWrapper(content, 'מכתב השגה חתום — מחשבון הארנונה');

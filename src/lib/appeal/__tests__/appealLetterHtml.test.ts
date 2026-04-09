@@ -33,54 +33,66 @@ describe('buildAppealLetterHtml', () => {
     };
     const doc = mergeAreaCorrectionLetter(ctx, payload);
     const html = buildAppealLetterHtml(doc);
+
+    // Basic document structure
     expect(html).toContain('dir="rtl"');
     expect(html).toContain('lang="he"');
     expect(html).toContain('&lt;script&gt;');
     expect(html).not.toMatch(/<script[^>]*>[\s\S]*Test/);
-    expect(html).toContain('letter-header-line');
-    expect(html).toContain('לכבוד');
+
+    // Header & addressee
+    expect(html).toContain('date-header');
     expect(html).toContain('תאריך:');
-    const idxLekavod = html.indexOf('letter-lekavod');
-    const idxDate = html.indexOf('letter-date-on-line');
-    expect(idxLekavod).toBeGreaterThan(-1);
-    expect(idxDate).toBeGreaterThan(-1);
     expect(html).toContain('מנהל הארנונה');
     expect(html).toContain('עיריית עיר');
-    expect(html).toContain('appeal-doc-main-titles');
+
+    // Titles
+    expect(html).toContain('main-titles');
     expect(html).toContain('כתב השגה על חיובי ארנונה');
     expect(html).toContain('ובקשה למתן הנחות בארנונה');
-    expect(html).toContain('תעודת זהות/ח.פ.:');
+
+    // Meta details table
+    expect(html).toContain('תעודת זהות / ח.פ.:');
     expect(html).toContain('כתובת הנכס:');
     expect(html).toContain('מהות ההשגה:');
     expect(html).toContain('הגשה לשנים:');
-    expect(html).toContain('appeal-meta-table');
+    expect(html).toContain('meta-table');
+
+    // Ordering: date → addressee → meta table → nature → titles → body
     const sheetStart = html.indexOf('<div class="sheet">');
     expect(sheetStart).toBeGreaterThan(-1);
     const sheet = html.slice(sheetStart);
-    const idxHeader = sheet.indexOf('letter-header-line');
-    const idxAddressee = sheet.indexOf('letter-addressee');
-    const idxTable = sheet.indexOf('<table class="appeal-meta-table"');
+    const idxDate = sheet.indexOf('date-header');
+    const idxAddressee = sheet.indexOf('addressee-block');
+    const idxTable = sheet.indexOf('<table class="meta-table"');
     const idxFiling = sheet.indexOf('הגשה לשנים:');
-    const idxTitles = sheet.indexOf('<div class="appeal-doc-main-titles"');
+    const idxTitles = sheet.indexOf('<div class="main-titles"');
     const idxIntro = sheet.indexOf('שם המשיג:');
-    expect(idxHeader).toBeLessThan(idxAddressee);
+    expect(idxDate).toBeLessThan(idxAddressee);
     expect(idxAddressee).toBeLessThan(idxTable);
     expect(idxTable).toBeLessThan(idxFiling);
     expect(idxFiling).toBeLessThan(idxTitles);
     expect(idxTitles).toBeLessThan(idxIntro);
+
+    // Signature block
     expect(html).toContain('הדבק חתימה');
     const idxAnchor = html.indexOf('id="appeal-signature-anchor"');
     const idxLabel = html.indexOf('הדבק חתימה');
     expect(idxAnchor).toBeGreaterThan(-1);
     expect(idxLabel).toBeGreaterThan(idxAnchor);
-    expect(html).toContain('appeal-signature-cluster');
-    expect(html).toContain('appeal-signature-paste-zone');
-    expect(html).toContain('appeal-signer-name-line');
+    expect(html).toContain('signature-cluster');
+    expect(html).toContain('signature-paste-zone');
+    expect(html).toContain('signer-name');
     expect(html).toContain('&lt;script&gt;');
-    const idxSignerLine = html.indexOf('appeal-signer-name-line');
+    const idxSignerLine = html.indexOf('signer-name');
     expect(html.slice(idxSignerLine)).toContain('&lt;script&gt;');
+
+    // Distribution footer
     expect(html).toContain('ועדת הנחות');
-    const idxDistribution = sheet.indexOf('<p class="appeal-distribution-line"');
+    const idxDistribution = sheet.indexOf('<p class="distribution-line"');
     expect(idxDistribution).toBeGreaterThan(sheet.indexOf('id="appeal-signature-anchor"'));
+
+    // "בכבוד רב" before signature
+    expect(html).toContain('בכבוד רב,');
   });
 });

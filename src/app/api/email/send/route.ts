@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       }
 
       case 'appeal_pdf': {
-        const { fullName, cityName, reported, calculated, annualSavings, pdfBase64 } = payload;
+        const { fullName, cityName, reported, calculated, annualSavings, pdfBase64, subjectType, exemptionDescription } = payload;
         if (!requiredString(fullName) || !requiredString(cityName)) {
           return NextResponse.json({ error: 'חסרים שדות חובה ב-payload' }, { status: 400 });
         }
@@ -106,6 +106,8 @@ export async function POST(req: NextRequest) {
           reported: reported ?? 0,
           calculated: calculated ?? 0,
           annualSavings: annualSavings ?? 0,
+          subjectType: typeof subjectType === 'string' ? subjectType : undefined,
+          exemptionDescription: typeof exemptionDescription === 'string' ? exemptionDescription : undefined,
           pdfBase64,
         });
         if (!result.success) {

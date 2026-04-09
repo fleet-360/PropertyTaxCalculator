@@ -3,6 +3,7 @@ import { formatHebrewAppealDate } from './formatHebrewAppealDate';
 import { normalizeAppealLetterTypos } from './appealLetterTypoNormalize';
 import type { AppealLetterGeminiClause, AppealLetterGeminiPayload } from './appealLetterPayload';
 import type { AppealLetterVariant } from './appealLetterVariant';
+import type { AppealSubject } from './resolveAppealSubject';
 
 /** שורת "העתק" קבועה — מודפסת אחרי בלוק החתימה; לא מהמודל. */
 export const APPEAL_LETTER_DISTRIBUTION_LINE =
@@ -31,6 +32,8 @@ export type AppealLetterBodyRow =
 
 export interface NormalizedAppealLetter {
   variant: AppealLetterVariant;
+  /** Subject-based classification (new system). */
+  subject?: AppealSubject;
   header: AppealLetterHeaderModel;
   /** שורת תאריך קבועה בלבד ב-PDF (מוצגת ב-HTML). */
   dateLine: string;
@@ -277,6 +280,64 @@ export function mergeAppealLetter(
   variant: AppealLetterVariant,
 ): NormalizedAppealLetter {
   return mergeModelLetter(ctx, payload, variant);
+}
+
+/**
+ * Subject-based merge — replaces variant system.
+ * The subject drives the "מהות ההשגה" header and substitution map.
+ */
+export function mergeAppealLetterBySubject(
+  ctx: AppealUserContext,
+  payload: AppealLetterGeminiPayload,
+  subject: AppealSubject,
+): NormalizedAppealLetter {
+  const map = buildSubstitutionMap(ctx);
+  // Add subject-specific placeholders
+  map.exemptionDescription = subject.exemptionDescription;
+  map.letterSubject = subject.letterSubject;
+  map.savingsAnnual = subject.savingsAnnual > 0
+    ? formatMoney(subject.savingsAnnual)
+    : '___';
+
+  // Map subject to a legacy variant for backward compatibility in HTML/PDF rendering
+  const legacyVariant: AppealLetterVariant =
+    subject.subjectType === 'area_correction' ? 'area_correction' : 'fallback';
+
+  const filingRaw = ctx.tax.paymentPeriod?.trim() || '';
+  const looksLikeBillingPeriodToken =
+    filingRaw === 'monthly' ||
+    filingRaw === 'bimonthly' ||
+    filingRaw === 'quarterly' ||
+    filingRaw === 'semi_annual' ||
+    filingRaw === 'annual';
+
+  const header: AppealLetterHeaderModel = {
+    cityDisplay: ctx.city.name,
+    fullName: ctx.fullName,
+    idNumber: map.idNumber,
+    propertyNumber: map.propertyNumber,
+    propertyId: map.propertyId,
+    addressLine: map.address,
+    block: map.block,
+    parcel: map.parcel,
+    subParcel: map.subParcel,
+    appealNature: subject.letterSubject, // driven by subject, not variant switch
+    filingYearsLine: filingRaw && !looksLikeBillingPeriodToken ? filingRaw : '_________',
+  };
+
+  return {
+    variant: legacyVariant,
+    subject,
+    header,
+    dateLine: `תאריך: ${formatHebrewAppealDate(new Date())}`,
+    titleLine1: 'כתב השגה על חיובי ארנונה',
+    titleLine2: 'ובקשה למתן הנחות בארנונה',
+    openingBlock: '',
+    bodyRows: finalizedBodyRows(ctx, payload),
+    showSignaturePlaceholder: true,
+    distributionLine: APPEAL_LETTER_DISTRIBUTION_LINE,
+    signerNameLine: ctx.fullName?.trim() || '',
+  };
 }
 
 /** מיזוג ל-variant תיקון שטחים — זהה ל־mergeAppealLetter (נשמר לתאימות בדיקות). */

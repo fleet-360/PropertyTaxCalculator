@@ -490,38 +490,60 @@ export const hardcodedDefaults: Record<string, string> = {
 • אם הצו לא מגדיר אגרות עירוניות, החזר: "cityFees": []`,
 
   // ── Appeal Letter JSON ─────────────────────────────────────────────
-  // Template variables: {{variant}}, {{userJson}}, {{schemaVersion}}
+  // Template variables: {{variant}}, {{userJson}}, {{schemaVersion}},
+  //   {{subjectType}}, {{exemptionDescription}}, {{letterSubject}}, {{savingsAnnual}}
   appeal_letter_json: `You are an expert assistant drafting formal Israeli municipal property tax appeals (השגה בארנונה).
 
-Attached PDFs may include:
-- An example appeal letter (template): mirror its structure, wording, headings, numbered clauses, subclauses, checklists, and which lines are emphasized — express that using the JSON fields (role, headingLevel, emphasis, items), not HTML.
-- A municipal property-tax order (צו ארנונה) for the user's city: use it only when needed to verify terminology / classifications / zone names / ordinance-specific details. Do not invent facts if the ordinance is missing.
+THE APPEAL SUBJECT
+This letter is about ONE specific request: {{exemptionDescription}}.
+Subject type: {{subjectType}} (area_correction = disputing property measurement; exemption = requesting a discount/exemption).
+Estimated annual savings: {{savingsAnnual}} ₪.
+The entire letter should focus on this single request and its legal basis.
 
-OUTPUT: a single JSON object (no markdown fences). The server prints the letterhead through "הגשה לשנים", then the two centered main titles, then your clauses (body of the appeal only).
+ATTACHED PDFs
+- Example appeal letters: these show the CORRECT structure and layout of a good appeal letter. Learn the format from them, but adapt the content to the specific exemption/discount described above.
+- A municipal property-tax order (צו ארנונה) for the user's city (if available): use it to verify terminology, zone names, classification codes, and to cite relevant ordinance sections. Do not invent facts if the ordinance is missing.
+
+LETTER STRUCTURE (10 parts)
+The server prints parts 1–3 and 10 automatically. You must generate parts 4–9 as clauses:
+
+Part 1 (SERVER): Header — date, addressee ("לכבוד מנהל הארנונה עיריית..."), name, ID, property details, "מהות ההשגה", filing years.
+Part 2 (SERVER): Main titles — "כתב השגה על חיובי ארנונה" + "ובקשה למתן הנחות בארנונה".
+Part 3 (SERVER): Opening — "אנו החתומים מטה... מתכבדים להגיש השגה..."
+
+Part 4 (YOU): תיאור הנכס — Property description. Include: property type, area (sqm), current bimonthly charge, reference to attached tax bill as appendix.
+Part 5 (YOU): תיאור הבעיה/הממצא — What was found wrong. This depends on the subject:
+  - area_correction: "מצאנו כי קיימת טעות במדידת הנכס" + area breakdown (main, balcony, storage, etc.)
+  - exemption: "מצאנו כי העירייה לא ביצעה הפחתה בגין פטור [name]" + explanation
+Part 6 (YOU): ביסוס משפטי — Legal basis. Cite relevant laws AND ordinance sections:
+  - area_correction: סעיף 7 לחוק ההסדרים (4 criteria: type, area, usage, zone), calculation = area × rate
+  - exemption: cite the specific regulation/law that grants this exemption, then quote the relevant ordinance section
+Part 7 (YOU): חישוב מתוקן — Corrected calculation. "עפ"י חישוב שערכנו..." + results.
+Part 8 (YOU): בקשות ספציפיות — Specific requests: apply retroactively, choose highest discount, relevant court rulings.
+Part 9 (YOU): חובת הגינות הרשות — Municipality's duty of fairness (standard paragraph): בר"מ 867/06 + בג"ץ 8684/22.
+
+Part 10 (SERVER): Closing — request to update assessment, offset overpayments, signature, "העתק".
+
+OUTPUT: a single JSON object (no markdown fences). Your clauses cover parts 4–9 only.
 
 RULES
 - schemaVersion must be {{schemaVersion}}.
 - variant must be exactly: "{{variant}}"
 - clauses: array of objects with required "id" and "body" (body may be empty string only when "items" is a non-empty array).
-
-- Each clause object may include (all optional except id + body, see below):
-  - "role": "paragraph" | "heading" — use "heading" for section titles that match the example (כותרות משנה / כותרת מסמך).
-  - "headingLevel": 1 | 2 | 3 when role is "heading". Level 1 = centered. Do NOT use level 1 for the two main document titles — the server prints them centered after the addressee block. Use level 2–3 for section headings inside the letter (usually right-aligned). If heading level omitted, default 2.
-  - "emphasis": true to render the whole block in bold (like emphasized lines in the example).
-  - "items": array of strings for checklist lines with ✓ (same idea as criterion lists in the example); if "items" is non-empty, "body" can be "".
-- "body": plain Hebrew only, no HTML, no markdown. Multiple paragraphs: use the two-character sequence \\n inside the JSON string (escaped newline), never a real line break inside quotes — invalid JSON breaks the server.
-- Numbering: put "1.", "2.", "4.1." etc. inside "body" text exactly as in the example — clause "id" is only for ordering in the array; the server does not add a separate numbered column.
-- Produce a complete letter matching the example's hierarchy, spacing feel, and emphasis patterns using these fields — the server maps them to print styles (headings, bold, checklist).
-- Do not duplicate any server-printed header: the "לכבוד" + date line; "מנהל הארנונה"; "עיריית …"; the form rows (שם המשיג/ים, תעודת זהות/ח.פ., פרטי הנכס, כתובת הנכס); "(להלן – \\"הנכס\\")"; "מהות ההשגה"; "הגשה לשנים"; the two centered titles after that ("כתב השגה על חיובי ארנונה" and the matching subtitle). Start your clauses where the numbered legal body begins in the example.
-- Do not write "הדבק חתימה", a signature strip, the signer's printed name line under the signature, or a final "העתק" line (e.g. "העתק: ועדת הנחות…") — the server prints those after the body for PDF/signing.
-- Use correct Hebrew legal abbreviations: עפ"י, דו"ח, מ"ר, סה"כ, הנ"ל, רצ"ב. Do not output :Date or Date:.
-- Keep numbered legal citations (בר"מ, בג"ץ) inside the same clause body as in the example when possible.
-- Do not invent private data from the sample PDF; use user JSON for names, areas, amounts, addresses.
-- Parentheses policy:
-  - NEVER copy instructional text inside parentheses from the example (e.g. "(סדר מספרי ... או אותיות א,ב,ג)").
-  - instructional parentheses are for template notes only, not for the final letter.
-  - If you need to reference an appendix, output ONLY the appendix marker (e.g. "כנספח א׳" or "כנספח 1") without any explanatory parenthetical guidance.
-  - Do not include placeholder punctuation like ",,".
+- Each clause object may include (all optional except id + body):
+  - "role": "paragraph" | "heading" — use "heading" for section titles.
+  - "headingLevel": 1 | 2 | 3 when role is "heading". Do NOT use level 1 (server uses it for main titles). Use 2–3 for section headings.
+  - "emphasis": true for bold blocks.
+  - "items": array of strings for checklist lines with ✓.
+- "body": plain Hebrew only, no HTML, no markdown. Multiple paragraphs: use \\n (escaped newline in JSON).
+- Numbering: put "1.", "2.", "4.1." inside body text — "id" is for array ordering only.
+- Do not duplicate server-printed headers (parts 1–3) or footer (part 10).
+- Do not write "הדבק חתימה", signature strip, signer name, or "העתק: ועדת הנחות…".
+- Use correct Hebrew abbreviations: עפ"י, דו"ח, מ"ר, סה"כ, הנ"ל, רצ"ב.
+- Keep legal citations (בר"מ, בג"ץ) inside clause body.
+- Use user JSON for names, areas, amounts — never invent data from example PDFs.
+- NEVER copy instructional parentheses from examples (e.g. "(סדר מספרי...)"). For appendix references write only "כנספח א׳".
+- Always request the highest applicable discount: "ככול וקיימת זכאות להנחות שונות, נבקש לתת את ההנחה הגבוהה ביותר מבניהן."
 
 User data (JSON):
 {{userJson}}`,

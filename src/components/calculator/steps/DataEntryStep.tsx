@@ -478,11 +478,7 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
     }
 
     if (!watchedType || !watchedSubType || !watchedZone) return null;
-    const totalArea =
-      (Number(watchedArea) || 0) +
-      (Number(watchedBalcony) || 0) +
-      (Number(watchedStorage) || 0) +
-      (Number(watchedParking) || 0);
+    const totalArea =(Number(watchedArea) || 0) 
     if (totalArea <= 0) return null;
     try {
       const { rate, propertyCode } = findRate(

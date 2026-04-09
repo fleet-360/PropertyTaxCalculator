@@ -26,7 +26,7 @@ describe('buildAppealLetterHtml structured rows', () => {
     };
     const doc = mergeAppealLetter(minimalCtx(), payload, 'fallback');
     const html = buildAppealLetterHtml(doc);
-    expect(html).toContain('appeal-doc-h2');
+    expect(html).toContain('doc-h2');
     expect(html).toContain('כותרת משנה');
     expect(html).toContain('class="checklist"');
     expect(html).toContain('שורה א');
@@ -43,6 +43,6 @@ describe('buildAppealLetterHtml structured rows', () => {
     expect(html).toContain('plain-block');
     expect(html).not.toContain('subclause-num');
     expect(html).toContain('4.1.');
-    expect(html).toContain('appeal-strong');
+    expect(html).toContain('<strong>');
   });
 });
