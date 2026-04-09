@@ -23,6 +23,8 @@ import IconButton from '@mui/material/IconButton';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
+import Divider from '@mui/material/Divider';
+import Stack from '@mui/material/Stack';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import Tooltip from '@mui/material/Tooltip';
@@ -33,7 +35,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import CircularProgress from '@mui/material/CircularProgress';
 import type { LeadListItem } from '@/lib/types/admin';
 import type { ICalculationEntry } from '@/lib/types/lead';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { formatDateTimeHe, formatPostDateHe, formatPostDateISO } from '@/lib/dates';
 
 // ── Consent record shape (from GET /api/consents) ───────────────────
@@ -147,68 +149,152 @@ function getLatestCalculation(lead: LeadListItem): ICalculationEntry | undefined
 
 // ── Calculation card (shown in expanded row) ─────────────────────────
 
-function CalculationCard({ calc, index }: { calc: ICalculationEntry; index: number }) {
+function DetailRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <Card variant="outlined" sx={{ mb: 1 }}>
-      <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-            חישוב #{index + 1}
-          </Typography>
-          {calc.calculationStatus && (
-            <Chip
-              label={calcStatusLabelMap[calc.calculationStatus] || calc.calculationStatus}
-              color={calcStatusColorMap[calc.calculationStatus] || 'default'}
-              size="small"
-            />
-          )}
-          <Chip
-            label={abandonmentLabelMap[calc.abandonmentStage] || calc.abandonmentStage}
-            size="small"
-            variant="outlined"
-          />
-          <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
-            {formatPostDateHe(String(calc.createdAt))}
-          </Typography>
-        </Box>
+    <Box sx={{ display: 'flex', gap: 1, alignItems: 'baseline', flexWrap: 'wrap' }}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        component="span"
+        sx={{ minWidth: 100, flexShrink: 0 }}
+      >
+        {label}
+      </Typography>
+      <Typography variant="body2" component="span">
+        {children}
+      </Typography>
+    </Box>
+  );
+}
 
+function CalculationCard({ calc, index }: { calc: ICalculationEntry; index: number }) {
+  const hasResults = Boolean(calc.calculationResult);
+  const showPrivateExemptions =
+    calc.propertyType === 'private' &&
+    (calc.selectedExemptions?.length ||
+      calc.householdSize != null ||
+      calc.childrenCount != null);
+  const showBusinessDesignations =
+    calc.propertyType === 'business' && Boolean(calc.designations?.length);
+
+  return (
+    <Card variant="outlined" elevation={0} sx={{ mb: 1 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          flexWrap: 'wrap',
+          px: 2,
+          py: 1.5,
+          borderBottom: 1,
+          borderColor: 'divider',
+        }}
+      >
+        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+          חישוב #{index + 1}
+        </Typography>
+        {calc.calculationStatus && (
+          <Chip
+            label={calcStatusLabelMap[calc.calculationStatus] || calc.calculationStatus}
+            color={calcStatusColorMap[calc.calculationStatus] || 'default'}
+            size="small"
+          />
+        )}
+        <Chip
+          label={abandonmentLabelMap[calc.abandonmentStage] || calc.abandonmentStage}
+          size="small"
+          variant="outlined"
+        />
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ marginInlineStart: 'auto' }}
+        >
+          {formatPostDateHe(String(calc.createdAt))}
+        </Typography>
+      </Box>
+
+      <CardContent sx={{ py: 2, '&:last-child': { pb: 2 } }}>
         <Grid container spacing={2}>
-          {/* Property details */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, mb: 0.5 }}>
+          <Grid size={{ xs: 12, md: hasResults ? 4 : 12 }}>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600, mb: 1 }}>
               פרטי נכס
             </Typography>
-            {calc.citySlug && <Typography variant="body2">עיר: {calc.citySlug}</Typography>}
-            {calc.propertyType && (
-              <Typography variant="body2">
-                סוג: {calc.propertyType === 'private' ? 'פרטי' : 'עסקי'}
-              </Typography>
-            )}
-            {calc.propertyArea != null && (
-              <Typography variant="body2">שטח: {calc.propertyArea} מ״ר</Typography>
-            )}
-            {calc.bimonthlyPayment != null && (
-              <Typography variant="body2">תשלום דו-חודשי: ₪{calc.bimonthlyPayment}</Typography>
-            )}
-            {calc.address && <Typography variant="body2">כתובת: {calc.address}</Typography>}
-            {calc.zone && <Typography variant="body2">אזור: {calc.zone}</Typography>}
-          </Grid>
+            <Stack spacing={1}>
+              {calc.citySlug && <DetailRow label="עיר">{calc.citySlug}</DetailRow>}
+              {calc.propertyType && (
+                <DetailRow label="סוג">
+                  {calc.propertyType === 'private' ? 'פרטי' : 'עסקי'}
+                </DetailRow>
+              )}
+              {calc.propertyArea != null && (
+                <DetailRow label="שטח">{calc.propertyArea} מ״ר</DetailRow>
+              )}
+              {calc.bimonthlyPayment != null && (
+                <DetailRow label="תשלום דו-חודשי">₪{calc.bimonthlyPayment}</DetailRow>
+              )}
+              {calc.address && <DetailRow label="כתובת">{calc.address}</DetailRow>}
+              {calc.zone && <DetailRow label="אזור">{calc.zone}</DetailRow>}
+            </Stack>
 
-          {/* Calculation results */}
+
+          </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+            {showPrivateExemptions && (
+              <>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600, mb: 1 }}>
+                  הנחות ומשק בית
+                </Typography>
+                <Stack spacing={1}>
+                  {calc.householdSize != null && (
+                    <DetailRow label="גודל משפחה">{calc.householdSize}</DetailRow>
+                  )}
+                  {calc.childrenCount != null && (
+                    <DetailRow label="מספר ילדים">{calc.childrenCount}</DetailRow>
+                  )}
+                  {calc.selectedExemptions?.map((ex, exIdx) => (
+                    <DetailRow key={`${ex.sectionCode}-${ex.subSectionCode}-${exIdx}`} label="הנחה">
+                      סעיף {ex.sectionCode} · תת-סעיף {ex.subSectionCode}
+                    </DetailRow>
+                  ))}
+                </Stack>
+              </>
+            )}
+
+            {showBusinessDesignations && (
+              <>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600, mb: 1 }}>
+                  ייעודים עסקיים
+                </Typography>
+                <Stack spacing={1}>
+                  {(calc.designations ?? []).map((d, dIdx) => (
+                    <DetailRow key={`${d.type}-${dIdx}`} label={`ייעוד ${dIdx + 1}`}>
+                      {d.type} — {d.area} מ״ר
+                    </DetailRow>
+                  ))}
+                </Stack>
+              </>
+            )}
+            </Grid>
           {calc.calculationResult && (
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, mb: 0.5 }}>
+            <Grid size={12} sx={{ display: { xs: 'block', md: 'none' } }}>
+              <Divider />
+            </Grid>
+          )}
+          {calc.calculationResult && (
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600, mb: 1 }}>
                 תוצאות
               </Typography>
-              <Typography variant="body2">
-                חישוב דו-חודשי: ₪{calc.calculationResult.calculatedBimonthly}
-              </Typography>
-              <Typography variant="body2">
-                חיסכון שנתי: ₪{calc.calculationResult.savingsAnnual}
-              </Typography>
-              <Typography variant="body2">
-                חיסכון 10 שנים: ₪{calc.calculationResult.savings10Year}
-              </Typography>
+              <Stack spacing={1}>
+                <DetailRow label="חישוב דו-חודשי">
+                  ₪{calc.calculationResult.calculatedBimonthly}
+                </DetailRow>
+                <DetailRow label="חיסכון שנתי">₪{calc.calculationResult.savingsAnnual}</DetailRow>
+                <DetailRow label="חיסכון 10 שנים">₪{calc.calculationResult.savings10Year}</DetailRow>
+              </Stack>
             </Grid>
           )}
         </Grid>
@@ -390,9 +476,17 @@ function ExpandableRow({
                 <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
                   היסטוריית חישובים ({lead.calculations.length})
                 </Typography>
-                {lead.calculations.map((calc, idx) => (
-                  <CalculationCard key={idx} calc={calc} index={idx} />
-                ))}
+                <Box
+                  sx={{
+                    maxHeight: { xs: 280, sm: 420 },
+                    overflowY: 'auto',
+                    pr: 0.5,
+                  }}
+                >
+                  {lead.calculations.map((calc, idx) => (
+                    <CalculationCard key={idx} calc={calc} index={idx} />
+                  ))}
+                </Box>
 
                 {/* Consent history */}
                 <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, mt: 2 }}>
