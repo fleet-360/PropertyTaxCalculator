@@ -291,17 +291,23 @@ function mergeFeatures(partial?: Partial<CalculatorFeatureConfig>): CalculatorFe
 export interface CalculatorWizardProps {
   features?: Partial<CalculatorFeatureConfig>;
   onMiaMessage?: (messageId: string | string[]) => void;
+  onOrdinanceUrl?: (url: string | undefined) => void;
 }
 
 export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
   const features = mergeFeatures(props.features);
-  const { onMiaMessage } = props;
+  const { onMiaMessage, onOrdinanceUrl } = props;
   const [state, dispatch] = useReducer(wizardReducer, initialState);
 
   // Notify parent whenever miaMessageId changes
   useEffect(() => {
     onMiaMessage?.(state.miaMessageId);
   }, [state.miaMessageId, onMiaMessage]);
+
+  // Notify parent whenever ordinance URL changes (after city selection)
+  useEffect(() => {
+    onOrdinanceUrl?.(state.cityData?.ordinanceUrl as string | undefined);
+  }, [state.cityData?.ordinanceUrl, onOrdinanceUrl]);
 
   const applied = state.appliedCoupon;
   const featuresContextValue = useMemo(
