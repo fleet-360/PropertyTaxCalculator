@@ -46,6 +46,9 @@ export default function AppealStep({ state, dispatch }: StepProps) {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [draftPdfBase64, setDraftPdfBase64] = useState<string | null>(null);
   const [signedPdfBase64, setSignedPdfBase64] = useState<string | null>(null);
+  /** Subject metadata returned from the generate endpoint — forwarded to email. */
+  const [appealSubjectType, setAppealSubjectType] = useState<string | undefined>();
+  const [appealExemptionDescription, setAppealExemptionDescription] = useState<string | undefined>();
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [signatureError, setSignatureError] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(false);
@@ -107,6 +110,8 @@ export default function AppealStep({ state, dispatch }: StepProps) {
           reported,
           calculated,
           annualSavings,
+          subjectType: appealSubjectType,
+          exemptionDescription: appealExemptionDescription,
           pdfBase64,
         },
       });
@@ -117,7 +122,7 @@ export default function AppealStep({ state, dispatch }: StepProps) {
       setEmailError(null);
       return true;
     },
-    [annualSavings, calculated, cityName, reported, sendEmail, state.email, state.fullName],
+    [annualSavings, appealExemptionDescription, appealSubjectType, calculated, cityName, reported, sendEmail, state.email, state.fullName],
   );
 
   const beginGenerationFlow = useCallback(
@@ -143,7 +148,7 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      const data = (await res.json()) as { error?: string; pdfBase64?: string };
+      const data = (await res.json()) as { error?: string; pdfBase64?: string; subjectType?: string; exemptionDescription?: string };
       if (!res.ok) {
         throw new Error(data.error || 'הכנת מכתב ההשגה נכשלה');
       }
@@ -151,6 +156,8 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         throw new Error('תשובת שרת לא תקינה');
       }
       setDraftPdfBase64(data.pdfBase64);
+      setAppealSubjectType(data.subjectType);
+      setAppealExemptionDescription(data.exemptionDescription);
       setFlow('sign');
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'שגיאה';

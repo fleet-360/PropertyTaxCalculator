@@ -26,7 +26,7 @@ export async function GET(
     if (!city) {
       city = await CityTariff.findOne({ slug: id }).lean();
     }
-
+    console.log(city);
     if (!city) {
       return NextResponse.json(
         { error: 'City not found' },

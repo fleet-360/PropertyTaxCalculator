@@ -112,3 +112,51 @@ export function pickAppealBlobExamplesForGemini(
 
   return [sorted[0]!];
 }
+
+/**
+ * Pick 2–3 general-purpose appeal letter examples — not variant-specific.
+ * Used by the new subject-based generation flow.
+ *
+ * Strategy: pick up to 3 diverse examples to show the model the correct
+ * structure/layout without biasing toward a specific exemption type.
+ */
+export function pickGeneralAppealBlobExamples(
+  sources: BlobBackedGeminiSource[],
+): BlobBackedGeminiSource[] {
+  if (sources.length === 0) return [];
+  const sorted = sortedSources(sources);
+  const MAX_EXAMPLES = 3;
+
+  if (sorted.length <= MAX_EXAMPLES) return sorted;
+
+  // Try to pick diverse examples: one area, one exemption, one general
+  const p = (s: BlobBackedGeminiSource) => blobPath(s);
+  const results: BlobBackedGeminiSource[] = [];
+  const used = new Set<number>();
+
+  const tryPick = (pred: (path: string) => boolean) => {
+    if (results.length >= MAX_EXAMPLES) return;
+    const idx = sorted.findIndex((s, i) => !used.has(i) && pred(p(s)));
+    if (idx >= 0) {
+      used.add(idx);
+      results.push(sorted[idx]!);
+    }
+  };
+
+  // 1. Area correction example
+  tryPick((path) => path.includes('תיקון שטחים'));
+  // 2. Exemption example (פטורים כלליים or נכס ריק)
+  tryPick((path) => path.includes('פטורים כלליים') || path.includes('החלת פטורים'));
+  // 3. Another type (נכס ריק, or anything else)
+  tryPick((path) => path.includes('נכס ריק') || path.includes('בשימוש'));
+
+  // Fill remaining slots if we still have room
+  for (let i = 0; i < sorted.length && results.length < MAX_EXAMPLES; i++) {
+    if (!used.has(i)) {
+      used.add(i);
+      results.push(sorted[i]!);
+    }
+  }
+
+  return results;
+}
