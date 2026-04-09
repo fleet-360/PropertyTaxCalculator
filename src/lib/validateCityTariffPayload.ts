@@ -93,9 +93,14 @@ export function validateCityTariffPayload(data: CityTariffPayloadInput): CityTar
     }
   });
 
+  const seenTypeCodes = new Set<string>();
   data.types.forEach((t, ti) => {
     if (!trimNonEmpty(t.code)) {
       errors.push({ path: `types.${ti}.code`, message: 'קוד סוג נכס חובה' });
+    } else if (seenTypeCodes.has(t.code.trim())) {
+      errors.push({ path: `types.${ti}.code`, message: 'קוד סוג נכס כפול' });
+    } else {
+      seenTypeCodes.add(t.code.trim());
     }
     if (!trimNonEmpty(t.label)) {
       errors.push({ path: `types.${ti}.label`, message: 'שם סוג נכס חובה' });
@@ -105,9 +110,17 @@ export function validateCityTariffPayload(data: CityTariffPayloadInput): CityTar
       errors.push({ path: `types.${ti}.category`, message: 'קטגוריה חייבת להיות מגורים או עסקים' });
     }
 
+    const seenSubtypeCodes = new Set<string>();
     t.subtypes.forEach((s, si) => {
       if (!trimNonEmpty(s.code)) {
         errors.push({ path: `types.${ti}.subtypes.${si}.code`, message: 'קוד תת־סוג חובה' });
+      } else if (seenSubtypeCodes.has(s.code.trim())) {
+        errors.push({
+          path: `types.${ti}.subtypes.${si}.code`,
+          message: 'קוד תת־סוג כפול באותו סוג נכס',
+        });
+      } else {
+        seenSubtypeCodes.add(s.code.trim());
       }
       if (!trimNonEmpty(s.label)) {
         errors.push({ path: `types.${ti}.subtypes.${si}.label`, message: 'שם תת־סוג חובה' });
@@ -210,17 +223,30 @@ export function validateCityTariffPayload(data: CityTariffPayloadInput): CityTar
     }
   });
 
+  const seenSectionCodes = new Set<string>();
   data.exemptions.forEach((sec, ei) => {
     if (!trimNonEmpty(sec.sectionCode)) {
       errors.push({ path: `exemptions.${ei}.sectionCode`, message: 'קוד סעיף הנחה חובה' });
+    } else if (seenSectionCodes.has(sec.sectionCode.trim())) {
+      errors.push({ path: `exemptions.${ei}.sectionCode`, message: 'קוד סעיף כפול' });
+    } else {
+      seenSectionCodes.add(sec.sectionCode.trim());
     }
     if (!trimNonEmpty(sec.sectionLabel)) {
       errors.push({ path: `exemptions.${ei}.sectionLabel`, message: 'שם סעיף הנחה חובה' });
     }
 
+    const seenSubsectionCodes = new Set<string>();
     sec.subSections.forEach((sub, ssi) => {
       if (!trimNonEmpty(sub.code)) {
         errors.push({ path: `exemptions.${ei}.subSections.${ssi}.code`, message: 'קוד תת־סעיף חובה' });
+      } else if (seenSubsectionCodes.has(sub.code.trim())) {
+        errors.push({
+          path: `exemptions.${ei}.subSections.${ssi}.code`,
+          message: 'קוד תת־סעיף כפול באותו סעיף',
+        });
+      } else {
+        seenSubsectionCodes.add(sub.code.trim());
       }
       if (!trimNonEmpty(sub.description)) {
         errors.push({ path: `exemptions.${ei}.subSections.${ssi}.description`, message: 'תיאור תת־סעיף חובה' });
@@ -254,4 +280,130 @@ export function accordionSectionForValidationPath(path: string): CityTariffAccor
   if (path.startsWith('areaTypeDiscounts')) return 'areaTypeDiscounts';
   if (path.startsWith('cityFees')) return 'cityFees';
   return 'basic';
+}
+
+/**
+ * Human-readable Hebrew location for admin UI (snackbar / summary list).
+ */
+export function formatValidationIssueLocation(path: string, data: ICityTariffData): string {
+  if (path === 'cityName') return 'פרטי עיר · שם בעברית';
+  if (path === 'cityNameEn') return 'פרטי עיר · שם באנגלית';
+  if (path === 'slug') return 'פרטי עיר · Slug';
+  if (path === 'year') return 'פרטי עיר · שנה';
+  if (path === 'ordinanceUrl') return 'פרטי עיר · קישור צו ארנונה';
+
+  let m = path.match(/^availableZones\.(\d+)\.(code|label)$/);
+  if (m) {
+    const i = Number(m[1]);
+    const z = data.availableZones[i];
+    const row = z ? `${z.code?.trim() || '—'} · ${z.label?.trim() || 'ללא שם'}` : `שורה ${i + 1}`;
+    return m[2] === 'code' ? `אזורים · ${row} · קוד` : `אזורים · ${row} · שם אזור`;
+  }
+
+  m = path.match(/^types\.(\d+)\.(code|label|category)$/);
+  if (m) {
+    const ti = Number(m[1]);
+    const t = data.types[ti];
+    const name = t ? `${t.code?.trim() || '—'} · ${t.label?.trim() || 'ללא שם'}` : `סוג ${ti + 1}`;
+    const field =
+      m[2] === 'code' ? 'קוד סוג נכס' : m[2] === 'label' ? 'שם סוג נכס' : 'קטגוריה (מגורים/עסקים)';
+    return `סוגי נכס ותעריפים · ${name} · ${field}`;
+  }
+
+  m = path.match(/^types\.(\d+)\.subtypes\.(\d+)\.(code|label)$/);
+  if (m) {
+    const ti = Number(m[1]);
+    const si = Number(m[2]);
+    const t = data.types[ti];
+    const s = t?.subtypes[si];
+    const typePart = t ? `${t.code?.trim() || '—'} · ${t.label?.trim() || 'ללא שם'}` : `סוג ${ti + 1}`;
+    const subPart = s ? `${s.code?.trim() || '—'} · ${s.label?.trim() || 'ללא שם'}` : `תת־סוג ${si + 1}`;
+    const field = m[3] === 'code' ? 'קוד תת־סוג' : 'שם תת־סוג';
+    return `סוגי נכס · ${typePart} · ${subPart} · ${field}`;
+  }
+
+  m = path.match(/^types\.(\d+)\.subtypes\.(\d+)\.zones\.(\d+)\.(zone|zoneLabel)$/);
+  if (m) {
+    const ti = Number(m[1]);
+    const si = Number(m[2]);
+    const zi = Number(m[3]);
+    const t = data.types[ti];
+    const s = t?.subtypes[si];
+    const zr = s?.zones[zi];
+    const typePart = t ? `${t.code?.trim() || '—'}` : `${ti + 1}`;
+    const subPart = s ? `${s.code?.trim() || '—'}` : `${si + 1}`;
+    const zonePart = zr ? `${zr.zone?.trim() || '—'} · ${zr.zoneLabel?.trim() || '—'}` : `אזור ${zi + 1}`;
+    const field = m[4] === 'zone' ? 'קוד אזור בתעריף' : 'שם אזור בתעריף';
+    return `תעריף · סוג ${typePart} · תת־סוג ${subPart} · ${zonePart} · ${field}`;
+  }
+
+  m = path.match(
+    /^types\.(\d+)\.subtypes\.(\d+)\.zones\.(\d+)\.sizeRanges\.(\d+)\.(min|max|rate)$/,
+  );
+  if (m) {
+    const ti = Number(m[1]);
+    const si = Number(m[2]);
+    const zi = Number(m[3]);
+    const ri = Number(m[4]);
+    const t = data.types[ti];
+    const s = t?.subtypes[si];
+    const zr = s?.zones[zi];
+    const typePart = t ? `${t.code?.trim() || '—'}` : `${ti + 1}`;
+    const subPart = s ? `${s.code?.trim() || '—'}` : `${si + 1}`;
+    const zonePart = zr ? `${zr.zoneLabel?.trim() || zr.zone?.trim() || '—'}` : `${zi + 1}`;
+    const field =
+      m[5] === 'min' ? 'טווח מ״ר · מ־' : m[5] === 'max' ? 'טווח מ״ר · עד' : 'טווח מ״ר · תעריף';
+    return `תעריף · סוג ${typePart} · תת־סוג ${subPart} · אזור ${zonePart} · טווח ${ri + 1} · ${field}`;
+  }
+
+  m = path.match(/^areaTypeDiscounts\.(\d+)\.(areaType|label|discountPercent|minimumRatePerSqm)$/);
+  if (m) {
+    const di = Number(m[1]);
+    const d = (data.areaTypeDiscounts ?? [])[di];
+    const row = d ? `${d.areaType?.trim() || '—'} · ${d.label?.trim() || '—'}` : `שורה ${di + 1}`;
+    const field =
+      m[2] === 'areaType'
+        ? 'קוד סוג שטח'
+        : m[2] === 'label'
+          ? 'שם'
+          : m[2] === 'discountPercent'
+            ? 'אחוז הנחה'
+            : 'מחיר מינימום למ״ר';
+    return `הנחות שטח (מרפסת וכו׳) · ${row} · ${field}`;
+  }
+
+  m = path.match(/^cityFees\.(\d+)\.(name|amount)$/);
+  if (m) {
+    const fi = Number(m[1]);
+    const f = (data.cityFees ?? [])[fi];
+    const row = f?.name?.trim() || `שורה ${fi + 1}`;
+    const field = m[2] === 'name' ? 'שם אגרה' : 'עלות דו־חודשית';
+    return `אגרות עירוניות · ${row} · ${field}`;
+  }
+
+  m = path.match(/^exemptions\.(\d+)\.(sectionCode|sectionLabel)$/);
+  if (m) {
+    const ei = Number(m[1]);
+    const sec = data.exemptions[ei];
+    const name = sec ? `${sec.sectionCode?.trim() || '—'} · ${sec.sectionLabel?.trim() || 'ללא שם'}` : `סעיף ${ei + 1}`;
+    const field = m[2] === 'sectionCode' ? 'קוד סעיף' : 'שם סעיף';
+    return `הנחות ופטורים · ${name} · ${field}`;
+  }
+
+  m = path.match(/^exemptions\.(\d+)\.subSections\.(\d+)\.(code|description|discountPercent)$/);
+  if (m) {
+    const ei = Number(m[1]);
+    const ssi = Number(m[2]);
+    const sec = data.exemptions[ei];
+    const sub = sec?.subSections[ssi];
+    const secName = sec ? `${sec.sectionCode?.trim() || '—'}` : `${ei + 1}`;
+    const subName = sub
+      ? `${sub.code?.trim() || '—'} · ${sub.description?.trim().slice(0, 24) || '—'}`
+      : `תת־סעיף ${ssi + 1}`;
+    const field =
+      m[3] === 'code' ? 'קוד תת־סעיף' : m[3] === 'description' ? 'תיאור' : 'אחוז הנחה';
+    return `הנחות ופטורים · סעיף ${secName} · ${subName} · ${field}`;
+  }
+
+  return path;
 }

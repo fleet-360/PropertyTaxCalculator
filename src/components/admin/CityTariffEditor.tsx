@@ -28,6 +28,7 @@ import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { alpha, useTheme } from '@mui/material/styles';
 import { ALL_ZONES_TARIFF_CODE, ALL_ZONES_LABEL_HE } from '@/lib/tariff-constants';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -48,6 +49,9 @@ import {
   validateCityTariffPayload,
   validationIssuesToFieldMap,
   accordionSectionForValidationPath,
+  formatValidationIssueLocation,
+  type CityTariffAccordionSection,
+  type CityTariffValidationIssue,
 } from '@/lib/validateCityTariffPayload';
 import type {
   ISizeRange,
@@ -85,12 +89,14 @@ const emptyCityData: ICityTariffData = {
 
 // ── Component ────────────────────────────────────────────────────────
 export default function CityTariffEditor({ city, isNew = false }: CityTariffEditorProps) {
+  const theme = useTheme();
   const router = useRouter();
   const [data, setData] = React.useState<ICityTariffData>(city || emptyCityData);
   const [saving, setSaving] = React.useState(false);
   const [snackbar, setSnackbar] = React.useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
   const [importedFromOrdinance, setImportedFromOrdinance] = React.useState(false);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
+  const [validationIssuesList, setValidationIssuesList] = React.useState<CityTariffValidationIssue[] | null>(null);
   const [miaPickerOpen, setMiaPickerOpen] = React.useState(false);
   const [expandedAccordion, setExpandedAccordion] = React.useState({
     basic: true,
@@ -123,6 +129,54 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
   }, []);
 
   const fieldErr = (path: string) => fieldErrors[path];
+
+  const sectionErrorCount = React.useMemo(() => {
+    const c: Record<CityTariffAccordionSection, number> = {
+      basic: 0,
+      zones: 0,
+      types: 0,
+      exemptions: 0,
+      areaTypeDiscounts: 0,
+      cityFees: 0,
+    };
+    for (const k of Object.keys(fieldErrors)) {
+      c[accordionSectionForValidationPath(k)] += 1;
+    }
+    return c;
+  }, [fieldErrors]);
+
+  const hasPathPrefix = React.useCallback(
+    (prefix: string) => {
+      const keys = Object.keys(fieldErrors);
+      return keys.some((k) => k === prefix || k.startsWith(`${prefix}.`));
+    },
+    [fieldErrors],
+  );
+
+  const accordionValidationSx = React.useCallback(
+    (section: CityTariffAccordionSection) =>
+      sectionErrorCount[section] > 0
+        ? {
+            border: '1px solid',
+            borderColor: 'error.main',
+            borderRadius: 1,
+            bgcolor: alpha(theme.palette.error.main, 0.06),
+          }
+        : undefined,
+    [sectionErrorCount, theme.palette.error.main],
+  );
+
+  const listItemErrorSx = React.useCallback(
+    (active: boolean) =>
+      active
+        ? {
+            borderInlineStart: '3px solid',
+            borderInlineStartColor: 'error.main',
+            bgcolor: alpha(theme.palette.error.main, 0.08),
+          }
+        : undefined,
+    [theme.palette.error.main],
+  );
 
   const [selectedTypeIndex, setSelectedTypeIndex] = React.useState<number | null>(() =>
     city && city.types.length > 0 ? 0 : null,
@@ -237,10 +291,10 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
 
   const handleSave = async () => {
     const normalized = normalizeCityTariffPayload(data);
-    console.log(normalized);
     const issues = validateCityTariffPayload(normalized);
     if (issues.length > 0) {
       setFieldErrors(validationIssuesToFieldMap(issues));
+      setValidationIssuesList(issues);
       setExpandedAccordion((prev) => {
         const next = { ...prev };
         for (const issue of issues) {
@@ -248,14 +302,25 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
         }
         return next;
       });
+      const sample = issues
+        .slice(0, 2)
+        .map(
+          (i) =>
+            `${formatValidationIssueLocation(i.path, data)}: ${i.message}`,
+        )
+        .join(' · ');
       setSnackbar({
         open: true,
-        message: `נמצאו ${issues.length} בעיות אימות — נא לתקן לפי השדות המסומנים`,
+        message:
+          issues.length <= 2
+            ? sample
+            : `נמצאו ${issues.length} בעיות · ${sample} …`,
         severity: 'error',
       });
       return;
     }
 
+    setValidationIssuesList(null);
     setFieldErrors({});
     setSaving(true);
     try {
@@ -706,6 +771,33 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
         </Alert>
       )}
 
+      {validationIssuesList && validationIssuesList.length > 0 && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setValidationIssuesList(null)}>
+          <Typography variant="subtitle2" component="div" sx={{ mb: 1, fontWeight: 700 }}>
+            יש לתקן את השגיאות הבאות (הסקשנים והשורות המסומנים באדום):
+          </Typography>
+          <Box
+            component="ul"
+            sx={{ m: 0, pl: 2.5, maxHeight: 360, overflow: 'auto', listStyleType: 'disc' }}
+          >
+            {validationIssuesList.map((issue, idx) => (
+              <Typography
+                key={`${issue.path}-${idx}`}
+                component="li"
+                variant="body2"
+                sx={{ mb: 0.75 }}
+              >
+                <Box component="span" sx={{ fontWeight: 600 }}>
+                  {formatValidationIssueLocation(issue.path, data)}
+                </Box>
+                {' — '}
+                {issue.message}
+              </Typography>
+            ))}
+          </Box>
+        </Alert>
+      )}
+
       {/* Header */}
       <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
         <Box>
@@ -735,9 +827,15 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       <Accordion
         expanded={expandedAccordion.basic}
         onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, basic: exp }))}
+        sx={accordionValidationSx('basic')}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>פרטי עיר</Typography>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1, flexWrap: 'wrap' }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>פרטי עיר</Typography>
+            {sectionErrorCount.basic > 0 && (
+              <Chip size="small" color="error" label={`${sectionErrorCount.basic} שגיאות`} />
+            )}
+          </Stack>
         </AccordionSummary>
         <AccordionDetails>
           <Grid container spacing={2}>
@@ -872,18 +970,33 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       <Accordion
         expanded={expandedAccordion.zones}
         onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, zones: exp }))}
+        sx={accordionValidationSx('zones')}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1, flexWrap: 'wrap' }}>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
               אזורים <Chip label={data.availableZones.length} size="small" sx={{ ml: 1 }} />
             </Typography>
+            {sectionErrorCount.zones > 0 && (
+              <Chip size="small" color="error" label={`${sectionErrorCount.zones} שגיאות`} />
+            )}
             <SectionExtractTrigger sectionKey="zones" sectionLabel="אזורים" onOpen={openSectionExtract} />
           </Stack>  
         </AccordionSummary>
         <AccordionDetails>
           {data.availableZones.map((zone, zi) => (
-            <Box key={zi} sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'flex-start' }}>
+            <Box
+              key={zi}
+              sx={{
+                display: 'flex',
+                gap: 1,
+                mb: 1,
+                alignItems: 'flex-start',
+                p: 0.5,
+                borderRadius: 1,
+                ...listItemErrorSx(hasPathPrefix(`availableZones.${zi}`)),
+              }}
+            >
               <TextField
                 size="small"
                 label="קוד"
@@ -923,12 +1036,16 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       <Accordion
         expanded={expandedAccordion.types}
         onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, types: exp }))}
+        sx={accordionValidationSx('types')}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1, flexWrap: 'wrap' }}>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
               סוגי נכס ותעריפים <Chip label={data.types.length} size="small" sx={{ ml: 1 }} />
             </Typography>
+            {sectionErrorCount.types > 0 && (
+              <Chip size="small" color="error" label={`${sectionErrorCount.types} שגיאות`} />
+            )}
             <SectionExtractTrigger
               sectionKey="rates"
               sectionLabel="סוגי נכס ותעריפים"
@@ -1030,7 +1147,10 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                     </Button>
                   </Box>
                   <List dense disablePadding aria-label="רשימת סוגי נכס">
-                    {data.types.sort((a, b) => a.code.localeCompare(b.code)).map((type, ti) => (
+                    {[...data.types]
+                      .map((type, ti) => ({ type, ti }))
+                      .sort((a, b) => a.type.code.localeCompare(b.type.code))
+                      .map(({ type, ti }) => (
                       <ListItemButton
                         key={ti}
                         selected={selectedTypeIndex === ti}
@@ -1040,6 +1160,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                         }}
                         aria-current={selectedTypeIndex === ti ? 'true' : undefined}
                         aria-label={`בחר סוג ${type.label || type.code || ti}`}
+                        sx={listItemErrorSx(hasPathPrefix(`types.${ti}`))}
                       >
                         <ListItemText
                           primary={
@@ -1109,6 +1230,9 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                           onClick={() => setSelectedSubtypeIndex(si)}
                           aria-current={selectedSubtypeIndex === si ? 'true' : undefined}
                           aria-label={`בחר תת־סוג ${sub.label || sub?.code || si}`}
+                          sx={listItemErrorSx(
+                            hasPathPrefix(`types.${selectedTypeIndex}.subtypes.${si}`),
+                          )}
                         >
                           <ListItemText
                             primary={`${sub.code || '—'} · ${sub.label || 'ללא שם'}`}
@@ -1377,12 +1501,16 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       <Accordion
         expanded={expandedAccordion.exemptions}
         onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, exemptions: exp }))}
+        sx={accordionValidationSx('exemptions')}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1, flexWrap: 'wrap' }}>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
               הנחות / פטורים <Chip label={data.exemptions.length} size="small" sx={{ ml: 1 }} />
             </Typography>
+            {sectionErrorCount.exemptions > 0 && (
+              <Chip size="small" color="error" label={`${sectionErrorCount.exemptions} שגיאות`} />
+            )}
             <SectionExtractTrigger
               sectionKey="exemptions"
               sectionLabel="הנחות ופטורים"
@@ -1491,6 +1619,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                         }}
                         aria-current={selectedExemptionSectionIndex === ei ? 'true' : undefined}
                         aria-label={`בחר סעיף ${section.sectionLabel || section.sectionCode || ei}`}
+                        sx={listItemErrorSx(hasPathPrefix(`exemptions.${ei}`))}
                       >
                         <ListItemText
                           primary={
@@ -1552,6 +1681,11 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                           onClick={() => setSelectedExemptionSubIndex(ssi)}
                           aria-current={selectedExemptionSubIndex === ssi ? 'true' : undefined}
                           aria-label={`בחר תת־סעיף ${sub.code || sub.description || ssi}`}
+                          sx={listItemErrorSx(
+                            hasPathPrefix(
+                              `exemptions.${selectedExemptionSectionIndex}.subSections.${ssi}`,
+                            ),
+                          )}
                         >
                           <ListItemText
                             primary={`${sub.code || '—'} · ${sub.discountPercent}%`}
@@ -1744,12 +1878,20 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       <Accordion
         expanded={expandedAccordion.areaTypeDiscounts}
         onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, areaTypeDiscounts: exp }))}
+        sx={accordionValidationSx('areaTypeDiscounts')}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1, flexWrap: 'wrap' }}>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
               הנחות שטח <Chip label={(data.areaTypeDiscounts ?? []).length} size="small" sx={{ ml: 1 }} />
             </Typography>
+            {sectionErrorCount.areaTypeDiscounts > 0 && (
+              <Chip
+                size="small"
+                color="error"
+                label={`${sectionErrorCount.areaTypeDiscounts} שגיאות`}
+              />
+            )}
             <SectionExtractTrigger
               sectionKey="extras"
               sectionLabel="הנחות שטח ואגרות"
@@ -1759,7 +1901,15 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
         </AccordionSummary>
         <AccordionDetails>
           {(data.areaTypeDiscounts ?? []).map((d, di) => (
-            <Paper key={di} variant="outlined" sx={{ p: 2, mb: 2 }}>
+            <Paper
+              key={di}
+              variant="outlined"
+              sx={{
+                p: 2,
+                mb: 2,
+                ...listItemErrorSx(hasPathPrefix(`areaTypeDiscounts.${di}`)),
+              }}
+            >
               <Stack direction="row" spacing={1.5} alignItems="flex-start" flexWrap="wrap" useFlexGap>
                 <TextField
                   label="קוד סוג שטח"
@@ -1865,12 +2015,16 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       <Accordion
         expanded={expandedAccordion.cityFees}
         onChange={(_, exp) => setExpandedAccordion((prev) => ({ ...prev, cityFees: exp }))}
+        sx={accordionValidationSx('cityFees')}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1, flexWrap: 'wrap' }}>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
               אגרות נוספות <Chip label={(data.cityFees ?? []).length} size="small" sx={{ ml: 1 }} />
             </Typography>
+            {sectionErrorCount.cityFees > 0 && (
+              <Chip size="small" color="error" label={`${sectionErrorCount.cityFees} שגיאות`} />
+            )}
             <SectionExtractTrigger
               sectionKey="extras"
               sectionLabel="הנחות שטח ואגרות"
@@ -1880,7 +2034,15 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
         </AccordionSummary>
         <AccordionDetails>
           {(data.cityFees ?? []).map((f, fi) => (
-            <Paper key={fi} variant="outlined" sx={{ p: 2, mb: 2 }}>
+            <Paper
+              key={fi}
+              variant="outlined"
+              sx={{
+                p: 2,
+                mb: 2,
+                ...listItemErrorSx(hasPathPrefix(`cityFees.${fi}`)),
+              }}
+            >
               <Stack direction="row" spacing={1.5} alignItems="flex-start" flexWrap="wrap" useFlexGap>
                 <TextField
                   label="שם אגרה"
