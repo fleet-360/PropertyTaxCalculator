@@ -328,7 +328,6 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       const method = isNew ? 'POST' : 'PUT';
 
       const payload = { ...data, types: normalized.types, exemptions: normalized.exemptions };
-
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -663,7 +662,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       newEi = prev.exemptions.length;
       return {
         ...prev,
-        exemptions: [...prev.exemptions, { sectionCode: '', sectionLabel: '', miaMessageId: '', subSections: [] }],
+        exemptions: [...prev.exemptions, { sectionCode: '', sectionLabel: '', miaMessageId: '', applicableTo: 'private' as const, subSections: [] }],
       };
     });
     setSelectedExemptionSectionIndex(newEi);
@@ -1555,6 +1554,22 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                       error={Boolean(fieldErr(`exemptions.${selectedExemptionSectionIndex}.sectionLabel`))}
                       helperText={fieldErr(`exemptions.${selectedExemptionSectionIndex}.sectionLabel`)}
                     />
+                                      <Box sx={{ mt: 1 }}>
+                    <TextField
+                      select
+                      size="small"
+                      label="חל על סוג נכס"
+                      value={data.exemptions[selectedExemptionSectionIndex].applicableTo ?? 'private'}
+                      onChange={(e) =>
+                        updateExemptionSection(selectedExemptionSectionIndex, 'applicableTo', e.target.value)
+                      }
+                      sx={{ width: 180 }}
+                    >
+                      <MenuItem value="private">מגורים</MenuItem>
+                      <MenuItem value="business">עסקי</MenuItem>
+                      <MenuItem value="both">שניהם</MenuItem>
+                    </TextField>
+                  </Box>
                     <IconButton
                       size="small"
                       color="error"
@@ -1582,6 +1597,7 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                       />
                     )}
                   </Box>
+
                 </Paper>
               )}
 

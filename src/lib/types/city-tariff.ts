@@ -64,6 +64,7 @@ export interface IExemptionSection {
   sectionCode: string;
   sectionLabel: string;
   miaMessageId?: string;
+  applicableTo: 'private' | 'business' | 'both';
   subSections: IExemptionSubSection[];
 }
 

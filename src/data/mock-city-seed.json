@@ -396,6 +396,7 @@
       {
         "sectionCode": "1",
         "sectionLabel": "אזרח ותיק",
+        "applicableTo": "private",
         "subSections": [
           {
             "code": "senior_25",
@@ -439,6 +440,7 @@
       {
         "sectionCode": "2",
         "sectionLabel": "נכה",
+        "applicableTo": "private",
         "subSections": [
           {
             "code": "disabled_40",
@@ -481,6 +483,7 @@
       {
         "sectionCode": "3",
         "sectionLabel": "הכנסה לנפש",
+        "applicableTo": "private",
         "subSections": [
           {
             "code": "income_80_small",
@@ -571,6 +574,7 @@
       {
         "sectionCode": "4",
         "sectionLabel": "מקבל תגמולים",
+        "applicableTo": "private",
         "subSections": [
           {
             "code": "benefits_66",
@@ -601,6 +605,7 @@
       {
         "sectionCode": "5",
         "sectionLabel": "הורה יחיד",
+        "applicableTo": "private",
         "subSections": [
           {
             "code": "single_parent_20",
@@ -617,6 +622,7 @@
       {
         "sectionCode": "6",
         "sectionLabel": "עולה חדש",
+        "applicableTo": "private",
         "subSections": [
           {
             "code": "immigrant_90",
@@ -635,6 +641,7 @@
       {
         "sectionCode": "7",
         "sectionLabel": "נכס ריק",
+        "applicableTo": "both",
         "subSections": [
           {
             "code": "empty_100",
@@ -651,6 +658,7 @@
       {
         "sectionCode": "8",
         "sectionLabel": "משפחה ברוכת ילדים",
+        "applicableTo": "private",
         "subSections": [
           {
             "code": "large_family_4",

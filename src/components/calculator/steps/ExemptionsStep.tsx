@@ -19,7 +19,13 @@ const MAX_ROWS = 3;
 
 export default function ExemptionsStep({ state, dispatch ,sx}: StepProps) {
   const { updateLead } = useLeadUpdate();
-  const exemptionSections: IExemptionSection[] = state.cityData?.exemptions ?? [];
+  const allExemptionSections: IExemptionSection[] = state.cityData?.exemptions ?? [];
+  const exemptionSections = useMemo(() => {
+    const type = state.propertyType; // 'private' | 'business'
+    return allExemptionSections.filter(
+      (s) => s.applicableTo === 'both' || s.applicableTo === type,
+    );
+  }, [allExemptionSections, state.propertyType]);
 
   // ── Mia message on mount ──
   useEffect(() => {

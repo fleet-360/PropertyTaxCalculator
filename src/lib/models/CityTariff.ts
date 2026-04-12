@@ -124,6 +124,11 @@ const ExemptionSectionSchema = new Schema<IExemptionSection>(
     sectionCode: { type: String, required: true },
     sectionLabel: { type: String, required: true },
     miaMessageId: { type: String },
+    applicableTo: {
+      type: String,
+      enum: ['private', 'business', 'both'],
+      default: 'private',
+    },
     subSections: { type: [ExemptionSubSectionSchema], default: [] },
   },
   { _id: false }

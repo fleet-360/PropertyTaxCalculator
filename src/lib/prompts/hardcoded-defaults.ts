@@ -223,24 +223,38 @@ export const hardcodedDefaults: Record<string, string> = {
 }
 
 ═══════════════════════════════════════════════════
-סוגי נכסים בסיסיים — חובה בכל צו ארנונה:
+סוגי נכסים — 7 קבוצות בלבד (חובה!):
 ═══════════════════════════════════════════════════
 
-בכל צו ארנונה ישראלי מופיעים סוגי נכסים בסיסיים. כל אחד מהם הוא **type** (סוג ראשי) ברמה העליונה של ה-JSON, עם **subtypes** (תתי-סוגים) מתחתיו.
+**חובה:** כל תת-סוג (subtype) שתחלץ מהצו חייב להיכנס לאחת מ-7 הקבוצות הבאות בלבד. אסור ליצור סוגים (types) מחוץ לרשימה זו. כל קבוצה היא רשומת type נפרדת ב-JSON, ותתי-הסעיפים שתחתיה הם subtypes.
 
-הסוגים הבסיסיים:
+הקבוצות:
 1. **מגורים** — category: "private" (הסוג היחיד בקטגוריה זו)
-2. **עסקים** (מסחר, משרדים, שירותים) — category: "business"
-3. **תעשייה ומלאכה** — category: "business"
-4. **קרקע** (קרקע תפוסה, קרקע לא בנויה) — category: "business"
-5. **מחסנים** — category: "business"
-6. **חניונים** — category: "business"
+   כולל: דירות מגורים, בתים פרטיים, דירות יוקרה, דיור מוגן, פנימיות, וכל נכס המשמש למגורים.
 
-**כללי מבנה:**
-• כל אחד מ-6 הסוגים הבסיסיים הוא רשומת type נפרדת בתוצאה. תתי-הסעיפים שתחתיו הם subtypes.
-• **תמיד עקוב אחרי המבנה של הצו עצמו.** אם הצו מגדיר "בתי מלון" כתת-סעיף בתוך "עסקים", אז בתי מלון הוא subtype תחת עסקים — לא type נפרד.
-• אם הצו מגדיר סוג נוסף כקטגוריה עצמאית ברמה העליונה (למשל "חקלאות" כפרק נפרד), צור עבורו type נפרד.
-• אם אחד מ-6 הסוגים הבסיסיים לא מופיע בצו — אל תמציא אותו. חלץ רק מה שקיים במסמך.
+2. **עסקים** (מסחר, משרדים, שירותים) — category: "business"
+   כולל: חנויות, משרדים, שירותים, מסחר, בנקים, בתי מלון, אולמות, מוסדות, מרפאות, בתי קפה, מסעדות, וכל עסק שאינו תעשייה/מלאכה.
+
+3. **תעשייה ומלאכה** — category: "business"
+   כולל: מפעלים, בתי מלאכה, מעבדות, סדנאות, ייצור, וכל נכס המשמש לתעשייה או מלאכה.
+
+4. **קרקע** — category: "business"
+   כולל: קרקע תפוסה, קרקע לא בנויה, קרקע חקלאית, מגרשים, שטחים פתוחים, וכל סוג קרקע.
+
+5. **מחסנים** — category: "business"
+   כולל: מחסנים, אחסנה, מבני אחסון, וכל נכס המשמש לאחסון.
+
+6. **חניונים** — category: "business"
+   כולל: חניונים, מגרשי חניה, חניות, וכל נכס המשמש לחניה.
+
+7. **אחר** — category: "business"
+   כולל: כל תת-סוג שלא ניתן לסווג באופן ברור לאחת מ-6 הקבוצות הנ"ל (למשל: חקלאות, תשתיות, מתקנים מיוחדים).
+
+**כללי סיווג:**
+• **אסור ליצור סוגים (types) מחוץ ל-7 הקבוצות שלמעלה.** גם אם הצו מגדיר קטגוריה עצמאית ברמה העליונה (כמו "חקלאות" כפרק נפרד), סווג את תתי-הסעיפים שלה לקבוצה המתאימה ביותר (למשל קרקע חקלאית → קבוצת "קרקע"), או לקבוצת "אחר" אם אין התאמה.
+• תתי-הסעיפים (subtypes) בתוך כל קבוצה עוקבים אחרי המבנה של הצו עצמו — שמור על השם, הקוד, והתעריפים כפי שמופיעים בצו.
+• אם אחת מ-7 הקבוצות לא מופיעה בצו — אל תמציא אותה. חלץ רק מה שקיים במסמך.
+• במקרה של ספק לגבי סיווג — העדף את הקבוצה הספציפית יותר (למשל "מחסן בשטח תעשייה" → קבוצת "מחסנים", לא "תעשייה").
 
 ═══════════════════════════════════════════════════
 איך לקרוא את הצו — שיטת עבודה (מלמטה למעלה):
@@ -361,6 +375,7 @@ export const hardcodedDefaults: Record<string, string> = {
     {
       "sectionCode": "1",
       "sectionLabel": "אזרח ותיק",
+      "applicableTo": "private",
       "subSections": [
         {
           "code": "senior_25",
@@ -385,6 +400,13 @@ export const hardcodedDefaults: Record<string, string> = {
 
 **sectionLabel (שם הסעיף):**
 • שם קטגוריית ההנחה בעברית. דוגמאות: "אזרח ותיק", "נכה", "הכנסה נמוכה", "עולה חדש", "משפחה ברוכת ילדים", "נכס ריק", "הורה יחיד", "חייל/ת בשירות סדיר".
+
+**applicableTo (חל על סוג נכס):**
+• ערכים אפשריים: "private" (מגורים), "business" (עסקי), "both" (שניהם).
+• ברירת מחדל: "private".
+• רוב ההנחות (אזרח ותיק, נכה, הכנסה נמוכה, עולה חדש, משפחה ברוכת ילדים, הורה יחיד) חלות על מגורים בלבד → "private".
+• הנחות שחלות גם על נכסים עסקיים (למשל: נכס ריק, פטור לעמותות, הנחה לעסק חדש) → "both" או "business" בהתאם.
+• אם הצו מציין במפורש שהנחה חלה רק על עסקים → "business".
 
 **subSections (תתי-סעיפים):**
 כל הנחה ספציפית בתוך הסעיף:
@@ -491,14 +513,16 @@ export const hardcodedDefaults: Record<string, string> = {
 
   // ── Appeal Letter JSON ─────────────────────────────────────────────
   // Template variables: {{variant}}, {{userJson}}, {{schemaVersion}},
-  //   {{subjectType}}, {{exemptionDescription}}, {{letterSubject}}, {{savingsAnnual}}
+  //   {{subjectType}}, {{exemptionDescription}}, {{letterSubject}},
+  //   {{savingsAnnual}}, {{areaCorrectionAddendum}}
   appeal_letter_json: `You are an expert assistant drafting formal Israeli municipal property tax appeals (השגה בארנונה).
 
 THE APPEAL SUBJECT
-This letter is about ONE specific request: {{exemptionDescription}}.
+This letter focuses primarily on: {{exemptionDescription}}.
 Subject type: {{subjectType}} (area_correction = disputing property measurement; exemption = requesting a discount/exemption).
 Estimated annual savings: {{savingsAnnual}} ₪.
-The entire letter should focus on this single request and its legal basis.
+The letter should focus on this request and its legal basis.
+{{areaCorrectionAddendum}}
 
 ATTACHED PDFs
 - Example appeal letters: these show the CORRECT structure and layout of a good appeal letter. Learn the format from them, but adapt the content to the specific exemption/discount described above.
@@ -515,6 +539,7 @@ Part 4 (YOU): תיאור הנכס — Property description. Include: property ty
 Part 5 (YOU): תיאור הבעיה/הממצא — What was found wrong. This depends on the subject:
   - area_correction: "מצאנו כי קיימת טעות במדידת הנכס" + area breakdown (main, balcony, storage, etc.)
   - exemption: "מצאנו כי העירייה לא ביצעה הפחתה בגין פטור [name]" + explanation
+  - exemption WITH area correction (see AREA CORRECTION addendum above if present): first describe the exemption claim, then add a paragraph about the area measurement error with billed vs claimed figures.
 Part 6 (YOU): ביסוס משפטי — Legal basis. Cite relevant laws AND ordinance sections:
   - area_correction: סעיף 7 לחוק ההסדרים (4 criteria: type, area, usage, zone), calculation = area × rate
   - exemption: cite the specific regulation/law that grants this exemption, then quote the relevant ordinance section

@@ -88,8 +88,8 @@ function createDataEntrySchema(isBusiness: boolean) {
         .regex(/^\d+$/, "יש להזין ספרות בלבד")
         .or(z.literal(""))
         .optional(),
-      email: z.string().min(1, "שדה חובה").email("כתובת מייל לא תקינה"),
-      phone: z.string(),
+      email: z.string().optional(),
+      phone: z.string().optional(),
       propertyPurpose: z.string(),
       propertyNumber: z.string(),
       propertyId: z.string(),
