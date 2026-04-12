@@ -1,6 +1,18 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Box, Container, IconButton, Tooltip, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  IconButton,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { alpha } from "@mui/material/styles";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -98,6 +110,7 @@ export default function CalculatorSection({
   const childVariants = reduceMotion ? reducedMotionVariants : fadeSlideUp;
 
   const wizardRef = useRef<CalculatorWizardHandle>(null);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   // ── Mia messages from DB ──
   const [miaMessages, setMiaMessages] = useState<
@@ -419,7 +432,7 @@ export default function CalculatorSection({
                           <Tooltip title="איפוס מחשבון" arrow>
                             <IconButton
                               aria-label="איפוס מחשבון"
-                              onClick={() => wizardRef.current?.resetCalculator()}
+                              onClick={() => setResetDialogOpen(true)}
                               sx={calcButtonSx}
                             >
                               <RestartAltIcon />
@@ -475,6 +488,34 @@ export default function CalculatorSection({
           </Box>
         </Box>
       </Container>
+
+      {/* Reset confirmation dialog */}
+      <Dialog
+        open={resetDialogOpen}
+        onClose={() => setResetDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>איפוס מחשבון</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            האם אתה בטוח? כל הנתונים שהוזנו יימחקו.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setResetDialogOpen(false)}>ביטול</Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => {
+              wizardRef.current?.resetCalculator();
+              setResetDialogOpen(false);
+            }}
+          >
+            אפס
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
