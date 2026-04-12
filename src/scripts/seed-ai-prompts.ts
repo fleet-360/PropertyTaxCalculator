@@ -10,9 +10,7 @@ import AiPrompt from '../lib/models/AiPrompt';
 import { hardcodedDefaults } from '../lib/prompts/hardcoded-defaults';
 
 const MONGODB_URI =
-  process.env.MONGODB_URI_MONGODB_URI ||
-  "mongodb+srv://Vercel-Admin-atlas-purple-prism:oMlxLAeHKMabI8Fq@atlas-purple-prism.4jxx7va.mongodb.net/property-tax-calculator?retryWrites=true&w=majority";
-
+  process.env.MONGODB_URI_MONGODB_URI ??""
 interface PromptSeedData {
   key: string;
   category: string;

@@ -8,8 +8,8 @@ vi.mock('@/hooks/useLeadUpdate', () => ({
   useLeadUpdate: () => ({ updateLead: vi.fn(() => Promise.resolve()) }),
 }));
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import ContactRedirectStep from '@/components/calculator/steps/ContactRedirectStep';
 import ResultsGateStep from '@/components/calculator/steps/ResultsGateStep';
@@ -36,6 +36,14 @@ describe('ContactRedirectStep', () => {
   const dispatch = vi.fn();
   const contactState = makeState({ leadId: 'test-lead' });
 
+  beforeEach(() => {
+    dispatch.mockClear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('reason="area" → shows large area message', () => {
     renderWithTheme(
       <ContactRedirectStep reason="area" dispatch={dispatch} state={contactState} />
@@ -47,7 +55,9 @@ describe('ContactRedirectStep', () => {
     renderWithTheme(
       <ContactRedirectStep reason="designations" dispatch={dispatch} state={contactState} />
     );
-    expect(screen.getByText('מספר ייעודים עסקיים')).toBeInTheDocument();
+    expect(
+      screen.getByText(/כאשר לנכס עסקי יש יותר מייעוד אחד/),
+    ).toBeInTheDocument();
   });
 
   it('reason="city" → shows city not found message', () => {
@@ -71,12 +81,48 @@ describe('ContactRedirectStep', () => {
     expect(screen.getByText('לא ניתן לבצע חישוב')).toBeInTheDocument();
   });
 
-  it('shows contact buttons', () => {
+  it('shows callback and restart buttons', () => {
     renderWithTheme(
       <ContactRedirectStep reason="area" dispatch={dispatch} state={contactState} />
     );
-    expect(screen.getByText('התקשר אלינו')).toBeInTheDocument();
-    expect(screen.getByText('שלח מייל')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /רוצה שיחזרו אלי/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /חזרה להתחלה/ })).toBeInTheDocument();
+  });
+
+  it('opens dialog, saves lead via PUT, then resets calculator', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({}),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderWithTheme(
+      <ContactRedirectStep reason="area" dispatch={dispatch} state={contactState} />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /רוצה שיחזרו אלי/ }));
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/שם מלא/), {
+      target: { value: 'ישראל ישראלי' },
+    });
+    fireEvent.change(screen.getByLabelText(/^טלפון$/), {
+      target: { value: '0501234567' },
+    });
+    fireEvent.change(screen.getByLabelText(/אימייל/), {
+      target: { value: 'test@example.com' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /^שליחה$/ }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/leads/test-lead',
+        expect.objectContaining({ method: 'PUT' }),
+      );
+      expect(dispatch).toHaveBeenCalledWith({ type: 'RESET_CALCULATOR' });
+    });
   });
 });
 
