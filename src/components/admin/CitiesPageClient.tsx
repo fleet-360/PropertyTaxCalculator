@@ -149,7 +149,7 @@ export default function CitiesPageClient({ initialCities }: { initialCities: Cit
                 cities.map((city) => (
                   <TableRow key={city._id} hover>
                     <TableCell >
-                      <Box>
+                      <Box component={"a"} href={`/admin/cities/${city._id}/edit`} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, textDecoration: 'none' }}>
                         <Typography variant="body2" sx={{ fontWeight: 500 }}>
                           {city.cityName}
                         </Typography>
