@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import MiaMessage from '../lib/models/MiaMessage';
 
 const MONGODB_URI =
-  process.env.MONGODB_URI_MONGODB_URI || 'mongodb+srv://benshuan_db_user:5u6gSXHSXLeMm6LV@taxcalculatordev.dujlziy.mongodb.net/property-tax-calculator-test?appName=taxCalculatorDev';
+  process.env.MONGODB_URI_MONGODB_URI || ""
 
 const DEFAULT_MESSAGES = [
   {

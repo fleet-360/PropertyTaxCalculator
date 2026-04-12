@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Container, Typography, Box } from '@mui/material';
-import ContactForm from '@/components/contact/ContactForm';
+import ContactPageForm from '@/components/contact/ContactPageForm';
 
 export const metadata: Metadata = {
   title: 'צור קשר | מחשבון ארנונה',
@@ -20,7 +20,7 @@ export default function ContactPage() {
         </Typography>
       </Box>
 
-      <ContactForm />
+      <ContactPageForm />
     </Container>
   );
 }
