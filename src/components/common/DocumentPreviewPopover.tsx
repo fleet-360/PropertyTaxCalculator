@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, type MouseEvent } from 'react';
+import type { SxProps, Theme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
@@ -17,6 +18,7 @@ export interface DocumentPreviewPopoverProps {
   triggerAriaLabel?: string;
   downloadLabel?: string;
   downloadFileName?: string;
+  triggerSx?: SxProps<Theme>;
 }
 
 function defaultFileNameFromUrl(url: string): string {
@@ -38,6 +40,7 @@ export default function DocumentPreviewPopover({
   triggerAriaLabel,
   downloadLabel = 'הורדת הקובץ',
   downloadFileName,
+  triggerSx,
 }: DocumentPreviewPopoverProps) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
@@ -75,9 +78,12 @@ export default function DocumentPreviewPopover({
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={triggerAriaLabel ?? triggerLabel}
-        sx={{ textTransform: 'none', fontWeight: 600 }}
+        sx={[, ...(Array.isArray(triggerSx) ? triggerSx : triggerSx ? [triggerSx] : []), { zIndex: 10, textTransform: 'none', fontWeight: 600 }]}
       >
-        {triggerLabel}
+        <span>
+
+          {triggerLabel}
+        </span>
       </Button>
       <Popover
         open={open}

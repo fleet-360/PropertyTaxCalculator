@@ -148,7 +148,7 @@ export default function CitiesPageClient({ initialCities }: { initialCities: Cit
               ) : (
                 cities.map((city) => (
                   <TableRow key={city._id} hover>
-                    <TableCell>
+                    <TableCell >
                       <Box>
                         <Typography variant="body2" sx={{ fontWeight: 500 }}>
                           {city.cityName}

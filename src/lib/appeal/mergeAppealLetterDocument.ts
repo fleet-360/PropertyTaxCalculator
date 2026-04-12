@@ -331,7 +331,9 @@ export function mergeAppealLetterBySubject(
     header,
     dateLine: `תאריך: ${formatHebrewAppealDate(new Date())}`,
     titleLine1: 'כתב השגה על חיובי ארנונה',
-    titleLine2: 'ובקשה למתן הנחות בארנונה',
+    titleLine2: subject.includesAreaCorrection
+      ? 'ובקשה למתן הנחות בארנונה ולתיקון שטחי הנכס'
+      : 'ובקשה למתן הנחות בארנונה',
     openingBlock: '',
     bodyRows: finalizedBodyRows(ctx, payload),
     showSignaturePlaceholder: true,

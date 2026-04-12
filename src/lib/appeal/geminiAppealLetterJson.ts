@@ -131,18 +131,39 @@ function logParsedAppealGeminiPayload(
 async function buildJsonInstruction(variant: AppealLetterVariant, userJson: string): Promise<string> {
   return getPrompt('appeal_letter_json', {
     variant,
+    subjectType: variant,
+    exemptionDescription: '',
+    letterSubject: '',
+    savingsAnnual: '___',
+    areaCorrectionAddendum: '',
     userJson,
     schemaVersion: '1',
   });
 }
 
 async function buildJsonInstructionBySubject(subject: AppealSubject, userJson: string): Promise<string> {
+  let areaCorrectionAddendum = '';
+  if (subject.includesAreaCorrection) {
+    const ac = subject.includesAreaCorrection;
+    areaCorrectionAddendum = `
+
+IMPORTANT — AREA CORRECTION ALSO INCLUDED:
+In addition to the exemption request above, the user disputes the billed property area.
+Billed area: ${ac.billedAreaSqm} sqm. Claimed correct area: ${ac.claimedAreaSqm} sqm. Area correction annual savings: ${Math.round(ac.areaSavingsAnnual)} ₪.
+You MUST incorporate this area correction into the letter:
+- In Part 5 (תיאור הבעיה): after describing the exemption issue, add a section about the area measurement error — state the billed vs claimed area figures and that there is an error in the measurement.
+- In Part 6 (ביסוס משפטי): cite סעיף 3(א) לחוק הרשויות המקומיות (ערר על קביעת ארנונה כללית), תשל"ו-1976 regarding area measurement alongside the exemption legal basis. Also reference סעיף 7 לחוק ההסדרים regarding the 4 criteria (type, area, usage, zone).
+- In Part 7 (חישוב מתוקן): calculate using the CORRECTED area (${ac.claimedAreaSqm} sqm), not the billed area (${ac.billedAreaSqm} sqm). Show: corrected_area × rate = annual before exemption, then apply the exemption discount on the corrected amount.
+- The combined total savings should reflect both the area correction AND the exemption.`;
+  }
+
   return getPrompt('appeal_letter_json', {
     variant: subject.subjectType,
     subjectType: subject.subjectType,
     exemptionDescription: subject.exemptionDescription,
     letterSubject: subject.letterSubject,
     savingsAnnual: subject.savingsAnnual > 0 ? String(Math.round(subject.savingsAnnual)) : '___',
+    areaCorrectionAddendum,
     userJson,
     schemaVersion: '1',
   });

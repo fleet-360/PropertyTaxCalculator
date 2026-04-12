@@ -21,6 +21,16 @@ export interface AppealSubject {
   savingsAnnual: number;
   /** Ready-to-use "מהות ההשגה" line for the letter header. */
   letterSubject: string;
+  /**
+   * When subjectType is 'exemption' but the user also reported an area
+   * correction, this block carries the area-dispute data so the letter
+   * can incorporate both requests.
+   */
+  includesAreaCorrection?: {
+    billedAreaSqm: number;
+    claimedAreaSqm: number;
+    areaSavingsAnnual: number;
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -122,6 +132,10 @@ function exemptionSubjectLine(description: string): string {
   return `בקשה להחלת הנחה/פטור: ${description}; בקשה לתיקון השומה עפ"י דין וצו הארנונה.`;
 }
 
+function combinedSubjectLine(exemptionDescription: string): string {
+  return `בקשה להחלת הנחה/פטור: ${exemptionDescription} ותיקון מדידת שטחי הנכס; בקשה לתיקון השומה עפ"י דין וצו הארנונה.`;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Main                                                              */
 /* ------------------------------------------------------------------ */
@@ -161,8 +175,8 @@ export function resolveAppealSubject(ctx: AppealUserContext): AppealSubject {
   }
 
   if (exemption != null && exemptionSavingsVal > 0) {
-    // Exemption wins
-    return {
+    // Exemption wins — but if user also reported area correction, attach it
+    const result: AppealSubject = {
       subjectType: 'exemption',
       exemptionCode: exemption.code,
       exemptionDescription: exemption.description,
@@ -170,6 +184,20 @@ export function resolveAppealSubject(ctx: AppealUserContext): AppealSubject {
       savingsAnnual: exemptionSavingsVal,
       letterSubject: exemptionSubjectLine(exemption.description),
     };
+
+    if (areaSavings > 0) {
+      const billed = ctx.property.areaSqm ?? 0;
+      const claimed = ctx.property.userClaimedCorrectTotalAreaSqm ?? 0;
+      result.includesAreaCorrection = {
+        billedAreaSqm: billed,
+        claimedAreaSqm: claimed,
+        areaSavingsAnnual: areaSavings,
+      };
+      result.letterSubject = combinedSubjectLine(exemption.description);
+      result.savingsAnnual = exemptionSavingsVal + areaSavings;
+    }
+
+    return result;
   }
 
   // Fallback: no concrete savings found — still generate a letter

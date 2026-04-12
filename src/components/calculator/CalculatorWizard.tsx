@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useReducer, Dispatch } from 'react';
+import { useEffect, useMemo, useReducer, useImperativeHandle, forwardRef, Dispatch } from 'react';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import DocumentPreviewPopover from '@/components/common/DocumentPreviewPopover';
@@ -182,7 +182,13 @@ export type WizardAction =
   | { type: 'SET_MIA_MESSAGE'; payload: string | string[] };
 
 export function shouldSkipExemptions(state: WizardState): boolean {
-  return state.propertyType === 'business';
+  const exemptions = state.cityData?.exemptions ?? [];
+  console.log('Checking if should skip exemptions step with property type', state.propertyType, 'and exemptions', exemptions);
+  const type = state.propertyType; // 'private' | 'business'
+  const hasRelevant = exemptions.some(
+    (s: { applicableTo?: string }) => s?.applicableTo === 'both' || s.applicableTo === type,
+  );
+  return !hasRelevant;
 }
 
 export function wizardReducer(state: WizardState, action: WizardAction): WizardState {
@@ -288,16 +294,25 @@ function mergeFeatures(partial?: Partial<CalculatorFeatureConfig>): CalculatorFe
   return { ...DEFAULT_CALCULATOR_FEATURE_CONFIG, ...partial };
 }
 
+export interface CalculatorWizardHandle {
+  resetCalculator: () => void;
+}
+
 export interface CalculatorWizardProps {
   features?: Partial<CalculatorFeatureConfig>;
   onMiaMessage?: (messageId: string | string[]) => void;
-  onOrdinanceUrl?: (url: string | undefined) => void;
+  onOrdinanceUrl?: (url: { download: string; preview: string } | undefined) => void;
 }
 
-export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
+const CalculatorWizard = forwardRef<CalculatorWizardHandle, CalculatorWizardProps>(function CalculatorWizard(props, ref) {
   const features = mergeFeatures(props.features);
   const { onMiaMessage, onOrdinanceUrl } = props;
   const [state, dispatch] = useReducer(wizardReducer, initialState);
+
+  useImperativeHandle(ref, () => ({
+    resetCalculator: () => dispatch({ type: 'RESET_CALCULATOR' }),
+  }));
+  const ordinanceUrl = state.cityData?.ordinanceUrl as string | undefined;
 
   // Notify parent whenever miaMessageId changes
   useEffect(() => {
@@ -306,7 +321,11 @@ export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
 
   // Notify parent whenever ordinance URL changes (after city selection)
   useEffect(() => {
-    onOrdinanceUrl?.(state.cityData?.ordinanceUrl as string | undefined);
+    onOrdinanceUrl?.({
+      download: state.cityData?.ordinanceUrl as string | undefined, preview: isVercelBlobPublicUrl(ordinanceUrl??"")
+        ? `/api/view-pdf/${encodeURIComponent(state.citySlug!)}`
+        : undefined
+    } as { download: string; preview: string } | undefined);
   }, [state.cityData?.ordinanceUrl, onOrdinanceUrl]);
 
   const applied = state.appliedCoupon;
@@ -336,19 +355,18 @@ export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
 
   const StepComponent = STEP_COMPONENTS[state.currentStep];
 
-  const ordinanceUrl = state.cityData?.ordinanceUrl as string | undefined;
-  const showOrdinanceLink =
-    Boolean(state.citySlug) && state.citySlug !== 'other' && Boolean(ordinanceUrl);
-  const ordinanceTitle =
-    state.cityData?.cityName != null && String(state.cityData.cityName).trim() !== ''
-      ? `צו הארנונה — ${state.cityData.cityName}`
-      : 'צו הארנונה';
+  // const showOrdinanceLink =
+  //   Boolean(state.citySlug) && state.citySlug !== 'other' && Boolean(ordinanceUrl);
+  // const ordinanceTitle =
+  //   state.cityData?.cityName != null && String(state.cityData.cityName).trim() !== ''
+  //     ? `צו הארנונה — ${state.cityData.cityName}`
+  //     : 'צו הארנונה';
 
   return (
     <CalculatorFeaturesContext.Provider value={featuresContextValue}>
-      <Container maxWidth="md" sx={{ position: 'relative', flexDirection: 'column',  height: '100%' }}>
-        {showOrdinanceLink && ordinanceUrl && (
-          <Box sx={{ textAlign: 'center', mb: 2, position: 'absolute', top: 0, left: 0}}>
+      <Container maxWidth="md" sx={{ position: 'relative', flexDirection: 'column', height: '100%' }}>
+        {/* {showOrdinanceLink && ordinanceUrl && (
+          <Box sx={{ textAlign: 'center', mb: 2, position: 'absolute', top: 0, left: 0 }}>
             <DocumentPreviewPopover
               documentUrl={ordinanceUrl}
               previewSrc={
@@ -362,9 +380,11 @@ export default function CalculatorWizard(props: CalculatorWizardProps = {}) {
               downloadLabel="הורדת צו הארנונה (PDF)"
             />
           </Box>
-        )}
-        {StepComponent && <StepComponent sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',overflowY: 'scroll' }} key={state.currentStep} state={state} dispatch={dispatch} />}
+        )} */}
+        {StepComponent && <StepComponent sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflowY: 'scroll' }} key={state.currentStep} state={state} dispatch={dispatch} />}
       </Container>
     </CalculatorFeaturesContext.Provider>
   );
-}
+});
+
+export default CalculatorWizard;

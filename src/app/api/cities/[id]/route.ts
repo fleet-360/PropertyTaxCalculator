@@ -75,7 +75,7 @@ export async function PUT(
       return NextResponse.json(
         { error: 'Invalid city ID format' },
         { status: 400 }
-      );
+      );  
     }
 
     const body = await request.json();

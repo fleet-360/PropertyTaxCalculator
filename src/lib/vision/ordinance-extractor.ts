@@ -751,6 +751,7 @@ function sanitizeExemptions(exemptions: IExemptionSection[]): IExemptionSection[
     .map((sec) => ({
       sectionCode: sec.sectionCode,
       sectionLabel: sec.sectionLabel,
+      applicableTo: sec.applicableTo === 'business' ? 'business' : sec.applicableTo === 'both' ? 'both' : 'private',
       subSections: Array.isArray(sec.subSections)
         ? sec.subSections
             .filter(
