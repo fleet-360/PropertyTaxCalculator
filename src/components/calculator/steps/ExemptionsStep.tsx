@@ -10,6 +10,8 @@ import IconButton from '@mui/material/IconButton';
 import MenuItem from '@mui/material/MenuItem';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import type { StepProps } from '../CalculatorWizard';
 import type { SelectedExemption } from '../CalculatorWizard';
 import type { IExemptionSubSection, IExemptionSection } from '@/lib/types/city-tariff';
@@ -98,10 +100,6 @@ export default function ExemptionsStep({ state, dispatch ,sx}: StepProps) {
 
   return (
     <Box sx={{...sx, justifyContent: 'space-between'}}>
-      <Typography variant="h5" textAlign="center" mb={2}>
-        הנחות וזכאויות
-      </Typography>
-
       <Alert severity="info" sx={{ mb: 3 }}>
         שים לב: לא ניתן לקבל כפל הנחות. תחול ההנחה הגבוהה ביותר בלבד.
       </Alert>
@@ -229,11 +227,46 @@ export default function ExemptionsStep({ state, dispatch ,sx}: StepProps) {
         </Box>
       )}
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mt: 4,flex:1 }}>
-        <Button variant="outlined" onClick={() => dispatch({ type: 'PREV_STEP' })}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mt: 4, gap: 2, flexWrap: 'wrap' }}>
+        <Button
+          variant="outlined"
+          onClick={() => dispatch({ type: 'PREV_STEP' })}
+          startIcon={<ChevronRightIcon />}
+          sx={(theme) => ({
+            borderRadius: '999px',
+            px: 3.5,
+            py: 1.5,
+            fontSize: '15px',
+            fontWeight: 600,
+            borderColor: '#cdd2e0',
+            color: theme.palette.brand.navyDeep,
+            '& .MuiButton-startIcon': { mr: 0.5, ml: -0.5 },
+            '&:hover': {
+              borderColor: theme.palette.brand.blue,
+              bgcolor: 'rgba(26,86,224,0.04)',
+            },
+          })}
+        >
           חזרה
         </Button>
-        <Button variant="contained" onClick={() => {
+        <Button
+          variant="contained"
+          endIcon={<ChevronLeftIcon />}
+          sx={(theme) => ({
+            bgcolor: theme.palette.brand.blue,
+            color: '#fff',
+            borderRadius: '999px',
+            px: 4,
+            py: 1.5,
+            fontSize: '16px',
+            fontWeight: 700,
+            boxShadow: `0 10px 24px ${theme.palette.brand.blue}40`,
+            '& .MuiButton-endIcon': { ml: 0.75, mr: -0.5 },
+            '&:hover': {
+              bgcolor: theme.palette.brand.blueDark,
+            },
+          })}
+          onClick={() => {
           updateLead(state.leadId, state.calculationIndex, {
             abandonmentStage: 'exemptions',
             selectedExemptions: state.selectedExemptions,
@@ -242,7 +275,7 @@ export default function ExemptionsStep({ state, dispatch ,sx}: StepProps) {
           });
           dispatch({ type: 'NEXT_STEP' });
         }}>
-          {hasAnySelection ? 'הבא' : 'דלג'}
+          {hasAnySelection ? 'המשך לשלב הבא' : 'דלג'}
         </Button>
       </Box>
     </Box>

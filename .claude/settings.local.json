@@ -13,7 +13,9 @@
       "Bash(node ./node_modules/.bin/next build)",
       "Bash(\"C:\\\\Program Files\\\\nodejs\\\\node.exe\" --version)",
       "Bash(\"C:\\\\Program Files\\\\nodejs\\\\node.exe\" \"C:\\\\Users\\\\benny\\\\Desktop\\\\projects\\\\blogsManagerTemplate\\\\node_modules\\\\.bin\\\\next\" build)",
-      "Bash(\"C:\\\\Program Files\\\\nodejs\\\\node.exe\" \"C:\\\\Users\\\\benny\\\\Desktop\\\\projects\\\\blogsManagerTemplate\\\\node_modules\\\\next\\\\dist\\\\bin\\\\next\" build)"
+      "Bash(\"C:\\\\Program Files\\\\nodejs\\\\node.exe\" \"C:\\\\Users\\\\benny\\\\Desktop\\\\projects\\\\blogsManagerTemplate\\\\node_modules\\\\next\\\\dist\\\\bin\\\\next\" build)",
+      "mcp__Claude_in_Chrome__list_connected_browsers",
+      "mcp__Claude_in_Chrome__browser_batch"
     ]
   }
 }

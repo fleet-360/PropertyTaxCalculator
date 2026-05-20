@@ -1,6 +1,31 @@
 'use client';
 import { createTheme } from '@mui/material/styles';
 
+declare module '@mui/material/styles' {
+  interface Palette {
+    brand: {
+      navyDeep: string;
+      navyMid: string;
+      navyLight: string;
+      blue: string;
+      blueDark: string;
+      blueLight: string;
+      gridLine: string;
+    };
+  }
+  interface PaletteOptions {
+    brand?: {
+      navyDeep: string;
+      navyMid: string;
+      navyLight: string;
+      blue: string;
+      blueDark: string;
+      blueLight: string;
+      gridLine: string;
+    };
+  }
+}
+
 const theme = createTheme({
   direction: 'rtl',
   palette: {
@@ -26,6 +51,15 @@ const theme = createTheme({
     },
     warning: {
       main: '#f59e0b',
+    },
+    brand: {
+      navyDeep: '#0B1A47',
+      navyMid: '#152762',
+      navyLight: '#1E3580',
+      blue: '#1A56E0',
+      blueDark: '#1247C2',
+      blueLight: '#3D78F0',
+      gridLine: 'rgba(255,255,255,0.06)',
     },
   },
   typography: {

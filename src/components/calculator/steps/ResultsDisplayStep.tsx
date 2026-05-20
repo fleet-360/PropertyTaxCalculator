@@ -80,10 +80,6 @@ export default function ResultsDisplayStep({ state, dispatch, sx }: StepProps) {
   return (
     <Box sx={sx}>
       <Box id="results-printable">
-        <Typography variant="h5" textAlign="center" mb={4}>
-          תוצאות מפורטות
-        </Typography>
-
         <TableContainer component={Paper} variant="outlined" sx={{ mb: 4 }}>
           <Table>
             <TableBody>

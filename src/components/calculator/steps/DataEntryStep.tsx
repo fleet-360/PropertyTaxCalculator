@@ -23,6 +23,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Alert from "@mui/material/Alert";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import type { StepProps } from "../CalculatorWizard";
 import { useConsentSubmit } from "@/hooks/useConsentSubmit";
 import { IPropertyType, ISubType, IZoneRate } from "@/lib/models/CityTariff";
@@ -803,10 +805,6 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
       noValidate
       sx={{ ...sx, minWidth: 0 }}
     >
-      <Typography variant="h6" component="h2" textAlign="center" sx={{ mb: 2 }}>
-        מילוי פרטים
-      </Typography>
-
       {showValidationAlert ? (
         <Alert severity="error" sx={{ mb: 2 }} role="alert" aria-live="polite">
           יש שגיאות בטופס. נא לתקן את השדות המסומנים באדום.
@@ -1375,15 +1373,48 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
         </Box>
       )}
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4, gap: 2, flexWrap: "wrap" }}>
         <Button
           variant="outlined"
           onClick={() => dispatch({ type: "PREV_STEP" })}
+          startIcon={<ChevronRightIcon />}
+          sx={(theme) => ({
+            borderRadius: "999px",
+            px: 3.5,
+            py: 1.5,
+            fontSize: "15px",
+            fontWeight: 600,
+            borderColor: "#cdd2e0",
+            color: theme.palette.brand.navyDeep,
+            "& .MuiButton-startIcon": { mr: 0.5, ml: -0.5 },
+            "&:hover": {
+              borderColor: theme.palette.brand.blue,
+              bgcolor: "rgba(26,86,224,0.04)",
+            },
+          })}
         >
           חזרה
         </Button>
-        <Button variant="contained" type="submit">
-          הבא
+        <Button
+          variant="contained"
+          type="submit"
+          endIcon={<ChevronLeftIcon />}
+          sx={(theme) => ({
+            bgcolor: theme.palette.brand.blue,
+            color: "#fff",
+            borderRadius: "999px",
+            px: 4,
+            py: 1.5,
+            fontSize: "16px",
+            fontWeight: 700,
+            boxShadow: `0 10px 24px ${theme.palette.brand.blue}40`,
+            "& .MuiButton-endIcon": { ml: 0.75, mr: -0.5 },
+            "&:hover": {
+              bgcolor: theme.palette.brand.blueDark,
+            },
+          })}
+        >
+          המשך לשלב הבא
         </Button>
       </Box>
     </Box>

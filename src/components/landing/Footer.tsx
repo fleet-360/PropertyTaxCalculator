@@ -1,294 +1,177 @@
-import { Box, Container, Typography, Link as MuiLink } from '@mui/material';
+import { Box, Container, Typography } from '@mui/material';
 import Link from 'next/link';
-import logo from '@/assets/icon-with-text-no-background.png';
+import Image from 'next/image';
+import navbarLogo from '@/assets/navbar-logo.png';
 import { BLOG_PATHS } from '@/lib/blog/routes';
 import { getPosts } from '@/app/(public)/blog/page';
 import FooterLegalLinks from '@/components/landing/FooterLegalLinks';
 
+const NAVY_MID = '#152762';
+const NAVY_DEEP = '#0B1A47';
+const BLUE_LIGHT = '#3D78F0';
+
 const quickLinks = [
   { label: 'דף הבית', href: '/#hero' },
-  { label: 'מחשבון ארנונה', href: '/#calculator-section' },
-  { label: 'המלצות לקוחות', href: '/#testimonials' },
-  { label: 'מאמרים', href: BLOG_PATHS.home },
-  { label: 'צור קשר', href: '/contact' }, 
+  { label: 'המחשבון', href: '/calculator' },
+  { label: 'ממליצים', href: '/#testimonials' },
+  { label: 'חשוב לדעת', href: BLOG_PATHS.home },
+  { label: 'יצירת קשר', href: '/contact' },
 ];
 
-
+const linkStyle: React.CSSProperties = {
+  fontSize: '13px',
+  color: 'rgba(255,255,255,0.78)',
+  textDecoration: 'none',
+};
 
 export default async function Footer() {
   const { posts } = await getPosts(1, 5);
   return (
-    <Box component="footer" sx={{ bgcolor: '#fff', position: 'relative' }} >
-      {/* Top gradient line */}
-      <Box
-        sx={{
-          height: 2,
-          background: 'linear-gradient(to right, rgba(242,139,0,0), #F28B00 50%, rgba(242,139,0,0))',
-        }}
-      />
-
-      {/* Main content */}
-      <Container maxWidth="lg" sx={{ py: { xs: 4, sm: 5, md: 6.5 }, px: { xs: 2, sm: 3 } }}>
+    <Box
+      component="footer"
+      sx={{
+        position: 'relative',
+        background: `linear-gradient(180deg, ${NAVY_MID} 0%, ${NAVY_DEEP} 100%)`,
+        color: '#fff',
+      }}
+    >
+      <Container maxWidth="lg" sx={{ py: { xs: 5, md: 7 }, px: { xs: 2, sm: 3 } }}>
         <Box
           sx={{
             display: 'flex',
             flexDirection: { xs: 'column', md: 'row-reverse' },
-            gap: { xs: 3.5, sm: 4, md: 2 },
+            gap: { xs: 4, md: 6 },
             justifyContent: 'space-between',
             alignItems: { xs: 'stretch', md: 'flex-start' },
-            width: '100%',
           }}
         >
-          {/* Contact info */}
-          <Box
-            sx={{
-              width: '100%',
-              minWidth: 0,
-              flex: { xs: 'none', md: '0 1 280px' },
-              maxWidth: { md: 280 },
-            }}
-          >
-            <Typography
+          {/* Logo + description (right in RTL) */}
+          <Box sx={{ flex: { md: '0 1 320px' }, maxWidth: { md: 320 } }}>
+            <Box
               sx={{
-                fontWeight: 700,
-                fontSize: { xs: '15px', md: '16px' },
-                color: '#0c0c0c',
-                mb: { xs: 1.75, md: 2.25 },
+                bgcolor: '#fff',
+                borderRadius: 2,
+                p: 1.25,
+                display: 'inline-flex',
+                alignItems: 'center',
+                mb: 2.5,
               }}
             >
-              יצירת קשר
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1.75, md: 2.25 } }}>
-              <Typography
-                sx={{
-                  fontSize: { xs: '13px', md: '14px' },
-                  color: '#060606',
-                  wordBreak: 'break-word',
-                }}
-              >
-                <span aria-hidden="true">✉</span>&nbsp;&nbsp;service@arnonacal.com
-              </Typography>
-              <Typography sx={{ fontSize: { xs: '13px', md: '14px' }, color: '#060606' }}>
-                <span aria-hidden="true">📞</span>&nbsp;&nbsp;03-123-4567
-              </Typography>
-              <Typography sx={{ fontSize: { xs: '13px', md: '14px' }, color: '#060606' }}>
-                <span aria-hidden="true">🕐</span>&nbsp;&nbsp;א-ה | 09:00 - 17:00
-              </Typography>
-              <Typography sx={{ fontSize: { xs: '13px', md: '14px' }, color: '#060606' }}>
-                <span aria-hidden="true">📍</span>&nbsp;&nbsp;תל אביב, ישראל
-              </Typography>
+              <Image
+                src={navbarLogo}
+                alt="מחשבון הארנונה"
+                style={{ height: 36, width: 'auto', objectFit: 'contain' }}
+              />
             </Box>
-          </Box>
-
-          {/* Articles */}
-          <Box
-            sx={{
-              width: '100%',
-              minWidth: 0,
-              flex: { xs: 'none', md: '0 1 200px' },
-              maxWidth: { md: 200 },
-            }}
-          >
             <Typography
               sx={{
-                fontWeight: 700,
-                fontSize: { xs: '15px', md: '16px' },
-                color: '#0c0c0c',
-                mb: 2,
+                fontSize: { xs: '13px', md: '14px' },
+                lineHeight: 1.6,
+                opacity: 0.85,
               }}
             >
-              מאמרים
+              המערכת המתקדמת לחישוב ובדיקת חיובי ארנונה ברחבי ישראל.
+              דייקנות מירבית, חיסכון מקסימלי והכנת השגות מקצועיות.
             </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.6 }}>
-              {posts.map((post, i) => (
-                <Link
-                  key={i}
-                  href={BLOG_PATHS.home}
-                  style={{
-                    fontSize: '13px',
-                    color: '#060606',
-                    textDecoration: 'none',
-                    wordBreak: 'break-word'
-                  }}
-                >
-                  › {post.title}
-                </Link>
-              ))}
-            </Box>
           </Box>
 
           {/* Quick links */}
-          <Box
-            sx={{
-              width: '100%',
-              minWidth: 0,
-              flex: { xs: 'none', md: '0 1 116px' },
-              maxWidth: { md: 116 },
-            }}
-          >
+          <Box sx={{ flex: { md: '0 1 160px' }, maxWidth: { md: 160 } }}>
             <Typography
               sx={{
                 fontWeight: 700,
                 fontSize: { xs: '15px', md: '16px' },
-                color: '#0c0c0c',
+                color: '#fff',
                 mb: 2,
               }}
             >
               קישורים מהירים
             </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.6 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
               {quickLinks.map((link, i) => (
-                <a
-                  key={i}
-                  // component={link.href.startsWith('/') || link.href.startsWith('#') ? Link : 'a'}
-                  href={link.href}
-                  style={{
-                    fontSize: "13px",
-                    color: '#060606',
-                    textDecoration: 'none',
-                    wordBreak: 'break-word',
-                    lineHeight: 1.45,
-                    // '&:hover': { color: '#F28B00' },
-                  }}
-                >
-                  › {link.label}
-                </a>
+                link.href.startsWith('/') ? (
+                  <Link key={i} href={link.href} style={linkStyle}>
+                    {link.label}
+                  </Link>
+                ) : (
+                  <a key={i} href={link.href} style={linkStyle}>
+                    {link.label}
+                  </a>
+                )
               ))}
             </Box>
           </Box>
 
-          {/* Logo + description */}
-          <Box
-            sx={{
-              width: '100%',
-              minWidth: 0,
-              flex: { xs: 'none', md: '0 1 280px' },
-              maxWidth: { md: 280 },
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.5,
-                mb: 2.5,
-                flexWrap: 'wrap',
-                rowGap: 1,
-              }}
-            >
-              <Box
-                aria-hidden="true"
-                sx={{
-                  width: { xs: 64, sm: 75 },
-                  height: { xs: 58, sm: 68 },
-                  flexShrink: 0,
-                  backgroundImage: `url(${logo.src})`,
-                  backgroundSize: 'contain',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                }}
-              />
-              <Typography
-                sx={{
-                  fontWeight: 700,
-                  fontSize: { xs: '18px', sm: '20px', md: '22px' },
-                  color: '#0c0c0c',
-                  lineHeight: 1.25,
-                }}
-              >
-                ארנונה חכמה
-              </Typography>
-            </Box>
+          {/* Articles */}
+          <Box sx={{ flex: { md: '0 1 220px' }, maxWidth: { md: 220 } }}>
             <Typography
               sx={{
-                fontSize: { xs: '13px', md: '14px' },
-                color: '#161717',
-                lineHeight: { xs: 1.5, md: '22px' },
-                mb: 2.5,
-                maxWidth: { xs: '100%', md: 280 },
+                fontWeight: 700,
+                fontSize: { xs: '15px', md: '16px' },
+                color: '#fff',
+                mb: 2,
               }}
             >
-              המערכת המתקדמת לחישוב ובדיקת
-              <br />
-              חיובי ארנונה ברחבי ישראל
+              מאמרים אחרונים
             </Typography>
-            <Link
-              href={"/contact"}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: 'rgba(242,139,0,0.1)',
-                border: '1px solid rgba(242,139,0,0.3)',
-                borderRadius: '12px',
-                minHeight: 46,
-                padding: "1.25px 1.5px 0px 2px",
-                width: "100%",
-                maxWidth: '100%',
-                textDecoration: 'none',
-                cursor: 'pointer',
-                textAlign: 'center'
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+              {posts.slice(0, 4).map((post, i) => (
+                <Link key={i} href={BLOG_PATHS.home} style={linkStyle}>
+                  {post.title}
+                </Link>
+              ))}
+            </Box>
+          </Box>
+
+          {/* Contact info */}
+          <Box sx={{ flex: { md: '0 1 240px' }, maxWidth: { md: 240 } }}>
+            <Typography
+              sx={{
+                fontWeight: 700,
+                fontSize: { xs: '15px', md: '16px' },
+                color: '#fff',
+                mb: 2,
               }}
             >
-              <Typography
-                sx={{
-                  fontSize: { xs: '13px', md: '14px' },
-                  fontWeight: 500,
-                  color: '#F28B00',
-                  lineHeight: 1.35,
-                  wordBreak: 'break-word',
-                }}
-              >
-                <span aria-hidden="true">✉</span>&nbsp;&nbsp;צור קשר
+              יצירת קשר
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+              <Typography sx={{ fontSize: '13px', color: 'rgba(255,255,255,0.78)', wordBreak: 'break-word' }}>
+                service@arnonacal.com
               </Typography>
-            </Link>
+              <Typography sx={{ fontSize: '13px', color: 'rgba(255,255,255,0.78)' }}>
+                03-123-4567
+              </Typography>
+              <Typography sx={{ fontSize: '13px', color: 'rgba(255,255,255,0.78)' }}>
+                א-ה | 09:00 - 17:00
+              </Typography>
+              <Typography sx={{ fontSize: '13px', color: 'rgba(255,255,255,0.78)' }}>
+                תל אביב, ישראל
+              </Typography>
+            </Box>
           </Box>
         </Box>
       </Container>
 
       {/* Bottom bar */}
-      <Box>
-        {/* Separator line */}
-        <Box
-          sx={{
-            mx: { xs: 2, sm: 4, md: 6, lg: 10 },
-            height: '1px',
-            bgcolor: '#e0e0e0',
-          }}
-        />
-
-        <Box
-          sx={{
-            bgcolor: 'rgba(242,139,0,0.06)',
-            py: { xs: 1.75, md: 2 },
-          }}
-        >
-          <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexDirection: { xs: 'column', md: 'row' },
-                gap: { xs: 1.5, md: 1 },
-                textAlign: { xs: 'center', md: 'inherit' },
-                width: '100%',
-              }}
-            >
-              <FooterLegalLinks />
-              <Typography
-                sx={{
-                  fontSize: { xs: '12px', sm: '13px' },
-                  color: '#141414',
-                  lineHeight: 1.5,
-                  wordBreak: 'break-word',
-                }}
-              >
-                © 2026 ארנונה חכמה. כל הזכויות שמורות.
-              </Typography>
-            </Box>
-          </Container>
-        </Box>
+      <Box sx={{ borderTop: '1px solid rgba(255,255,255,0.1)', py: { xs: 2, md: 2.25 } }}>
+        <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexDirection: { xs: 'column', md: 'row' },
+              gap: { xs: 1.5, md: 1 },
+              textAlign: { xs: 'center', md: 'inherit' },
+            }}
+          >
+            <FooterLegalLinks />
+            <Typography sx={{ fontSize: { xs: '12px', sm: '13px' }, color: 'rgba(255,255,255,0.6)' }}>
+              © 2026 מחשבון הארנונה. כל הזכויות שמורות.
+            </Typography>
+          </Box>
+        </Container>
       </Box>
     </Box>
   );

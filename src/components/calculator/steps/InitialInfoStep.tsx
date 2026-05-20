@@ -8,11 +8,12 @@ import TextField from '@mui/material/TextField';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
-import CheckIcon from '@mui/icons-material/Check';
+import StoreOutlinedIcon from '@mui/icons-material/StoreOutlined';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import type { StepProps } from '../CalculatorWizard';
 import TaxBillUpload from '../TaxBillUpload';
 import { findByPropertyCode } from '@/lib/calculator';
-import { ButtonGroup, Theme } from '@mui/material';
 
 interface CityOption {
   _id: string;
@@ -20,22 +21,25 @@ interface CityOption {
   slug: string;
 }
 
-export default function InitialInfoStep({ state, dispatch, sx }: StepProps) {
+export default function InitialInfoStep({ state, dispatch }: StepProps) {
   // ── City list ──
   const [cities, setCities] = useState<CityOption[]>([]);
   const [loadingCities, setLoadingCities] = useState(true);
-  const [selectedCity, setSelectedCity] = useState<CityOption | null>(state.cityData ? {
-    _id: state.cityData._id,
-    cityName: state.cityData.cityName,
-    slug: state.cityData.slug,
-  } : null);
+  const [selectedCity, setSelectedCity] = useState<CityOption | null>(
+    state.cityData
+      ? {
+          _id: state.cityData._id,
+          cityName: state.cityData.cityName,
+          slug: state.cityData.slug,
+        }
+      : null,
+  );
 
   // ── Deferred file upload ──
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractionError, setExtractionError] = useState('');
 
-  // ── Mia message on mount ──
   useEffect(() => {
     dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-0-default' });
   }, [dispatch]);
@@ -76,13 +80,11 @@ export default function InitialInfoStep({ state, dispatch, sx }: StepProps) {
     }
   };
 
-  // ── File ready callback (deferred mode) ──
   const handleFileReady = useCallback((file: File | null) => {
     setPendingFile(file);
     setExtractionError('');
   }, []);
 
-  // ── Handle "המשך לשלב הבא" click — extract if file pending, then advance ──
   const handleNext = useCallback(async () => {
     if (pendingFile) {
       setIsExtracting(true);
@@ -127,8 +129,12 @@ export default function InitialInfoStep({ state, dispatch, sx }: StepProps) {
             if (f && f.value !== undefined && f.value !== null) {
               if (key === 'bimonthlyPayment') {
                 fieldsToApply['reportedPayment'] = f.value;
-              } else if (key === 'propertyPurposeDescription' || key === 'subTypeDescription' ||
-                         key === 'ratePerSqm' || key === 'annualPayment') {
+              } else if (
+                key === 'propertyPurposeDescription' ||
+                key === 'subTypeDescription' ||
+                key === 'ratePerSqm' ||
+                key === 'annualPayment'
+              ) {
                 // display-only fields
               } else {
                 fieldsToApply[key] = f.value;
@@ -138,7 +144,10 @@ export default function InitialInfoStep({ state, dispatch, sx }: StepProps) {
           dispatch({ type: 'UPDATE_FIELDS_BULK', payload: fieldsToApply });
 
           if (fieldsToApply.classificationCode && state.cityData) {
-            const match = findByPropertyCode(state.cityData, fieldsToApply.classificationCode as string);
+            const match = findByPropertyCode(
+              state.cityData,
+              fieldsToApply.classificationCode as string,
+            );
             if (match) {
               dispatch({
                 type: 'UPDATE_FIELDS_BULK',
@@ -164,165 +173,200 @@ export default function InitialInfoStep({ state, dispatch, sx }: StepProps) {
   const canProceed = state.propertyType && selectedCity && !state.isLoading && !isExtracting;
 
   return (
-    <Box sx={{...sx}}>
-      {/* ── Title ── */}
-      <Typography
-        sx={{
-          fontWeight: 700,
-          fontSize: '18px',
-          color: '#0c0c0c',
-          textAlign: 'center',
-          mb: 0.5,
-        }}
-      >
-        מחשבון חכם
-      </Typography>
-      <Typography
-        sx={{
-          fontWeight: 700,
-          fontSize: '15px',
-          color: '#0c0c0c',
-          textAlign: 'center',
-          mb: 2,
-        }}
-      >
-        הזנת נתוני נכס
-      </Typography>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      {/* ── Property type cards ── */}
+      <Box>
+        <Typography
+          sx={(theme) => ({
+            fontSize: { xs: '14px', md: '15px' },
+            fontWeight: 600,
+            color: theme.palette.brand.navyDeep,
+            mb: 1.5,
+          })}
+        >
+          בחרו את סוג הנכס
+        </Typography>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: { xs: 1.5, md: 2 },
+          }}
+        >
+          {(
+            [
+              { value: 'private', label: 'בית פרטי', Icon: HomeOutlinedIcon },
+              { value: 'business', label: 'נכס עסקי', Icon: StoreOutlinedIcon },
+            ] as const
+          ).map(({ value, label, Icon }) => {
+            const isSelected = state.propertyType === value;
+            return (
+              <Box
+                key={value}
+                role="button"
+                aria-pressed={isSelected}
+                tabIndex={0}
+                onClick={() => handleSelectType(value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleSelectType(value);
+                  }
+                }}
+                sx={(theme) => ({
+                  cursor: 'pointer',
+                  bgcolor: '#fff',
+                  border: '2px solid',
+                  borderColor: isSelected ? theme.palette.brand.blue : '#e3e7f1',
+                  borderRadius: 2.5,
+                  py: { xs: 2.5, md: 3 },
+                  px: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1.25,
+                  transition: 'all 0.2s ease',
+                  boxShadow: isSelected
+                    ? `0 8px 20px ${theme.palette.brand.blue}25`
+                    : '0 2px 6px rgba(11,26,71,0.04)',
+                  '&:hover': {
+                    borderColor: theme.palette.brand.blueLight,
+                    transform: 'translateY(-2px)',
+                  },
+                })}
+              >
+                <Icon
+                  sx={(theme) => ({
+                    fontSize: { xs: 38, md: 50 },
+                    color: isSelected ? theme.palette.brand.blue : theme.palette.brand.navyMid,
+                  })}
+                />
+                <Typography
+                  sx={(theme) => ({
+                    fontSize: { xs: '14px', md: '16px' },
+                    fontWeight: 700,
+                    color: theme.palette.brand.navyDeep,
+                  })}
+                >
+                  {label}
+                </Typography>
+              </Box>
+            );
+          })}
+        </Box>
+      </Box>
 
-      {/* ── 1. Property Type ── */}
-      <ButtonGroup sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-        {(['private', 'business'] as const).map((type) => {
-          const isSelected = state.propertyType === type;
-          const label = type === 'private' ? 'נכס פרטי' : 'נכס עסקי';
-          const icon=<CheckIcon sx={{ fontSize: '18px !important', visibility: isSelected ? 'visible' : 'hidden' }} />
-          return (
-            <Button
-              key={type}
-              onClick={() => handleSelectType(type)}
-              variant="contained"
-              disableElevation
-              startIcon={ type === 'private' ? icon : undefined}
-              endIcon={ type === 'business' ? icon : undefined}
+      {/* ── City Select ── */}
+      <Box>
+        <Typography
+          sx={(theme) => ({
+            fontSize: { xs: '14px', md: '15px' },
+            fontWeight: 600,
+            color: theme.palette.brand.navyDeep,
+            mb: 1,
+          })}
+        >
+          עיר / מועצה מקומית
+        </Typography>
+        <Autocomplete
+          options={cities}
+          getOptionLabel={(o) => o.cityName}
+          loading={loadingCities}
+          value={selectedCity}
+          onChange={(_, v) => handleSelectCity(v)}
+          size="small"
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              placeholder="בחרו עיר מהרשימה"
+              InputProps={{
+                ...params.InputProps,
+                endAdornment: (
+                  <>
+                    {loadingCities && <CircularProgress size={20} />}
+                    {params.InputProps.endAdornment}
+                  </>
+                ),
+              }}
               sx={{
-                border:(theme: Theme)=>`1px solid ${theme.palette.primary.light}`,
-                borderRadius: '24px',
-                px: 3,
-                py: 1,
-                fontSize: '14px',
-                fontWeight: 600,
-                textTransform: 'none',
-                bgcolor: isSelected ? '#F28B00' : '#f0f2f5',
-                color: isSelected ? '#fff' : '#333',
-                '&:hover': {
-                  bgcolor: isSelected ? '#C66D00' : '#e4e6ea',
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '10px',
+                  bgcolor: '#fff',
+                  '& fieldset': {
+                    borderColor: '#e3e7f1',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: (theme) => theme.palette.brand.blueLight,
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: (theme) => theme.palette.brand.blue,
+                  },
                 },
               }}
-            >
-              {label}
-            </Button>
-          );
-        })}
-      </ButtonGroup>
+            />
+          )}
+        />
+      </Box>
 
-      {/* ── 2. City Select ── */}
-      <Typography
-        sx={{
-          fontSize: '14px',
-          color: '#333',
-          fontWeight: 600,
-          
-        }}
-      >
-        עיר/ מועצה מקומית
-      </Typography>
-      <Autocomplete
-        options={cities}
-        getOptionLabel={(o) => o.cityName}
-        loading={loadingCities}
-        value={selectedCity}
-        onChange={(_, v) => handleSelectCity(v)}
-        size="small"
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            placeholder="בחירו עיר מהרשימה"
-            InputProps={{
-              ...params.InputProps,
-              endAdornment: (
-                <>
-                  {loadingCities && <CircularProgress size={20} />}
-                  {params.InputProps.endAdornment}
-                </>
-              ),
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '10px',
-                '& fieldset': {
-                  borderColor: '#d2d2d2',
-                },
-              },
-            }}
-          />
-        )}
-        sx={{ mb: 4 }}
-      />
+      {/* ── Document Upload ── */}
+      <Box>
+        <Typography
+          sx={(theme) => ({
+            fontSize: { xs: '14px', md: '15px' },
+            fontWeight: 600,
+            color: theme.palette.brand.navyDeep,
+            mb: 1,
+          })}
+        >
+          העלאת שובר ארנונה (אופציונלי)
+        </Typography>
+        <TaxBillUpload
+          dispatch={dispatch}
+          deferExtraction
+          onFileReady={handleFileReady}
+          expectedCityName={selectedCity?.cityName ?? state.cityData?.cityName}
+        />
+      </Box>
 
-      {/* ── 3. Document Upload (deferred — extraction on "הבא") ── */}
-      <Typography
-        sx={{
-          fontSize: '14px',
-          color: '#333',
-          fontWeight: 600,
-        }}
-      >
-        העלאת שובר ארנונה
-      </Typography>
-      <TaxBillUpload
-        dispatch={dispatch}
-        deferExtraction
-        onFileReady={handleFileReady}
-        expectedCityName={selectedCity?.cityName ?? state.cityData?.cityName}
-      />
+      {extractionError && <Alert severity="error">{extractionError}</Alert>}
 
-      {extractionError ? (
-        <Alert severity="error" sx={{ mt: 2, mb: 1 }}>
-          {extractionError}
-        </Alert>
-      ) : null}
-
-      {/* ── Navigation ── */}
-      <Button
-        variant="contained"
-        disabled={!canProceed}
-        onClick={handleNext}
-        fullWidth
-        sx={{
-          bgcolor: '#1a1a1a',
-          color: '#fff',
-          borderRadius: '12px',
-          py: 1.5,
-          fontSize: '16px',
-          fontWeight: 700,
-          textTransform: 'none',
-          '&:hover': {
-            bgcolor: '#F28B00',
-          },
-          '&.Mui-disabled': {
-            bgcolor: '#d4d4d4',
+      {/* ── Continue button ── */}
+      <Box sx={{ mt: 'auto', pt: 2, display: 'flex', justifyContent: 'flex-start' }}>
+        <Button
+          variant="contained"
+          disabled={!canProceed}
+          onClick={handleNext}
+          endIcon={!isExtracting ? <ChevronLeftIcon /> : undefined}
+          sx={(theme) => ({
+            bgcolor: theme.palette.brand.blue,
             color: '#fff',
-          },
-        }}
-      >
-        {isExtracting ? (
-          <>
-            <CircularProgress size={20} sx={{ mr: 1 }} color="inherit" />
-            מחלץ נתונים...
-          </>
-        ) : (
-          'המשך לשלב הבא'
-        )}
-      </Button>
+            borderRadius: '999px',
+            px: 4,
+            py: 1.5,
+            fontSize: '16px',
+            fontWeight: 700,
+            boxShadow: `0 10px 24px ${theme.palette.brand.blue}40`,
+            '& .MuiButton-endIcon': { ml: 0.75, mr: -0.5 },
+            '&:hover': {
+              bgcolor: theme.palette.brand.blueDark,
+            },
+            '&.Mui-disabled': {
+              bgcolor: '#cdd2e0',
+              color: '#fff',
+            },
+          })}
+        >
+          {isExtracting ? (
+            <>
+              <CircularProgress size={20} sx={{ mr: 1 }} color="inherit" />
+              מחלץ נתונים...
+            </>
+          ) : (
+            'המשך לשלב הבא'
+          )}
+        </Button>
+      </Box>
     </Box>
   );
 }

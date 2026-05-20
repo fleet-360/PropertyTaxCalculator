@@ -137,10 +137,6 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
   );
   return (
     <Box sx={sx}>
-      <Typography variant="h5" textAlign="center" mb={4}>
-        תוצאות
-      </Typography>
-
       {outcome === "match" && (
         <>
           <Alert severity="success" sx={{ mb: 3, fontSize: "1rem" }}>

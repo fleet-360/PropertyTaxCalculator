@@ -14,6 +14,7 @@ import ResultsDisplayStep from './steps/ResultsDisplayStep';
 import AppealStep from './steps/AppealStep';
 import ContactRedirectStep from './steps/ContactRedirectStep';
 import { CalculatorFeaturesContext } from './CalculatorFeaturesContext';
+import WizardLayout from './WizardLayout';
 
 import type { ISelectedExemption } from '@/lib/types/lead';
 import {
@@ -290,6 +291,91 @@ const STEP_COMPONENTS = [
   AppealStep,
 ];
 
+interface StepMeta {
+  displayStep: number;
+  title: string;
+  subtitle?: string;
+  infoMessage?: string;
+  hideInfoCard?: boolean;
+}
+
+/**
+ * Map internal step index → display metadata for WizardLayout.
+ * Display steps: 1=Welcome, 2=Property details, 3=Exemptions, 4=Disclaimer, 5=Results.
+ */
+function getStepMeta(internalStep: number): StepMeta {
+  switch (internalStep) {
+    case 0:
+      return {
+        displayStep: 1,
+        title: "ברוכים הבאים למחשבון הארנונה",
+        subtitle: "המחשבון מנתח את נתוני הנכס שלך ומשווה אותם לתעריפים בצו הארנונה",
+        infoMessage:
+          "זה לוקח כמה שניות, שנתחיל? המחשבון שלנו מנתח את נתוני הנכס שלך ומשווה אותם לתעריפי צו הארנונה של הרשות המקומית. תוך שניות תקבל תוצאה וגם תוכל להגיש השגה לעירייה כדי לקבל הנחות.",
+      };
+    case 1:
+      return {
+        displayStep: 1,
+        title: "פרטים אישיים והעלאת שובר",
+        subtitle: "מלאו את הפרטים שלכם והעלו את שובר הארנונה",
+        infoMessage:
+          "אנחנו זקוקים לפרטים שלך כדי להפיק לך דוח מפורט. הנתונים נשמרים מאובטחים ולא נחלוק אותם עם צד שלישי.",
+      };
+    case 2:
+      return {
+        displayStep: 2,
+        title: "פרטי נכס",
+        subtitle: "מלאו את פרטי הנכס לקבלת חישוב מדויק",
+        infoMessage:
+          "ככל שהפרטים מדויקים יותר, כך החישוב יהיה קרוב יותר למציאות. ניתן לראות את הסיווג והאזור בצו הארנונה של הרשות.",
+      };
+    case 3:
+      return {
+        displayStep: 3,
+        title: "פטורים והנחות",
+        subtitle: "האם אתה זכאי להנחות? בחרו את כל ההנחות שמתאימות לכם",
+        infoMessage:
+          "הנחה משמעותית כאשר ההנחה לחודשים היא יותר מ-100 ש\"ח אחרת יחשב כהנחה בלבד (לא משמעותית).",
+      };
+    case 4:
+      return {
+        displayStep: 4,
+        title: "הצהרה",
+        subtitle: "אנא קראו ואשרו את ההצהרה לפני המשך",
+        infoMessage:
+          "ההצהרה היא תנאי משפטי להפעלת השירות. אנו מתחייבים לפעול בהתאם לחוקי הפרטיות הישראליים.",
+      };
+    case 5:
+      return {
+        displayStep: 5,
+        title: "תוצאות החישוב",
+        subtitle: "מיד תקבלו את התוצאות המלאות",
+        hideInfoCard: false,
+        infoMessage:
+          "התוצאות נשלפות בזמן אמת מצו הארנונה העדכני של העירייה. ניתן להוריד את הדוח המלא לאחר התשלום.",
+      };
+    case 6:
+      return {
+        displayStep: 5,
+        title: "תוצאות החישוב",
+        hideInfoCard: true,
+      };
+    case 7:
+      return {
+        displayStep: 5,
+        title: "הכנת השגה לעירייה",
+        subtitle: "מערכת ה-AI שלנו תכין עבורכם מכתב מקצועי",
+        infoMessage:
+          "מכתב ההשגה נכתב בנוסח מקצועי על-ידי מומחי ארנונה ומשפט. תוכלו להוריד ולשלוח לעירייה.",
+      };
+    default:
+      return {
+        displayStep: 1,
+        title: "מחשבון הארנונה",
+      };
+  }
+}
+
 function mergeFeatures(partial?: Partial<CalculatorFeatureConfig>): CalculatorFeatureConfig {
   return { ...DEFAULT_CALCULATOR_FEATURE_CONFIG, ...partial };
 }
@@ -362,27 +448,26 @@ const CalculatorWizard = forwardRef<CalculatorWizardHandle, CalculatorWizardProp
   //     ? `צו הארנונה — ${state.cityData.cityName}`
   //     : 'צו הארנונה';
 
+  const stepMeta = getStepMeta(state.currentStep);
+
   return (
     <CalculatorFeaturesContext.Provider value={featuresContextValue}>
-      <Container maxWidth="md" sx={{ position: 'relative', flexDirection: 'column', height: '100%' }}>
-        {/* {showOrdinanceLink && ordinanceUrl && (
-          <Box sx={{ textAlign: 'center', mb: 2, position: 'absolute', top: 0, left: 0 }}>
-            <DocumentPreviewPopover
-              documentUrl={ordinanceUrl}
-              previewSrc={
-                isVercelBlobPublicUrl(ordinanceUrl)
-                  ? `/api/view-pdf/${encodeURIComponent(state.citySlug!)}`
-                  : undefined
-              }
-              title={ordinanceTitle}
-              triggerLabel="צפייה בצו הארנונה"
-              triggerAriaLabel="פתיחת תצוגה מקדימה של צו הארנונה"
-              downloadLabel="הורדת צו הארנונה (PDF)"
-            />
-          </Box>
-        )} */}
-        {StepComponent && <StepComponent sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflowY: 'scroll' }} key={state.currentStep} state={state} dispatch={dispatch} />}
-      </Container>
+      <WizardLayout
+        displayStep={stepMeta.displayStep}
+        totalSteps={5}
+        title={stepMeta.title}
+        subtitle={stepMeta.subtitle}
+        infoMessage={stepMeta.infoMessage}
+        hideInfoCard={stepMeta.hideInfoCard}
+      >
+        {StepComponent && (
+          <StepComponent
+            key={state.currentStep}
+            state={state}
+            dispatch={dispatch}
+          />
+        )}
+      </WizardLayout>
     </CalculatorFeaturesContext.Provider>
   );
 });

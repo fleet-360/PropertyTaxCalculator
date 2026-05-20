@@ -1,402 +1,207 @@
-'use client';
+"use client";
+import { Box, Container, Typography } from "@mui/material";
+import TouchAppOutlinedIcon from "@mui/icons-material/TouchAppOutlined";
+import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
+import CalculateOutlinedIcon from "@mui/icons-material/CalculateOutlined";
+import EmojiEventsOutlinedIcon from "@mui/icons-material/EmojiEventsOutlined";
+import type { SvgIconComponent } from "@mui/icons-material";
 
-import { useRef } from 'react';
-import { Box, Container, Typography } from '@mui/material';
-import {
-  motion,
-  useScroll,
-  useTransform,
-  type MotionValue,
-} from 'framer-motion';
-import { DURATION_MULTIPLIER } from '@/lib/animations';
+type Step = {
+  number: string;
+  title: string;
+  Icon: SvgIconComponent;
+  /** Vertical offset relative to baseline (px). Creates zigzag layout. */
+  offsetY: number;
+};
 
-const steps = [
-  {
-    number: 1,
-    label: 'שלב ראשון',
-    title: 'בחירת סוג נכס ואזור',
-    description:
-      'בוחרים סוג נכס (פרטי/עסקי) ובוחרים את העיר או האזור שלכם.',
-    side: 'left' as const,
-  },
-  {
-    number: 2,
-    label: 'שלב שני',
-    title: 'העלאת שובר הארנונה',
-    description:
-      'מעלים את שובר הארנונה שלכם למערכת לצורך ניתוח אוטומטי.',
-    side: 'right' as const,
-  },
-  {
-    number: 3,
-    label: 'שלב שלישי',
-    title: 'חישוב חיסכון בקליק',
-    description:
-      'מתבצע חישוב חיסכון אוטומטי בקליק אחד – מהיר ומדויק.',
-    side: 'left' as const,
-  },
-  {
-    number: 4,
-    label: 'שלב רביעי',
-    title: 'הכנת מכתב לעירייה',
-    description:
-      'מכינים עבורכם מכתב מקצועי שיוגש לעירייה לקבלת ההנחה.',
-    side: 'right' as const,
-  },
+const steps: Step[] = [
+  { number: "01", title: "אתם בוחרים סוג נכס ועיר", Icon: TouchAppOutlinedIcon, offsetY: 0 },
+  { number: "02", title: "מעלים את שובר הארנונה", Icon: CloudUploadOutlinedIcon, offsetY: 60 },
+  { number: "03", title: "מסמנים פטורים והנחות שנציע עבורכם", Icon: LocalOfferOutlinedIcon, offsetY: 0 },
+  { number: "04", title: "מחשבון הארנונה עושה חישוב", Icon: CalculateOutlinedIcon, offsetY: 60 },
+  { number: "05", title: "מקבלים את התוצאה ומגישים השגה לעירייה לקבלת חיסכון", Icon: EmojiEventsOutlinedIcon, offsetY: 0 },
 ];
 
-/** Activation thresholds (one per step, evenly spaced) */
-const THRESHOLDS = steps.map((_, i) => i / (steps.length - 1));
-
-/* ------------------------------------------------------------------ */
-/*  StepCircle — colour transitions gray → orange as the line arrives  */
-/* ------------------------------------------------------------------ */
-
-function StepCircle({
-  stepNumber,
-  scrollYProgress,
-  threshold,
-}: {
-  stepNumber: number;
-  scrollYProgress: MotionValue<number>;
-  threshold: number;
-}) {
-  const lo = Math.max(0, threshold - 0.06);
-  const hi = Math.min(1, threshold + 0.06);
-
-  const progress = useTransform(scrollYProgress, [lo, hi], [0, 1]);
-  const bgColor = useTransform(progress, [0, 1], ['#9ca3af', '#F28B00']);
-  const textColor = useTransform(progress, [0, 1], ['#6b7280', '#ffffff']);
-  const circleScale = useTransform(progress, [0, 0.5, 1], [1, 1.15, 1]);
-
+function StepCard({ step }: { step: Step }) {
+  const { Icon } = step;
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.5 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true, margin: '-50px' }}
-      transition={{ duration: 0.4 * DURATION_MULTIPLIER }}
+    <Box
+      className="step-card"
+      sx={(theme) => ({
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 1.5,
+        cursor: "default",
+        transform: { md: `translateY(${step.offsetY}px)` },
+        transition: "transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
+        "&:hover": {
+          transform: {
+            md: `translateY(${step.offsetY - 10}px)`,
+          },
+          "& .step-box": {
+            transform: "rotate(-45deg) scale(1.08)",
+            boxShadow: `0 16px 36px ${theme.palette.brand.blue}40, 0 0 0 2px ${theme.palette.brand.blue}`,
+          },
+          "& .step-number": {
+            color: theme.palette.brand.blueLight,
+          },
+        },
+      })}
     >
-      <motion.div
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: '50%',
-          backgroundColor: bgColor,
-          color: textColor,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontWeight: 700,
-          fontSize: '20px',
-          zIndex: 2,
-          position: 'relative',
-          flexShrink: 0,
-          scale: circleScale,
-        }}
+      {/* Large number (tilted) */}
+      <Typography
+        className="step-number"
+        sx={(theme) => ({
+          fontSize: { xs: "44px", md: "60px" },
+          fontWeight: 900,
+          color: theme.palette.brand.navyDeep,
+          letterSpacing: "-1px",
+          lineHeight: 0.85,
+          fontFamily: '"Inter", var(--font-heebo), sans-serif',
+          transform: "skewX(-12deg)",
+          transition: "color 0.3s ease",
+        })}
       >
-        {stepNumber}
-      </motion.div>
-    </motion.div>
+        {step.number}
+      </Typography>
+
+      {/* Rotated rounded-square card */}
+      <Box
+        className="step-box"
+        sx={(theme) => ({
+          width: { xs: 96, md: 120 },
+          height: { xs: 96, md: 120 },
+          borderRadius: { xs: "18px", md: "22px" },
+          bgcolor: "#fff",
+          boxShadow: `0 8px 24px ${theme.palette.brand.blue}25, 0 0 0 1.5px ${theme.palette.brand.blue}`,
+          transform: "rotate(-45deg)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transition: "transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease",
+        })}
+      >
+        {/* Icon back-rotated */}
+        <Box
+          sx={(theme) => ({
+            transform: "rotate(45deg)",
+            color: theme.palette.brand.blue,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          })}
+        >
+          <Icon sx={{ fontSize: { xs: 36, md: 44 } }} />
+        </Box>
+      </Box>
+
+      {/* Description text */}
+      <Typography
+        sx={(theme) => ({
+          fontSize: { xs: "13px", md: "15px" },
+          fontWeight: 600,
+          color: theme.palette.brand.navyDeep,
+          textAlign: "center",
+          lineHeight: 1.4,
+          maxWidth: 180,
+          mt: 1,
+        })}
+      >
+        {step.title}
+      </Typography>
+    </Box>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Main section                                                       */
-/* ------------------------------------------------------------------ */
+/** Decorative wave path connecting all 5 cards. */
+function ConnectorWave() {
+  return (
+    <Box
+      aria-hidden
+      component="svg"
+      viewBox="0 0 1200 200"
+      preserveAspectRatio="none"
+      sx={{
+        position: "absolute",
+        top: { md: 100 },
+        left: 0,
+        right: 0,
+        width: "100%",
+        height: { md: 200 },
+        display: { xs: "none", md: "block" },
+        zIndex: 0,
+        pointerEvents: "none",
+      }}
+    >
+      <path
+        d="M 100 30 Q 250 30 300 90 Q 350 150 500 150 Q 650 150 700 90 Q 750 30 900 30 Q 1050 30 1100 90 Q 1150 150 1100 150"
+        fill="none"
+        stroke="#dde3f3"
+        strokeWidth={2}
+        strokeLinecap="round"
+      />
+    </Box>
+  );
+}
 
 export default function HowItWorksSection() {
-  const timelineRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: timelineRef,
-    offset: ['start 80%', 'end 50%'],
-  });
-
-  const lineScaleY = useTransform(scrollYProgress, [0, 1], [0, 1]);
-
   return (
-    <Box sx={{ py: { xs: 6, md: 10 }, bgcolor: '#f8fafc' }}>
+    <Box
+      component="section"
+      sx={{
+        py: { xs: 6, md: 10 },
+        bgcolor: "background.paper",
+        overflow: "hidden",
+      }}
+    >
       <Container maxWidth="lg">
-        {/* Title */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 * DURATION_MULTIPLIER }}
+        <Typography
+          component="h2"
+          sx={(theme) => ({
+            fontFamily: 'var(--font-heebo), "Heebo", sans-serif',
+            fontWeight: 800,
+            fontSize: { xs: "26px", md: "38px" },
+            color: theme.palette.brand.navyDeep,
+            textAlign: "center",
+            mb: { xs: 5, md: 8 },
+            letterSpacing: "-0.3px",
+          })}
         >
-          <Typography
-            component="h2"
-            sx={{
-              fontFamily:
-                'var(--font-varela-round), "Varela Round", "Heebo", sans-serif',
-              fontWeight: 400,
-              fontSize: { xs: '28px', md: '38px' },
-              color: '#080808',
-              textAlign: 'center',
-              mb: 1,
-            }}
-          >
-            איך זה עובד?
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: { xs: '14px', md: '18px' },
-              color: '#4a4a6a',
-              textAlign: 'center',
-              mb: { xs: 5, md: 8 },
-            }}
-          >
-            זה לקח שנייה, תראו בעצמכם!
-          </Typography>
-        </motion.div>
+          לוקח כמה רגעים ויש תוצאה!
+        </Typography>
 
-        {/* Timeline */}
         <Box
-          ref={timelineRef}
           sx={{
-            position: 'relative',
-            maxWidth: 900,
-            mx: 'auto',
+            position: "relative",
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            gap: { xs: 6, md: 0 },
+            alignItems: { xs: "center", md: "flex-start" },
+            justifyContent: "space-around",
+            minHeight: { md: 380 },
+            pb: { md: 8 },
           }}
         >
-          {/* Background line (gray) */}
-          <Box
-            sx={{
-              position: 'absolute',
-              left: '50%',
-              top: 0,
-              bottom: 0,
-              width: 2,
-              bgcolor: '#e0e4ea',
-              transform: 'translateX(-50%)',
-              display: { xs: 'none', md: 'block' },
-            }}
-          />
-
-          {/* Animated progress line (orange) */}
-          <motion.div
-            style={{
-              position: 'absolute',
-              left: '50%',
-              top: 0,
-              bottom: 0,
-              width: 2,
-              background: '#F28B00',
-              transformOrigin: 'top',
-              scaleY: lineScaleY,
-              translateX: '-50%',
-            }}
-          />
-
-          {/* Steps */}
-          {steps.map((step, i) => (
+          <ConnectorWave />
+          {steps.map((step) => (
             <Box
               key={step.number}
               sx={{
-                display: 'flex',
-                flexDirection: { xs: 'column', md: 'row' },
-                alignItems: { xs: 'center', md: 'center' },
-                justifyContent: 'center',
-                position: 'relative',
-                mb: i < steps.length - 1 ? { xs: 5, md: 8 } : 0,
+                position: "relative",
+                zIndex: 1,
+                flex: { md: 1 },
+                display: "flex",
+                justifyContent: "center",
               }}
             >
-              {/* LEFT content area */}
-              <Box
-                sx={{
-                  flex: '1 1 0',
-                  display: { xs: 'none', md: 'flex' },
-                  justifyContent: 'flex-end',
-                  pr: 4,
-                }}
-              >
-                {step.side === 'left' ? (
-                  <motion.div
-                    initial={{ opacity: 0, x: -60 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: false, margin: '-80px' }}
-                    transition={{
-                      duration: 0.5 * DURATION_MULTIPLIER,
-                      delay: 0.15 * DURATION_MULTIPLIER,
-                    }}
-                  >
-                    <StepCard
-                      title={step.title}
-                      description={step.description}
-                    />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, x: 60 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: false, margin: '-80px' }}
-                    transition={{
-                      duration: 0.5 * DURATION_MULTIPLIER,
-                      delay: 0.15 * DURATION_MULTIPLIER,
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontWeight: 700,
-                        fontSize: '18px',
-                        color: '#F28B00',
-                        mt: 1,
-                      }}
-                    >
-                      {step.label}
-                    </Typography>
-                  </motion.div>
-                )}
-              </Box>
-
-              {/* CENTER — number circle */}
-              <StepCircle
-                stepNumber={step.number}
-                scrollYProgress={scrollYProgress}
-                threshold={THRESHOLDS[i]}
-              />
-
-              {/* RIGHT content area */}
-              <Box
-                sx={{
-                  flex: '1 1 0',
-                  display: { xs: 'none', md: 'flex' },
-                  justifyContent: 'flex-start',
-                  pl: 4,
-                }}
-              >
-                {step.side === 'right' ? (
-                  <motion.div
-                    initial={{ opacity: 0, x: 60 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: false, margin: '-80px' }}
-                    transition={{
-                      duration: 0.5 * DURATION_MULTIPLIER,
-                      delay: 0.15 * DURATION_MULTIPLIER,
-                    }}
-                  >
-                    <StepCard
-                      title={step.title}
-                      description={step.description}
-                    />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, x: -60 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: false, margin: '-80px' }}
-                    transition={{
-                      duration: 0.5 * DURATION_MULTIPLIER,
-                      delay: 0.15 * DURATION_MULTIPLIER,
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontWeight: 700,
-                        fontSize: '18px',
-                        color: '#F28B00',
-                        mt: 1,
-                      }}
-                    >
-                      {step.label}
-                    </Typography>
-                  </motion.div>
-                )}
-              </Box>
-
-              {/* Mobile: label + card below circle */}
-              <Box
-                sx={{
-                  display: { xs: 'flex', md: 'none' },
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  mt: 2,
-                  gap: 1.5,
-                }}
-              >
-               
-                <motion.div
-                    initial={{ opacity: 0, x: 60 * (step.side === 'right' ? 1 : -1) }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: false, margin: '-80px' }}
-                  transition={{
-                    duration: 0.4 * DURATION_MULTIPLIER,
-                    delay: 0.1 * DURATION_MULTIPLIER,
-                  }}
-                >
-                   <Typography
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: '16px',
-                    color: '#F28B00',
-                    width: '100%',
-                    paddingLeft: 3,
-                  }}
-                >
-                  {step.label}
-                </Typography>
-                  <StepCard
-                    title={step.title}
-                    description={step.description}
-                  />
-                </motion.div>
-              </Box>
+              <StepCard step={step} />
             </Box>
           ))}
         </Box>
       </Container>
     </Box>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  StepCard with hover pop-out                                        */
-/* ------------------------------------------------------------------ */
-
-function StepCard({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.03 }}
-      transition={{ duration: 0.2 }}
-    >
-      <Box
-        sx={{
-          bgcolor: '#fff',
-          borderRadius: '16px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          p: 3,
-          width: { xs: 300, md: 340 },
-          transition: 'box-shadow 0.3s ease',
-          '&:hover': {
-            boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
-          },
-        }}
-      >
-        <Typography
-          sx={{
-            fontWeight: 700,
-            fontSize: '16px',
-            color: '#0c0c0c',
-            mb: 1,
-          }}
-        >
-          {title}
-        </Typography>
-        <Typography
-          sx={{
-            fontSize: '14px',
-            color: '#4a4a6a',
-            lineHeight: '22px',
-          }}
-        >
-          {description}
-        </Typography>
-      </Box>
-    </motion.div>
   );
 }

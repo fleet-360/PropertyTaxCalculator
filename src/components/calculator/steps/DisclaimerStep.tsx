@@ -7,6 +7,8 @@ import Paper from '@mui/material/Paper';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import Button from '@mui/material/Button';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import type { StepProps } from '../CalculatorWizard';
 import { useLeadUpdate } from '@/hooks/useLeadUpdate';
 import { CONSENT_TEXTS } from '@/lib/consent/consentTexts';
@@ -30,15 +32,22 @@ export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
 
   return (
     <Box sx={sx}>
-      <Typography variant="h5" textAlign="center" mb={3}>
-        הצהרה ואישור
-      </Typography>
-
       <Paper
-        variant="outlined"
-        sx={{ p: 3, mb: 3, maxHeight: 260, overflowY: 'auto', lineHeight: 1.8 }}
+        elevation={0}
+        sx={{
+          p: { xs: 2.25, md: 3 },
+          mb: 3,
+          maxHeight: 320,
+          overflowY: 'auto',
+          lineHeight: 1.8,
+          borderRadius: 2,
+          border: '1px solid #e3e7f1',
+          bgcolor: '#fff',
+        }}
       >
-        <Typography variant="body1">{DISCLAIMER_TEXT}</Typography>
+        <Typography variant="body2" sx={{ color: '#333' }}>
+          {DISCLAIMER_TEXT}
+        </Typography>
       </Paper>
 
       <FormControlLabel
@@ -48,18 +57,69 @@ export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
             onChange={(e) =>
               dispatch({ type: 'UPDATE_FIELD', field: 'consentGiven', value: e.target.checked })
             }
+            sx={(theme) => ({
+              color: '#cdd2e0',
+              '&.Mui-checked': { color: theme.palette.brand.blue },
+            })}
           />
         }
-        label="קראתי את התקנון ומדיניות הפרטיות ואני מסכים/ה ומאשר/ת"
+        label={
+          <Typography
+            sx={(theme) => ({
+              fontSize: '14px',
+              fontWeight: 600,
+              color: theme.palette.brand.navyDeep,
+            })}
+          >
+            קראתי את התקנון ומדיניות הפרטיות ואני מסכים/ה ומאשר/ת
+          </Typography>
+        }
       />
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-        <Button variant="outlined" onClick={() => dispatch({ type: 'PREV_STEP' })}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4, gap: 2, flexWrap: 'wrap' }}>
+        <Button
+          variant="outlined"
+          onClick={() => dispatch({ type: 'PREV_STEP' })}
+          startIcon={<ChevronRightIcon />}
+          sx={(theme) => ({
+            borderRadius: '999px',
+            px: 3.5,
+            py: 1.5,
+            fontSize: '15px',
+            fontWeight: 600,
+            borderColor: '#cdd2e0',
+            color: theme.palette.brand.navyDeep,
+            '& .MuiButton-startIcon': { mr: 0.5, ml: -0.5 },
+            '&:hover': {
+              borderColor: theme.palette.brand.blue,
+              bgcolor: 'rgba(26,86,224,0.04)',
+            },
+          })}
+        >
           חזרה
         </Button>
         <Button
           variant="contained"
           disabled={!state.consentGiven}
+          endIcon={<ChevronLeftIcon />}
+          sx={(theme) => ({
+            bgcolor: theme.palette.brand.blue,
+            color: '#fff',
+            borderRadius: '999px',
+            px: 4,
+            py: 1.5,
+            fontSize: '16px',
+            fontWeight: 700,
+            boxShadow: `0 10px 24px ${theme.palette.brand.blue}40`,
+            '& .MuiButton-endIcon': { ml: 0.75, mr: -0.5 },
+            '&:hover': {
+              bgcolor: theme.palette.brand.blueDark,
+            },
+            '&.Mui-disabled': {
+              bgcolor: '#cdd2e0',
+              color: '#fff',
+            },
+          })}
           onClick={() => {
             submitConsent(state.leadId, state.phone, 'legal_disclaimer', true);
             updateLead(state.leadId, state.calculationIndex, {
@@ -130,3 +190,4 @@ export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
     </Box>
   );
 }
+
