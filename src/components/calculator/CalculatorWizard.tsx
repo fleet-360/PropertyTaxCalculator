@@ -442,15 +442,16 @@ function getStepMeta(
       };
     case 8:
       if (appealPhase === 'generating' || appealPhase === 'finalize') {
+        // IMPORTANT: keep layoutVariant === 'default' (do NOT switch to 'centered').
+        // Switching layout variants restructures the React tree and unmounts
+        // AppealStep — losing its local flow state — which sends the user back
+        // to the intro screen. We only hide chrome/sidebar via stable CSS flags,
+        // and AppealStep renders its own centered title + subtitle + loader.
         return {
           displayStep: 5,
-          title:
-            appealPhase === 'generating'
-              ? 'המערכת מכינה את מכתב ההשגה'
-              : 'שולחים את ההשגה למייל',
-          subtitle: 'זה ייקח כמה שניות, קצת סבלנות',
+          title: '',
           hideInfoCard: true,
-          layoutVariant: 'centered',
+          hideStepChrome: true,
         };
       }
       return {

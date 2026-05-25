@@ -90,9 +90,11 @@ export default function AppealStep({ state, dispatch }: StepProps) {
     dispatch({ type: "SET_MIA_MESSAGE", payload: "step-7-default" });
   }, [dispatch, flow]);
 
-  // Mirror the local flow phase into wizard state so the shell can switch to the
-  // centered video-loader layout (no sidebar, no title chrome) while generating /
-  // finalizing the appeal. Always reset to 'idle' when leaving the step.
+  // Mirror the local flow phase into wizard state so the shell can hide its chrome
+  // (step indicator, title, sidebar) while we generate / finalize the appeal.
+  // We intentionally do NOT reset to 'idle' on unmount — the wizard navigates away
+  // from this step before that matters, and resetting in cleanup would race with
+  // the layout swap and bounce the user back to the intro screen.
   useEffect(() => {
     if (flow === "generating" || flow === "finalize") {
       dispatch({ type: "SET_APPEAL_PHASE", payload: flow });
@@ -100,12 +102,6 @@ export default function AppealStep({ state, dispatch }: StepProps) {
       dispatch({ type: "SET_APPEAL_PHASE", payload: "idle" });
     }
   }, [dispatch, flow]);
-
-  useEffect(() => {
-    return () => {
-      dispatch({ type: "SET_APPEAL_PHASE", payload: "idle" });
-    };
-  }, [dispatch]);
 
   const result = state.calculationResult ?? {};
   const reported = state.bimonthlyPayment ?? 0;
@@ -422,9 +418,48 @@ export default function AppealStep({ state, dispatch }: StepProps) {
   }
 
   if (flow === "generating" || flow === "finalize") {
-    // Centered layout (set via getStepMeta for step 8 + this phase) supplies the
-    // Hebrew title/subtitle above; render only the brand video here.
-    return <WizardVideoLoader />;
+    // Wizard chrome is hidden via stepMeta (hideStepChrome + hideInfoCard).
+    // Render our own centered title / subtitle / video so the user sees the
+    // clean loading screen from the design.
+    const loadingTitle =
+      flow === "generating"
+        ? "המערכת מכינה את מכתב ההשגה"
+        : "שולחים את ההשגה למייל";
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          textAlign: "center",
+          gap: 1,
+          py: { xs: 2, md: 4 },
+        }}
+      >
+        <Typography
+          component="h1"
+          sx={(theme) => ({
+            fontWeight: 700,
+            fontSize: { xs: "20px", md: "24px" },
+            lineHeight: 1,
+            color: theme.palette.brand.scanTitle,
+            mb: 1,
+          })}
+        >
+          {loadingTitle}
+        </Typography>
+        <Typography
+          sx={(theme) => ({
+            fontSize: { xs: "16px", md: "18px" },
+            color: theme.palette.brand.textMain,
+            mb: 2,
+          })}
+        >
+          זה ייקח כמה שניות, קצת סבלנות
+        </Typography>
+        <WizardVideoLoader />
+      </Box>
+    );
   }
 
   if (flow === "sign" && draftPdfBase64) {

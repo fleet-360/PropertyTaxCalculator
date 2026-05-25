@@ -484,37 +484,42 @@ export default function WizardLayout({
               minWidth: 0,
             }}
           >
-            {!hideStepChrome && (
-              <>
-                <StepIndicator displayStep={displayStep} total={totalSteps} />
-                {title ? (
-                  <Typography
-                    component="h1"
-                    sx={(theme) => ({
-                      fontWeight: 700,
-                      fontSize: { xs: "26px", md: "32px" },
-                      lineHeight: { xs: 1.2, md: "44px" },
-                      color: theme.palette.brand.textMain,
-                      mb: subtitle ? 1.25 : 3,
-                    })}
-                  >
-                    {title}
-                  </Typography>
-                ) : null}
-                {subtitle && (
-                  <Typography
-                    sx={(theme) => ({
-                      fontSize: { xs: "16px", md: "18px" },
-                      lineHeight: { md: "24px" },
-                      color: theme.palette.brand.textMain,
-                      mb: { xs: 3, md: 4 },
-                    })}
-                  >
-                    {subtitle}
-                  </Typography>
-                )}
-              </>
-            )}
+            {/*
+             * Chrome wrapper is rendered unconditionally and hidden via CSS so that
+             * toggling hideStepChrome at runtime does NOT change the React tree
+             * structure under the step children. This keeps step components mounted
+             * (and their local state alive) when a step decides to swap to a chrome-
+             * less "loading takeover" mid-flow (e.g. AppealStep generating phase).
+             */}
+            <Box sx={{ display: hideStepChrome ? "none" : "block" }}>
+              <StepIndicator displayStep={displayStep} total={totalSteps} />
+              {title ? (
+                <Typography
+                  component="h1"
+                  sx={(theme) => ({
+                    fontWeight: 700,
+                    fontSize: { xs: "26px", md: "32px" },
+                    lineHeight: { xs: 1.2, md: "44px" },
+                    color: theme.palette.brand.textMain,
+                    mb: subtitle ? 1.25 : 3,
+                  })}
+                >
+                  {title}
+                </Typography>
+              ) : null}
+              {subtitle && (
+                <Typography
+                  sx={(theme) => ({
+                    fontSize: { xs: "16px", md: "18px" },
+                    lineHeight: { md: "24px" },
+                    color: theme.palette.brand.textMain,
+                    mb: { xs: 3, md: 4 },
+                  })}
+                >
+                  {subtitle}
+                </Typography>
+              )}
+            </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>{children}</Box>
           </Box>
 
