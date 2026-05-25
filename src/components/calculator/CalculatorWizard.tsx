@@ -91,9 +91,9 @@ export interface WizardState {
   // user is on InitialWaiverStep — the video loader doubles as the loading state).
   extractionStatus: 'idle' | 'extracting' | 'success' | 'error';
   extractionError: string | null;
-  // AppealStep loading phase — lets the wizard shell swap to the centered video-loader
-  // layout (no sidebar, no step chrome) while the appeal letter is generated or signed.
-  appealPhase: 'idle' | 'generating' | 'finalize';
+  // AppealStep flow phase — lets the wizard shell hide its chrome / sidebar so the
+  // step can render its own centered layout (loader, signature page, success page).
+  appealPhase: 'idle' | 'generating' | 'finalize' | 'sign' | 'done';
   // Contact redirect reason (when calculation can't proceed)
   contactRedirectReason: 'area' | 'designations' | 'city' | 'other_city' | 'error' | null;
   /** Draft input for coupon (shown alongside payment on results gate / appeal) */
@@ -441,12 +441,18 @@ function getStepMeta(
         hideStepChrome: true,
       };
     case 8:
-      if (appealPhase === 'generating' || appealPhase === 'finalize') {
+      if (
+        appealPhase === 'generating' ||
+        appealPhase === 'finalize' ||
+        appealPhase === 'sign' ||
+        appealPhase === 'done'
+      ) {
         // IMPORTANT: keep layoutVariant === 'default' (do NOT switch to 'centered').
         // Switching layout variants restructures the React tree and unmounts
         // AppealStep — losing its local flow state — which sends the user back
         // to the intro screen. We only hide chrome/sidebar via stable CSS flags,
-        // and AppealStep renders its own centered title + subtitle + loader.
+        // and AppealStep renders its own centered title + subtitle + content
+        // (loader / signature page / success page).
         return {
           displayStep: 5,
           title: '',

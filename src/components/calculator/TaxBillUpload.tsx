@@ -8,10 +8,11 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import Chip from "@mui/material/Chip";
-import { wizardUploadZoneSx } from "./wizardStyles";
+import { wizardUploadReadyZoneSx, wizardUploadZoneSx } from "./wizardStyles";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningIcon from "@mui/icons-material/Warning";
 import ErrorIcon from "@mui/icons-material/Error";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import type { WizardState, WizardAction } from "./CalculatorWizard";
 import type { ExtractionResult } from "@/lib/vision/types";
 import type { TaxBillData } from "@/lib/vision/document-types/tax-bill";
@@ -279,44 +280,78 @@ export default function TaxBillUpload({
 
       {/* ── File ready (deferred mode) ── */}
       {status === "ready" && (
-        <Box sx={{ textAlign: "center", py: 2 }}>
-          {previewUrl && (
-            <Box
-              component="img"
-              src={previewUrl}
-              alt="Preview"
-              sx={{ maxWidth: 200, maxHeight: 150, mb: 2, borderRadius: 1 }}
-            />
-          )}
-          <Alert severity="info" sx={{ mb: 1 }}>
-            הקובץ {selectedFileName} טעון ומוכן — הנתונים יחולצו בלחיצה על
-            &quot;הבא&quot;
-          </Alert>
-          <Button variant="outlined" size="small" onClick={handleReset}>
-            החלף קובץ
-          </Button>
+        <Box sx={wizardUploadReadyZoneSx}>
+          <Box
+            aria-hidden
+            sx={(theme) => ({
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              bgcolor: theme.palette.success.main,
+              boxShadow: `0 0 0 4px ${theme.palette.success.main}1A`,
+              mb: 1.5,
+            })}
+          />
+          <Typography
+            sx={{
+              fontSize: { xs: "14px", md: "15px" },
+              fontWeight: 600,
+              color: "text.primary",
+              textAlign: "center",
+              wordBreak: "break-word",
+              direction: "rtl",
+            }}
+          >
+            {selectedFileName}
+          </Typography>
+          <Box
+            component="button"
+            type="button"
+            onClick={handleReset}
+            sx={{
+              mt: 1,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 0.5,
+              background: "transparent",
+              border: "none",
+              p: 0,
+              cursor: "pointer",
+              color: "text.secondary",
+              fontSize: "13px",
+              fontFamily: "inherit",
+              "&:hover": { color: "text.primary" },
+            }}
+          >
+            <Typography component="span" sx={{ fontSize: "13px" }}>
+              מחיקת קובץ והעלאה חדש
+            </Typography>
+            <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+          </Box>
         </Box>
       )}
 
       {/* ── Loading ── */}
       {status === "uploading" && (
-        <Box sx={{ textAlign: "center", py: 4 }}>
-          {previewUrl && (
-            <Box
-              component="img"
-              src={previewUrl}
-              alt="Preview"
-              sx={{
-                maxWidth: 200,
-                maxHeight: 150,
-                mb: 2,
-                borderRadius: 1,
-                opacity: 0.7,
-              }}
-            />
-          )}
-          <CircularProgress sx={{ mb: 2 }} />
-          <Typography>מעבד את המסמך...</Typography>
+        <Box sx={wizardUploadReadyZoneSx}>
+          <CircularProgress size={28} sx={{ mb: 1.5 }} />
+          <Typography
+            sx={{
+              fontSize: { xs: "14px", md: "15px" },
+              fontWeight: 600,
+              color: "text.primary",
+              textAlign: "center",
+              wordBreak: "break-word",
+              direction: "rtl",
+            }}
+          >
+            {selectedFileName ?? "מעבד את המסמך..."}
+          </Typography>
+          <Typography
+            sx={{ fontSize: "13px", color: "text.secondary", mt: 0.5 }}
+          >
+            מעבד את המסמך...
+          </Typography>
         </Box>
       )}
 

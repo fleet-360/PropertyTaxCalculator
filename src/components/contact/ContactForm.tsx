@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useMemo, useState } from 'react';
-import { useForm, type Resolver } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useMemo, useState } from "react";
+import { useForm, type Resolver } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Box,
   TextField,
@@ -12,54 +12,58 @@ import {
   Typography,
   Paper,
   CircularProgress,
-} from '@mui/material';
-import SendIcon from '@mui/icons-material/Send';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import { motion, AnimatePresence } from 'framer-motion';
+} from "@mui/material";
+import SendIcon from "@mui/icons-material/Send";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import { motion, AnimatePresence } from "framer-motion";
 
 export const contactFieldsSchema = z.object({
-  fullName: z.string().min(2, 'יש להזין שם מלא (לפחות 2 תווים)'),
+  fullName: z.string().min(2, "יש להזין שם מלא (לפחות 2 תווים)"),
   phone: z
     .string()
-    .min(1, 'יש להזין מספר טלפון')
-    .regex(/^05\d{1}-?\d{7}$/, 'מספר טלפון לא תקין (לדוגמה: 050-1234567)'),
+    .min(1, "יש להזין מספר טלפון")
+    .regex(/^05\d{1}-?\d{7}$/, "מספר טלפון לא תקין (לדוגמה: 050-1234567)"),
   email: z
     .string()
-    .min(1, 'יש להזין כתובת אימייל')
-    .email('כתובת אימייל לא תקינה'),
+    .min(1, "יש להזין כתובת אימייל")
+    .email("כתובת אימייל לא תקינה"),
 });
 
 const contactSchemaWithMessage = contactFieldsSchema.extend({
-  message: z.string().min(10, 'יש להזין הודעה (לפחות 10 תווים)'),
+  message: z.string().min(10, "יש להזין הודעה (לפחות 10 תווים)"),
 });
 
 export type ContactFormFields = z.infer<typeof contactFieldsSchema>;
 export type ContactFormWithMessage = z.infer<typeof contactSchemaWithMessage>;
 
-export type ContactFormSubmitPayload = ContactFormFields | ContactFormWithMessage;
+export type ContactFormSubmitPayload =
+  | ContactFormFields
+  | ContactFormWithMessage;
 
 export interface ContactFormProps {
   onSubmit: (data: ContactFormSubmitPayload) => Promise<void>;
   showMessage?: boolean;
-  variant?: 'page' | 'embedded';
+  variant?: "page" | "embedded";
   defaultValues?: Partial<ContactFormWithMessage>;
 }
 
 const emptyDefaults: ContactFormWithMessage = {
-  fullName: '',
-  phone: '',
-  email: '',
-  message: '',
+  fullName: "",
+  phone: "",
+  email: "",
+  message: "",
 };
 
 export default function ContactForm({
   onSubmit: onSubmitProp,
   showMessage = true,
-  variant = 'page',
+  variant = "page",
   defaultValues,
 }: ContactFormProps) {
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [submitStatus, setSubmitStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const schema = useMemo(
     () => (showMessage ? contactSchemaWithMessage : contactFieldsSchema),
@@ -70,7 +74,7 @@ export default function ContactForm({
     () => ({
       ...emptyDefaults,
       ...defaultValues,
-      message: showMessage ? defaultValues?.message ?? '' : '',
+      message: showMessage ? (defaultValues?.message ?? "") : "",
     }),
     [defaultValues, showMessage],
   );
@@ -81,13 +85,15 @@ export default function ContactForm({
     formState: { errors, isSubmitting },
     reset,
   } = useForm<ContactFormWithMessage>({
-    resolver: zodResolver(schema) as unknown as Resolver<ContactFormWithMessage>,
+    resolver: zodResolver(
+      schema,
+    ) as unknown as Resolver<ContactFormWithMessage>,
     defaultValues: mergedDefaults,
   });
 
   const onSubmit = async (data: ContactFormWithMessage) => {
-    setSubmitStatus('idle');
-    setErrorMessage('');
+    setSubmitStatus("idle");
+    setErrorMessage("");
 
     const payload: ContactFormSubmitPayload = showMessage
       ? {
@@ -105,21 +111,23 @@ export default function ContactForm({
     try {
       await onSubmitProp(payload);
 
-      if (variant === 'embedded') {
+      if (variant === "embedded") {
         reset(mergedDefaults);
       } else {
-        setSubmitStatus('success');
+        setSubmitStatus("success");
         reset(emptyDefaults);
       }
     } catch (err) {
-      setSubmitStatus('error');
-      setErrorMessage(err instanceof Error ? err.message : 'שגיאה בשליחת הטופס');
+      setSubmitStatus("error");
+      setErrorMessage(
+        err instanceof Error ? err.message : "שגיאה בשליחת הטופס",
+      );
     }
   };
 
   const formBody = (
     <AnimatePresence mode="wait">
-      {submitStatus === 'success' && variant === 'page' ? (
+      {submitStatus === "success" && variant === "page" ? (
         <Box
           component={motion.div}
           key="success"
@@ -127,12 +135,12 @@ export default function ContactForm({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}
           sx={{
-            textAlign: 'center',
+            textAlign: "center",
             py: 4,
           }}
         >
           <CheckCircleOutlineIcon
-            sx={{ fontSize: 64, color: 'success.main', mb: 2 }}
+            sx={{ fontSize: 64, color: "success.main", mb: 2 }}
           />
           <Typography variant="h5" gutterBottom>
             הפנייה נשלחה בהצלחה!
@@ -142,8 +150,8 @@ export default function ContactForm({
           </Typography>
           <Button
             variant="outlined"
-            onClick={() => setSubmitStatus('idle')}
-            sx={{ borderColor: 'primary.main', color: 'primary.main' }}
+            onClick={() => setSubmitStatus("idle")}
+            sx={{ borderColor: "primary.main", color: "primary.main" }}
           >
             שליחת פנייה נוספת
           </Button>
@@ -157,11 +165,11 @@ export default function ContactForm({
           exit={{ opacity: 0 }}
           onSubmit={handleSubmit(onSubmit)}
           noValidate
-          sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}
+          sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}
         >
           <TextField
             label="שם מלא"
-            {...register('fullName')}
+            {...register("fullName")}
             error={!!errors.fullName}
             helperText={errors.fullName?.message}
             fullWidth
@@ -170,28 +178,28 @@ export default function ContactForm({
 
           <TextField
             label="טלפון"
-            {...register('phone')}
+            {...register("phone")}
             error={!!errors.phone}
             helperText={errors.phone?.message}
             fullWidth
             autoComplete="tel"
-            inputProps={{ dir: 'ltr', inputMode: 'tel' }}
+            inputProps={{ dir: "ltr", inputMode: "tel" }}
           />
 
           <TextField
             label="אימייל"
-            {...register('email')}
+            {...register("email")}
             error={!!errors.email}
             helperText={errors.email?.message}
             fullWidth
             autoComplete="email"
-            inputProps={{ dir: 'ltr', inputMode: 'email' }}
+            inputProps={{ dir: "ltr", inputMode: "email" }}
           />
 
           {showMessage && (
             <TextField
               label="הודעה"
-              {...register('message')}
+              {...register("message")}
               error={!!errors.message}
               helperText={errors.message?.message}
               fullWidth
@@ -200,7 +208,7 @@ export default function ContactForm({
             />
           )}
 
-          {submitStatus === 'error' && (
+          {submitStatus === "error" && (
             <Alert severity="error">{errorMessage}</Alert>
           )}
 
@@ -217,23 +225,23 @@ export default function ContactForm({
               )
             }
             sx={{
-              bgcolor: 'secondary.main',
-              color: '#fff',
+              bgcolor: "theme.palette.secondary.main",
+              color: "#fff",
               fontWeight: 700,
               py: 1.5,
-              '&:hover': {
-                bgcolor: 'secondary.dark',
+              "&:hover": {
+                bgcolor: "secondary.dark",
               },
             }}
           >
-            {isSubmitting ? 'שולח...' : 'שליחה'}
+            {isSubmitting ? "שולח..." : "שליחה"}
           </Button>
         </Box>
       )}
     </AnimatePresence>
   );
 
-  if (variant === 'embedded') {
+  if (variant === "embedded") {
     return formBody;
   }
 
@@ -247,10 +255,10 @@ export default function ContactForm({
       sx={{
         p: { xs: 3, sm: 5 },
         maxWidth: 600,
-        mx: 'auto',
+        mx: "auto",
         borderRadius: 3,
-        border: '1px solid',
-        borderColor: 'divider',
+        border: "1px solid",
+        borderColor: "divider",
       }}
     >
       {formBody}

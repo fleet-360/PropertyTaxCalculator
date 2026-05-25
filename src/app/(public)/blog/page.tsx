@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
@@ -10,6 +9,8 @@ import { BLOG_PATHS } from '@/lib/blog/routes';
 import { getBlogSiteSettings } from '@/lib/blog/settings';
 import PostCard from '@/components/blog/PostCard';
 import Pagination from '@/components/blog/Pagination';
+import PageHero from '@/components/common/PageHero';
+import PageBreadcrumbs from '@/components/common/PageBreadcrumbs';
 import { PostsResponse } from '@/lib/types';
 
 export async function getPosts(page: number, perPage: number): Promise<PostsResponse> {
@@ -36,11 +37,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
   return {
-    title: settings.siteName || 'Blog',
-    description: settings.siteDescription || 'Welcome to our blog',
+    title: settings.siteName || 'חשוב לדעת | מחשבון ארנונה',
+    description: settings.siteDescription || 'כל מה שרציתם לדעת על הארנונה במקום אחד',
     openGraph: {
-      title: settings.siteName || 'Blog',
-      description: settings.siteDescription || 'Welcome to our blog',
+      title: settings.siteName || 'חשוב לדעת',
+      description: settings.siteDescription || 'כל מה שרציתם לדעת על הארנונה במקום אחד',
       type: 'website',
       ...(settings.defaultOgImage ? { images: [{ url: settings.defaultOgImage }] } : {}),
     },
@@ -56,57 +57,20 @@ export default async function BlogHome({ searchParams }: BlogHomeProps) {
   const params = await searchParams;
   const settings = await getBlogSiteSettings();
   const currentPage = Math.max(1, parseInt(params.page || '1', 10) || 1);
-  const perPage = settings.postsPerPage || 10;
+  const perPage = settings.postsPerPage || 9;
   const { posts, totalCount, totalPages } = await getPosts(currentPage, perPage);
 
   return (
     <>
-      {/* Hero / Header Section */}
-      <Box
-        component="section"
-        sx={{
-          py: { xs: 6, md: 10 },
-          textAlign: 'center',
-          backgroundColor: 'background.default',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-        }}
-      >
-        <Container maxWidth="md">
-          <Typography
-            variant="h1"
-            component="h1"
-            sx={{
-              fontWeight: 800,
-              fontSize: { xs: '2rem', md: '3rem' },
-              mb: 2,
-              color: 'text.primary',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            {settings.siteName || 'My Blog'}
-          </Typography>
-          {settings.siteDescription && (
-            <Typography
-              variant="h6"
-              component="p"
-              sx={{
-                color: 'text.secondary',
-                fontWeight: 400,
-                fontSize: { xs: '1rem', md: '1.2rem' },
-                lineHeight: 1.6,
-                maxWidth: 600,
-                mx: 'auto',
-              }}
-            >
-              {settings.siteDescription}
-            </Typography>
-          )}
-        </Container>
-      </Box>
+      <PageHero title="חשוב לדעת" />
+      <PageBreadcrumbs
+        items={[
+          { label: 'בית', href: '/' },
+          { label: 'חשוב לדעת' },
+        ]}
+      />
 
-      {/* Posts Grid */}
-      <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
+      <Container maxWidth="lg" sx={{ pb: { xs: 6, md: 10 }, pt: { xs: 1, md: 2 } }}>
         {posts.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 10 }}>
             <Typography variant="h5" color="text.secondary" sx={{ mb: 2 }}>
@@ -118,9 +82,9 @@ export default async function BlogHome({ searchParams }: BlogHomeProps) {
           </Box>
         ) : (
           <>
-            <Grid container spacing={4}>
+            <Grid container spacing={{ xs: 2.5, md: 3 }}>
               {posts.map((post: any) => (
-                <Grid size={{ xs: 12, md: 6 }} key={post._id}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={post._id}>
                   <PostCard post={post} />
                 </Grid>
               ))}
@@ -138,8 +102,8 @@ export default async function BlogHome({ searchParams }: BlogHomeProps) {
                 color="text.secondary"
                 sx={{ display: 'block', textAlign: 'center', mt: 2 }}
               >
-                Showing {(currentPage - 1) * perPage + 1}&ndash;
-                {Math.min(currentPage * perPage, totalCount)} of {totalCount} posts
+                מציג {(currentPage - 1) * perPage + 1}&ndash;
+                {Math.min(currentPage * perPage, totalCount)} מתוך {totalCount} כתבות
               </Typography>
             )}
           </>

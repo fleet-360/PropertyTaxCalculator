@@ -10,7 +10,7 @@ import FooterLegalLinks from '@/components/landing/FooterLegalLinks';
 const navItems = [
   { label: 'דף הבית', href: '/' },
   { label: 'המחשבון', href: '/calculator' },
-  { label: 'ממליצים', href: '/#testimonials' },
+  { label: 'ממליצים', href: '/testimonials' },
   { label: 'חשוב לדעת', href: BLOG_PATHS.home },
   { label: 'יצירת קשר', href: '/contact' },
 ];

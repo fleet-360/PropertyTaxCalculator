@@ -107,18 +107,6 @@ export default function ResultsDisplayStep({ state, dispatch, sx }: StepProps) {
           alignItems: "stretch",
         }}
       >
-        <ResultsDetailsCard
-          reported={reported}
-          calculated={calculated}
-          biMonthlySavings={biMonthlySavings}
-          annualSavings={annualSavings}
-          tenYearSavings={tenYearSavings}
-          areaBreakdown={areaBreakdown}
-          appliedFees={appliedFees}
-          totalFeesBimonthly={totalFeesBimonthly}
-          printableId="results-printable"
-        />
-
         <Stack spacing={3}>
           {paymentCompleted && (
             <Box sx={wizardResultsCardSx}>
@@ -280,12 +268,23 @@ export default function ResultsDisplayStep({ state, dispatch, sx }: StepProps) {
               startIcon={<GavelIcon />}
               disabled={!appealSavingsNonNegative}
               onClick={() => dispatch({ type: "NEXT_STEP" })}
-              sx={wizardPrimaryButtonSx}
+              color="success"
             >
-              הגש השגה לעירייה
+              להגשת השגה עכשיו{" "}
             </Button>
           </Box>
         </Stack>
+        <ResultsDetailsCard
+          reported={reported}
+          calculated={calculated}
+          biMonthlySavings={biMonthlySavings}
+          annualSavings={annualSavings}
+          tenYearSavings={tenYearSavings}
+          areaBreakdown={areaBreakdown}
+          appliedFees={appliedFees}
+          totalFeesBimonthly={totalFeesBimonthly}
+          printableId="results-printable"
+        />
       </Box>
 
       <EmailSendDialog

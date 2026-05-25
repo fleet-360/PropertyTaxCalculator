@@ -2,7 +2,8 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
+import theme from '@/theme/theme';
 import PostCard from '@/components/blog/PostCard';
 import { blogPostPath, blogCategoryPath } from '@/lib/blog/routes';
 
@@ -17,8 +18,6 @@ vi.mock('next/link', () => ({
     </a>
   ),
 }));
-
-const theme = createTheme({ direction: 'rtl' });
 
 function renderCard(ui: React.ReactElement) {
   return render(<ThemeProvider theme={theme}>{ui}</ThemeProvider>);
@@ -38,7 +37,7 @@ describe('PostCard', () => {
     const titleLink = screen.getByRole('heading', { level: 2 }).querySelector('a');
     expect(titleLink).toHaveAttribute('href', blogPostPath('test-slug'));
 
-    const readMore = screen.getByRole('link', { name: /קרא עוד/ });
+    const readMore = screen.getByRole('link', { name: /המשך קריאה/ });
     expect(readMore).toHaveAttribute('href', blogPostPath('test-slug'));
   });
 

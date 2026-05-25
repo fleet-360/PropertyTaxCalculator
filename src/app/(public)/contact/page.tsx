@@ -1,26 +1,26 @@
 import type { Metadata } from 'next';
-import { Container, Typography, Box } from '@mui/material';
-import ContactPageForm from '@/components/contact/ContactPageForm';
+import PageHero from '@/components/common/PageHero';
+import PageBreadcrumbs from '@/components/common/PageBreadcrumbs';
+import ContactPageContent from '@/components/contact/ContactPageContent';
 
 export const metadata: Metadata = {
-  title: 'צור קשר | מחשבון ארנונה',
+  title: 'יצירת קשר | מחשבון ארנונה',
   description:
-    'השאירו פרטים ונחזור אליכם בהקדם. נשמח לעזור בכל שאלה בנושא ארנונה, חישוב מס, הגשת השגה ועוד.',
+    'השאירו פרטים ונציג מטעמנו יחזור אליכם בהקדם. נשמח לעזור בכל שאלה בנושא ארנונה, חישוב מס, הגשת השגה ועוד.',
 };
 
 export default function ContactPage() {
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 4, sm: 6 } }}>
-      <Box sx={{ textAlign: 'center', mb: 4 }}>
-        <Typography variant="h3" component="h1" gutterBottom>
-          צור קשר
-        </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 480, mx: 'auto' }}>
-          יש לכם שאלה? רוצים לדעת עוד על השירות שלנו? השאירו פרטים ונחזור אליכם בהקדם
-        </Typography>
-      </Box>
+    <>
+      <PageHero title="יצירת קשר" />
+      <PageBreadcrumbs
+        items={[
+          { label: 'בית', href: '/' },
+          { label: 'יצירת קשר' },
+        ]}
+      />
 
-      <ContactPageForm />
-    </Container>
+      <ContactPageContent />
+    </>
   );
 }
