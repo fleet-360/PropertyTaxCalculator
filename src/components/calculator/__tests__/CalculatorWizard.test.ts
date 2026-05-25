@@ -40,34 +40,34 @@ describe('wizardReducer', () => {
     expect(result.currentStep).toBe(0);
   });
 
-  it('NEXT_STEP skips exemptions (step 3) for business', () => {
-    const state = makeState({ currentStep: 2, propertyType: 'business' });
+  it('NEXT_STEP skips exemptions (step 4) for business', () => {
+    const state = makeState({ currentStep: 3, propertyType: 'business' });
     const result = wizardReducer(state, { type: 'NEXT_STEP' });
-    expect(result.currentStep).toBe(4); // skips 3
+    expect(result.currentStep).toBe(5); // skips 4
   });
 
-  it('PREV_STEP skips exemptions (step 3) backward for business', () => {
-    const state = makeState({ currentStep: 4, propertyType: 'business' });
+  it('PREV_STEP skips exemptions (step 4) backward for business', () => {
+    const state = makeState({ currentStep: 5, propertyType: 'business' });
     const result = wizardReducer(state, { type: 'PREV_STEP' });
-    expect(result.currentStep).toBe(2); // skips 3
+    expect(result.currentStep).toBe(3); // skips 4
   });
 
   it('NEXT_STEP does NOT skip exemptions for private when exemptions exist', () => {
     const state = makeState({
-      currentStep: 2,
+      currentStep: 3,
       propertyType: 'private',
       cityData: {
         exemptions: [{ sectionCode: '1', sectionLabel: 'test', applicableTo: 'private', subSections: [] }],
       } as any,
     });
     const result = wizardReducer(state, { type: 'NEXT_STEP' });
-    expect(result.currentStep).toBe(3);
+    expect(result.currentStep).toBe(4);
   });
 
   it('NEXT_STEP skips exemptions for private when no relevant exemptions', () => {
-    const state = makeState({ currentStep: 2, propertyType: 'private' });
+    const state = makeState({ currentStep: 3, propertyType: 'private' });
     const result = wizardReducer(state, { type: 'NEXT_STEP' });
-    expect(result.currentStep).toBe(4);
+    expect(result.currentStep).toBe(5);
   });
 
   it('SET_PROPERTY_TYPE updates propertyType', () => {

@@ -26,6 +26,14 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import type { StepProps } from "../CalculatorWizard";
+import {
+  wizardFieldSx,
+  wizardNavRowSx,
+  wizardPrimaryButtonSx,
+  wizardSecondaryButtonSx,
+  wizardSectionHeaderSx,
+  wizardSectionTitleSx,
+} from "../wizardStyles";
 import { useConsentSubmit } from "@/hooks/useConsentSubmit";
 import { IPropertyType, ISubType, IZoneRate } from "@/lib/models/CityTariff";
 import {
@@ -814,15 +822,9 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
       <Box sx={fieldsGridSx}>
         {/* 1. פרטי המשתמש */}
         <Box sx={fullRowSx}>
-          <Typography
-            variant="subtitle1"
-            color="text.secondary"
-            fontWeight={600}
-            sx={{ mt: 0, mb: 0.5 }}
-          >
-            פרטי המשתמש
-          </Typography>
-          <Divider sx={{ mb: 0 }} />
+          <Box sx={wizardSectionHeaderSx}>
+            <Typography sx={wizardSectionTitleSx}>פרטים אישיים</Typography>
+          </Box>
         </Box>
         <Box sx={{ minWidth: 0 }}>
           <Controller
@@ -834,6 +836,7 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
                 label="שם מלא *"
                 fullWidth
                 size="small"
+                sx={wizardFieldSx}
                 error={!!errors.fullName}
                 helperText={errors.fullName?.message}
               />
@@ -885,15 +888,9 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
         {/* Business designations */}
         {isBusiness && (
           <Box sx={fullRowSx}>
-            <Typography
-              variant="subtitle1"
-              color="text.secondary"
-              fontWeight={600}
-              sx={{ mt: 1.5, mb: 0.5 }}
-            >
-              ייעודים עסקיים
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
+            <Box sx={{ ...wizardSectionHeaderSx, mt: 1.5 }}>
+              <Typography sx={wizardSectionTitleSx}>ייעודים עסקיים</Typography>
+            </Box>
 
             {fields.map((field, idx) => (
               <DesignationRow
@@ -1274,19 +1271,11 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
         </Box>
       </Box>
 
-      {/* 5. דיווח על שגיאות (אופציונלי) */}
-      <Typography
-        variant="subtitle1"
-        color="text.secondary"
-        fontWeight={600}
-        sx={{ mt: 3, mb: 0.5 }}
-      >
-        דיווח על שגיאות (אופציונלי)
-      </Typography>
-      <Divider sx={{ mb: 2 }} />
-      <Typography variant="body2" color="text.secondary" mb={2}>
-        אם אתה סבור שיש שגיאה בנתוני הנכס שלך, תוכל לדווח כאן
-      </Typography>
+      <Box sx={{ ...wizardSectionHeaderSx, mt: 3 }}>
+        <Typography sx={{ ...wizardSectionTitleSx, fontSize: '14px', fontWeight: 400 }}>
+          האם יש טעות בשטח הנכס?
+        </Typography>
+      </Box>
 
       <Box
         sx={{
@@ -1373,48 +1362,22 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
         </Box>
       )}
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4, gap: 2, flexWrap: "wrap" }}>
+      <Box sx={wizardNavRowSx}>
         <Button
           variant="outlined"
           onClick={() => dispatch({ type: "PREV_STEP" })}
           startIcon={<ChevronRightIcon />}
-          sx={(theme) => ({
-            borderRadius: "999px",
-            px: 3.5,
-            py: 1.5,
-            fontSize: "15px",
-            fontWeight: 600,
-            borderColor: "#cdd2e0",
-            color: theme.palette.brand.navyDeep,
-            "& .MuiButton-startIcon": { mr: 0.5, ml: -0.5 },
-            "&:hover": {
-              borderColor: theme.palette.brand.blue,
-              bgcolor: "rgba(26,86,224,0.04)",
-            },
-          })}
+          sx={wizardSecondaryButtonSx}
         >
-          חזרה
+          לשלב הקודם
         </Button>
         <Button
           variant="contained"
           type="submit"
           endIcon={<ChevronLeftIcon />}
-          sx={(theme) => ({
-            bgcolor: theme.palette.brand.blue,
-            color: "#fff",
-            borderRadius: "999px",
-            px: 4,
-            py: 1.5,
-            fontSize: "16px",
-            fontWeight: 700,
-            boxShadow: `0 10px 24px ${theme.palette.brand.blue}40`,
-            "& .MuiButton-endIcon": { ml: 0.75, mr: -0.5 },
-            "&:hover": {
-              bgcolor: theme.palette.brand.blueDark,
-            },
-          })}
+          sx={wizardPrimaryButtonSx}
         >
-          המשך לשלב הבא
+          לשלב הבא
         </Button>
       </Box>
     </Box>

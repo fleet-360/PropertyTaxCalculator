@@ -1,65 +1,43 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import DummyPaymentDialog from "@/components/calculator/DummyPaymentDialog";
-import coffeePastryImage from "@/assets/results-gate-coffee-pastry.png";
+import CouponPaymentSection from "@/components/calculator/CouponPaymentSection";
+import { StepIndicator } from "../WizardLayout";
 import { useCalculatorFeatures } from "../CalculatorFeaturesContext";
 import { useEmailSend } from "@/hooks/useEmailSend";
 import type { StepProps } from "../CalculatorWizard";
-
-function PaymentUpsellBanner() {
-  return (
-    <Stack spacing={1} justifyContent="center">
-      <Box
-        sx={(theme) => ({
-          border: `1px solid ${theme.palette.divider}`,
-          bgcolor: "background.paper",
-          textAlign: "center",
-          borderRadius: 1,
-          p: 1,
-        })}
-      >
-        <Typography variant="body1" component="p">
-          זה לוקח כמה שניות
-        </Typography>
-        <Typography variant="body1" component="p">
-          והמחיר של כוס קפה ומאפה
-        </Typography>
-      </Box>
-      <Box
-        sx={{
-          position: "relative",
-          width: "100%",
-          overflow: "hidden",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Image
-          src={coffeePastryImage}
-          alt="כוס קפה ומאפה על שולחן במסעדה"
-          width={coffeePastryImage.width}
-          height={coffeePastryImage.height}
-          style={{ height: "auto", borderRadius: "1em" }}
-        />
-      </Box>
-    </Stack>
-  );
-}
+import {
+  wizardPrimaryButtonSx,
+  wizardResultsCardSx,
+  wizardSecondaryButtonSx,
+} from "../wizardStyles";
 
 export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
   const { paymentEnabled, calculatorChargeAmount } = useCalculatorFeatures();
   const { sendEmail } = useEmailSend();
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const result = state.calculationResult;
+  const outcome: string = result?.outcome ?? "match";
+
+  useEffect(() => {
+    if (!result) return;
+    const miaId =
+      outcome === "overpaying"
+        ? "step-5-overpaying"
+        : outcome === "underpaying"
+          ? "step-5-underpaying"
+          : "step-5-match";
+    dispatch({ type: "SET_MIA_MESSAGE", payload: miaId });
+  }, [outcome, dispatch, result]);
 
   if (state.isLoading || !result) {
     return (
@@ -70,20 +48,14 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
     );
   }
 
-  const outcome: string = result.outcome ?? "match";
   const showPaymentBlock =
     paymentEnabled && (outcome === "underpaying" || outcome === "overpaying");
 
-  // ── Mia message based on outcome ──
-  useEffect(() => {
-    const miaId =
-      outcome === "overpaying"
-        ? "step-5-overpaying"
-        : outcome === "underpaying"
-          ? "step-5-underpaying"
-          : "step-5-match";
-    dispatch({ type: "SET_MIA_MESSAGE", payload: miaId });
-  }, [outcome, dispatch]);
+  const reported = state.bimonthlyPayment ?? state.reportedPayment ?? 0;
+  const calculated =
+    result.calculatedBimonthly ?? result.calculated ?? reported;
+  const biMonthlySavings = Math.max(0, reported - calculated);
+  const annualSavings = biMonthlySavings * 6;
 
   const goToDetailedResults = () => dispatch({ type: "NEXT_STEP" });
 
@@ -106,9 +78,7 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
         amountNis: calculatorChargeAmount,
         date: new Date().toISOString(),
       },
-    }).catch(() => {
-      // Invoice sending is non-blocking
-    });
+    }).catch(() => {});
   };
 
   const handlePaymentConfirm = () => {
@@ -116,32 +86,136 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
     goToDetailedResults();
   };
 
-  const paymentButton = (
-    <>
-      {paymentEnabled && <PaymentUpsellBanner />}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          gap: 2
-        }}
+  const resultsHeadline =
+    outcome === "overpaying" ? (
+      <Typography
+        sx={(theme) => ({
+          fontWeight: 700,
+          fontSize: { xs: "18px", md: "20px" },
+          lineHeight: "27px",
+          textAlign: "right",
+          color: theme.palette.brand.textMain,
+          mb: { xs: 3, md: 4 },
+        })}
       >
-      <Button variant="outlined" onClick={() => dispatch({ type: 'SET_STEP', step: 0 })}>
-              חזרה להתחלה
-            </Button>
-        <Button variant="contained" onClick={handlePrimaryClick}>
-          {paymentEnabled ? "תשלום וצפייה בתוצאות" : "צפה בתוצאות מפורטות"}
-        </Button>
+        לפי התחשיב שלנו מגיעה לך{" "}
+        <Box component="span" sx={(theme) => ({ color: theme.palette.brand.successGreen })}>
+          הנחה משמעותית
+        </Box>{" "}
+        בתשלום הארנונה!
+      </Typography>
+    ) : null;
+
+  const overpayingLayout = outcome === "overpaying" && showPaymentBlock && (
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
+        gap: { xs: 3, md: 4 },
+        alignItems: "stretch",
+      }}
+    >
+      <Box sx={wizardResultsCardSx}>
+        <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ mb: 3 }}>
+          <DescriptionOutlinedIcon sx={{ fontSize: 40, color: "action.disabled" }} />
+          <Box sx={{ flex: 1 }}>
+            <Typography sx={{ fontWeight: 700, fontSize: "24px", lineHeight: "32px", mb: 1 }}>
+              תוצאות המחשבון:
+            </Typography>
+            <Typography sx={{ fontWeight: 500, fontSize: "16px" }}>
+              גובה ההנחה השנתי שמגיע לך:
+            </Typography>
+            <Typography sx={{ fontWeight: 500, fontSize: "32px", mt: 1 }}>
+              ₪{annualSavings.toLocaleString("he-IL")}
+            </Typography>
+          </Box>
+        </Stack>
+        <Box
+          sx={{
+            filter: "blur(5px)",
+            userSelect: "none",
+            pointerEvents: "none",
+            opacity: 0.85,
+          }}
+          aria-hidden
+        >
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Box
+              key={i}
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                py: 1.5,
+                borderBottom: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <Box sx={{ width: "40%", height: 12, bgcolor: "action.hover", borderRadius: 1 }} />
+              <Box sx={{ width: "25%", height: 12, bgcolor: "action.hover", borderRadius: 1 }} />
+            </Box>
+          ))}
+        </Box>
       </Box>
-    </>
+
+      <Stack spacing={3}>
+        <Box sx={wizardResultsCardSx}>
+          <Typography sx={{ fontWeight: 700, fontSize: "24px", lineHeight: "32px", mb: 2 }}>
+            סיכום תשלום — לצפייה בתוצאות המחשבון המפורטות
+          </Typography>
+          <Box sx={{ borderTop: "1px solid", borderColor: "divider", pt: 3, mb: 3 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="flex-end">
+              <Box>
+                <Typography sx={{ fontWeight: 500, fontSize: "32px" }}>
+                  ₪{calculatorChargeAmount.toLocaleString("he-IL")}
+                </Typography>
+                <Typography sx={{ fontSize: "14px", fontWeight: 500, mt: 0.5 }}>
+                  עלות של קפה ומאפה :)
+                </Typography>
+              </Box>
+              <Typography sx={{ fontWeight: 500, fontSize: "24px" }}>
+                סך הכל לתשלום
+              </Typography>
+            </Stack>
+          </Box>
+          <CouponPaymentSection state={state} dispatch={dispatch} context="results_gate" />
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={handlePrimaryClick}
+            endIcon={<ChevronLeftIcon />}
+            sx={{ ...wizardPrimaryButtonSx, mt: 2, py: 1.25 }}
+          >
+            לתשלום וצפייה בתוצאות
+          </Button>
+        </Box>
+      </Stack>
+    </Box>
   );
+
+  const simpleActions = (
+    <Box sx={{ display: "flex", justifyContent: "center", gap: 2, flexWrap: "wrap", mt: 3 }}>
+      <Button
+        variant="outlined"
+        onClick={() => dispatch({ type: "SET_STEP", step: 0 })}
+        sx={wizardSecondaryButtonSx}
+      >
+        חזרה להתחלה
+      </Button>
+      <Button variant="contained" onClick={handlePrimaryClick} sx={wizardPrimaryButtonSx}>
+        {paymentEnabled ? "תשלום וצפייה בתוצאות" : "צפה בתוצאות מפורטות"}
+      </Button>
+    </Box>
+  );
+
   return (
     <Box sx={sx}>
+      <StepIndicator displayStep={5} total={5} />
+      {resultsHeadline}
+
       {outcome === "match" && (
         <>
           <Alert severity="success" sx={{ mb: 3, fontSize: "1rem" }}>
-            {"\u{1F60A}"} על פי המידע שהזנת, נראה שהחישוב תואם את הנתונים שגובה
-            העירייה
+            על פי המידע שהזנת, נראה שהחישוב תואם את הנתונים שגובה העירייה
           </Alert>
           <Typography textAlign="center" color="text.secondary" mb={3}>
             תודה שהשתמשת במחשבון הארנונה
@@ -150,6 +224,7 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
             <Button
               variant="contained"
               onClick={() => dispatch({ type: "RESET_CALCULATOR" })}
+              sx={wizardPrimaryButtonSx}
             >
               חזרה להתחלה
             </Button>
@@ -160,37 +235,22 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
       {outcome === "underpaying" && (
         <>
           <Alert severity="info" sx={{ mb: 3, fontSize: "1rem" }}>
-            {`לפי המחשבון, נמצא אי-התאמה בין תוצאת המחשבון לדו"ח הארנונה`}
+            לפי המחשבון, אין התאמה בין תוצאת המחשבון לדו&quot;ח הארנונה
           </Alert>
-
-          {/* {paymentEnabled && (
-            <Typography variant="body1" mb={2} textAlign="center">
-              לצפייה בתוצאות המפורטות:{' '}
-              <strong>{calculatorChargeAmount.toLocaleString('he-IL')} ₪</strong>
-            </Typography>
-          )} */}
-          {paymentButton}
+          {simpleActions}
         </>
       )}
 
       {outcome === "overpaying" && (
         <>
-          <Alert severity="success" sx={{ mb: 3, fontSize: "1rem" }}>
-            {"\u{1F389}"} על פי המחשבון אתה זכאי להנחה!
-          </Alert>
-          {/* {paymentEnabled ? (
-            <Typography variant="body1" mb={2} textAlign="center">
-              לצפייה בתוצאות המפורטות:{" "}
-              <strong>
-                {calculatorChargeAmount.toLocaleString("he-IL")} ₪
-              </strong>
-            </Typography>
-          ) : (
-            <Typography variant="body1" mb={2} textAlign="center">
-              תרצה לראות את התוצאות המפורטות?
-            </Typography>
-          )} */}
-          {paymentButton}
+          {overpayingLayout ?? (
+            <>
+              <Alert severity="success" sx={{ mb: 3, fontSize: "1rem" }}>
+                על פי המחשבון אתה זכאי להנחה!
+              </Alert>
+              {simpleActions}
+            </>
+          )}
         </>
       )}
 

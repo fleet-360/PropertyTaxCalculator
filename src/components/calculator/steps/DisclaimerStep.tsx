@@ -13,6 +13,7 @@ import type { StepProps } from '../CalculatorWizard';
 import { useLeadUpdate } from '@/hooks/useLeadUpdate';
 import { CONSENT_TEXTS } from '@/lib/consent/consentTexts';
 import { useConsentSubmit } from '@/hooks/useConsentSubmit';
+import { wizardNavRowSx, wizardPrimaryButtonSx, wizardSecondaryButtonSx } from '../wizardStyles';
 
 /** Mia messages seeded in `seed-mia-messages.ts` — merged into one bubble on the disclaimer step. */
 const DISCLAIMER_MIA_MESSAGE_IDS = ['step-4-note-accuracy', 'step-4-note-ordinance'] as const;
@@ -32,23 +33,17 @@ export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
 
   return (
     <Box sx={sx}>
-      <Paper
-        elevation={0}
+      <Typography
         sx={{
-          p: { xs: 2.25, md: 3 },
+          fontSize: '16px',
+          lineHeight: '22px',
+          textAlign: 'right',
+          color: 'text.primary',
           mb: 3,
-          maxHeight: 320,
-          overflowY: 'auto',
-          lineHeight: 1.8,
-          borderRadius: 2,
-          border: '1px solid #e3e7f1',
-          bgcolor: '#fff',
         }}
       >
-        <Typography variant="body2" sx={{ color: '#333' }}>
-          {DISCLAIMER_TEXT}
-        </Typography>
-      </Paper>
+        {DISCLAIMER_TEXT}
+      </Typography>
 
       <FormControlLabel
         control={
@@ -65,61 +60,27 @@ export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
         }
         label={
           <Typography
-            sx={(theme) => ({
-              fontSize: '14px',
-              fontWeight: 600,
-              color: theme.palette.brand.navyDeep,
-            })}
+            sx={{ fontSize: '18px', fontWeight: 400 }}
           >
-            קראתי את התקנון ומדיניות הפרטיות ואני מסכים/ה ומאשר/ת
+            קראתי ואני מסכים/ה
           </Typography>
         }
       />
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4, gap: 2, flexWrap: 'wrap' }}>
+      <Box sx={wizardNavRowSx}>
         <Button
           variant="outlined"
           onClick={() => dispatch({ type: 'PREV_STEP' })}
           startIcon={<ChevronRightIcon />}
-          sx={(theme) => ({
-            borderRadius: '999px',
-            px: 3.5,
-            py: 1.5,
-            fontSize: '15px',
-            fontWeight: 600,
-            borderColor: '#cdd2e0',
-            color: theme.palette.brand.navyDeep,
-            '& .MuiButton-startIcon': { mr: 0.5, ml: -0.5 },
-            '&:hover': {
-              borderColor: theme.palette.brand.blue,
-              bgcolor: 'rgba(26,86,224,0.04)',
-            },
-          })}
+          sx={wizardSecondaryButtonSx}
         >
-          חזרה
+          לשלב הקודם
         </Button>
         <Button
           variant="contained"
           disabled={!state.consentGiven}
           endIcon={<ChevronLeftIcon />}
-          sx={(theme) => ({
-            bgcolor: theme.palette.brand.blue,
-            color: '#fff',
-            borderRadius: '999px',
-            px: 4,
-            py: 1.5,
-            fontSize: '16px',
-            fontWeight: 700,
-            boxShadow: `0 10px 24px ${theme.palette.brand.blue}40`,
-            '& .MuiButton-endIcon': { ml: 0.75, mr: -0.5 },
-            '&:hover': {
-              bgcolor: theme.palette.brand.blueDark,
-            },
-            '&.Mui-disabled': {
-              bgcolor: '#cdd2e0',
-              color: '#fff',
-            },
-          })}
+          sx={wizardPrimaryButtonSx}
           onClick={() => {
             submitConsent(state.leadId, state.phone, 'legal_disclaimer', true);
             updateLead(state.leadId, state.calculationIndex, {
@@ -184,7 +145,7 @@ export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
               });
           }}
         >
-          חשב תוצאות
+          לשלב הבא
         </Button>
       </Box>
     </Box>

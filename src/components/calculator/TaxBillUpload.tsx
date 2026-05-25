@@ -7,7 +7,7 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import Chip from '@mui/material/Chip';
-import Paper from '@mui/material/Paper';
+import { wizardUploadZoneSx } from './wizardStyles';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningIcon from '@mui/icons-material/Warning';
@@ -214,31 +214,17 @@ export default function TaxBillUpload({
   }, [onFileReady]);
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-
-      {/* ── Upload zone ── */}
+    <Box sx={{ mb: 0 }}>
       {status === 'idle' && (
         <Box
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          sx={{
-            border: '2px dashed',
-            borderColor: 'primary.main',
-            borderRadius: 2,
-            p: 3,
-            textAlign: 'center',
-            cursor: 'pointer',
-            transition: 'background-color 0.2s',
-            '&:hover': { backgroundColor: 'action.hover' },
-          }}
+          sx={wizardUploadZoneSx}
         >
-          <CloudUploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
-          <Typography variant="body1" color="primary">
-            צלם או העלה שובר ארנונה
-          </Typography>
-          <Typography variant="body2" color="text.secondary" mt={0.5}>
-            JPG, PNG, PDF — עד 10MB
+          <CloudUploadIcon sx={(theme) => ({ fontSize: 65, color: theme.palette.brand.blueLight })} />
+          <Typography sx={{ fontSize: '14px', textAlign: 'center', color: 'text.primary' }}>
+            גרירת קובץ ארנונה לכאן או העלאה מהמחשב
           </Typography>
           <input
             ref={fileInputRef}
@@ -352,6 +338,6 @@ export default function TaxBillUpload({
           </Typography>
         </Box>
       )}
-    </Paper>
+    </Box>
   );
 }

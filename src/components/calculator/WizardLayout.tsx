@@ -1,254 +1,387 @@
 "use client";
 
-import { Box, Container, Typography } from "@mui/material";
+import Image from "next/image";
+import { Box, Container, Typography, Button } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import CheckIcon from "@mui/icons-material/Check";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import type { ReactNode } from "react";
+import DocumentPreviewPopover from "@/components/common/DocumentPreviewPopover";
+import { wizardSidebarActionButtonSx } from "./wizardStyles";
 
 interface StepIndicatorProps {
-  /** Display step (1..total) */
   displayStep: number;
-  /** Total number of display steps */
   total: number;
 }
 
-/** "שלב X מתוך 5" + dots, RTL-aware. */
+/** "שלב X מתוך 5" + step dots — active step on the right (step 1 = rightmost dot). */
 export function StepIndicator({ displayStep, total }: StepIndicatorProps) {
   return (
     <Box
       sx={{
         display: "flex",
+        flexDirection: "row",
         alignItems: "center",
         gap: 1.5,
         justifyContent: "flex-end",
         mb: { xs: 3, md: 4 },
+        width: "100%",
+        direction: "ltr",
       }}
     >
-      <Typography
-        sx={(theme) => ({
-          fontSize: { xs: "15px", md: "17px" },
-          fontWeight: 700,
-          color: theme.palette.brand.navyDeep,
-        })}
-      >
-        שלב {displayStep} מתוך {total}
-      </Typography>
-      <Box sx={{ display: "flex", gap: 0.75 }} aria-hidden>
+      <Box sx={{ display: "flex", flexDirection: "row", gap: 1.5 }} aria-hidden>
         {Array.from({ length: total }).map((_, i) => {
-          const stepNum = i + 1;
+          const stepNum = total - i;
           const isCurrent = stepNum === displayStep;
           const isPast = stepNum < displayStep;
           return (
             <Box
               key={i}
               sx={(theme) => ({
-                width: isCurrent ? 14 : 10,
-                height: isCurrent ? 14 : 10,
+                width: 24,
+                height: 24,
                 borderRadius: "50%",
-                bgcolor: isCurrent
-                  ? theme.palette.brand.blue
-                  : isPast
-                    ? theme.palette.brand.blueLight
-                    : "#d6dbe8",
-                border: isCurrent
-                  ? `2px solid ${theme.palette.brand.blue}`
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                bgcolor: isPast || isCurrent ? theme.palette.brand.blueDark : "#FAFAFA",
+                border:
+                  isPast || isCurrent ? "none" : "1.5px solid #E9EAEB",
+                boxShadow: isCurrent
+                  ? `0 0 0 2px #FFFFFF, 0 0 0 4px ${theme.palette.brand.stepRing}`
                   : "none",
                 transition: "all 0.2s ease",
               })}
-            />
+            >
+              {isPast ? (
+                <CheckIcon sx={{ fontSize: 14, color: "#fff" }} />
+              ) : isCurrent ? (
+                <Box
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    bgcolor: "#fff",
+                  }}
+                />
+              ) : (
+                <Box
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    bgcolor: "#D5D7DA",
+                  }}
+                />
+              )}
+            </Box>
           );
         })}
+      </Box>
+      <Typography
+        sx={(theme) => ({
+          fontSize: "14px",
+          fontWeight: 500,
+          lineHeight: "20px",
+          color: theme.palette.brand.textMain,
+          flexShrink: 0,
+        })}
+      >
+        שלב {displayStep} מתוך {total}
+      </Typography>
+    </Box>
+  );
+}
+
+export interface WizardInfoCardProps {
+  message?: ReactNode;
+  showIllustration?: boolean;
+  onReset?: () => void;
+  ordinanceDocumentUrl?: string;
+  ordinancePreviewSrc?: string;
+  ordinanceTitle?: string;
+}
+
+function parseInfoMessage(message: ReactNode): { lead?: string; body?: ReactNode } {
+  if (typeof message !== "string") {
+    return { body: message };
+  }
+  const questionMark = message.indexOf("?");
+  if (questionMark === -1) {
+    return { body: message };
+  }
+  return {
+    lead: message.slice(0, questionMark + 1).trim(),
+    body: message.slice(questionMark + 1).trim(),
+  };
+}
+
+/** Blue sidebar with info box, bill image overlay, and action buttons (Figma Frame 27). */
+export function WizardInfoCard({
+  message,
+  showIllustration = true,
+  onReset,
+  ordinanceDocumentUrl,
+  ordinancePreviewSrc,
+  ordinanceTitle = "צו הארנונה",
+}: WizardInfoCardProps) {
+  const { lead, body } = parseInfoMessage(message);
+  const hasOrdinance = Boolean(ordinanceDocumentUrl?.trim());
+
+  return (
+    <Box
+      sx={(theme) => ({
+        position: "relative",
+        overflow: "hidden",
+        borderRadius: "30px",
+        width: { md: 446 },
+        maxWidth: "100%",
+        minHeight: { md: 540 },
+        height: { md: 540 },
+        bgcolor: theme.palette.brand.sidebarBg,
+        display: "flex",
+        flexDirection: "column",
+        color: "#fff",
+        isolation: "isolate",
+      })}
+    >
+      <Box
+        sx={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 0,
+          borderRadius: "30px",
+          overflow: "hidden",
+        }}
+      >
+        <Image
+          src="/images/calculator/info-background.png"
+          alt=""
+          fill
+          sizes="446px"
+          style={{ objectFit: "cover", borderRadius: "30px" }}
+          priority
+        />
+      </Box>
+
+      <Box
+        sx={{
+          position: "relative",
+          zIndex: 1,
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          p: { xs: 2.5, md: "18px 19px 24px" },
+          minHeight: { md: 540 },
+          direction: "rtl",
+        }}
+      >
+        {message && (
+          <Box
+            sx={(theme) => ({
+              bgcolor: theme.palette.brand.infoBg,
+              border: `1px solid ${theme.palette.brand.infoBorder}`,
+              borderRadius: "30px",
+              p: 1.5,
+              mb: 2,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              gap: 1.25,
+              direction: "rtl",
+            })}
+          >
+            <Box
+              sx={(theme) => ({
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                bgcolor: theme.palette.secondary.main,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                alignSelf: "flex-start",
+              })}
+            >
+              <InfoOutlinedIcon sx={{ fontSize: 22, color: "#fff" }} />
+            </Box>
+            {lead && (
+              <Typography
+                sx={{
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  lineHeight: "20px",
+                  color: "#fff",
+                  textAlign: "right",
+                  width: "100%",
+                }}
+              >
+                {lead}
+              </Typography>
+            )}
+            {body && (
+              <Typography
+                sx={{
+                  fontSize: "15px",
+                  lineHeight: "20px",
+                  color: "#fff",
+                  textAlign: "right",
+                  width: "100%",
+                }}
+              >
+                {body}
+              </Typography>
+            )}
+          </Box>
+        )}
+
+        {showIllustration && (
+          <Box
+            sx={{
+              position: "relative",
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: 200,
+              my: 1,
+            }}
+          >
+            <Box
+              aria-hidden
+              sx={{
+                position: "absolute",
+                top: "8%",
+                insetInlineEnd: "6%",
+                fontSize: 36,
+                fontWeight: 800,
+                color: "rgba(0, 85, 252, 0.55)",
+                zIndex: 0,
+              }}
+            >
+              %
+            </Box>
+            <Box
+              aria-hidden
+              sx={{
+                position: "absolute",
+                bottom: "18%",
+                insetInlineStart: "4%",
+                fontSize: 32,
+                fontWeight: 800,
+                color: "rgba(0, 85, 252, 0.55)",
+                zIndex: 0,
+              }}
+            >
+              +
+            </Box>
+            <Box
+              aria-hidden
+              sx={{
+                position: "absolute",
+                bottom: "8%",
+                insetInlineEnd: "10%",
+                fontSize: 28,
+                fontWeight: 800,
+                color: "rgba(0, 85, 252, 0.55)",
+                zIndex: 0,
+              }}
+            >
+              ×
+            </Box>
+            <Box
+              sx={{
+                position: "relative",
+                zIndex: 1,
+                width: "88%",
+                maxWidth: 320,
+                aspectRatio: "4 / 5",
+                transform: "rotate(-8deg)",
+                filter: "drop-shadow(0 18px 36px rgba(0,0,0,0.35))",
+              }}
+            >
+              <Image
+                src="/images/calculator/doc-bill.png"
+                alt=""
+                fill
+                sizes="320px"
+                style={{ objectFit: "contain" }}
+              />
+            </Box>
+          </Box>
+        )}
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 1,
+            justifyContent: "center",
+            mt: "auto",
+            pt: 2,
+            direction: "rtl",
+          }}
+        >
+          {hasOrdinance ? (
+            <DocumentPreviewPopover
+              documentUrl={ordinanceDocumentUrl!}
+              previewSrc={ordinancePreviewSrc}
+              title={ordinanceTitle}
+              triggerLabel="צפיה בצו הארנונה"
+              triggerAriaLabel="צפיה בצו הארנונה"
+              triggerVariant="outlined"
+              triggerStartIcon={<DescriptionOutlinedIcon sx={{ fontSize: 16 }} />}
+              triggerSx={wizardSidebarActionButtonSx}
+            />
+          ) : (
+            <Button
+              variant="outlined"
+              disabled
+              startIcon={<DescriptionOutlinedIcon sx={{ fontSize: 16 }} />}
+              sx={wizardSidebarActionButtonSx}
+            >
+              צפיה בצו הארנונה
+            </Button>
+          )}
+          {onReset && (
+            <Button
+              variant="outlined"
+              onClick={onReset}
+              startIcon={<RestartAltIcon sx={{ fontSize: 16 }} />}
+              sx={wizardSidebarActionButtonSx}
+            >
+              איפוס מחשבון
+            </Button>
+          )}
+        </Box>
       </Box>
     </Box>
   );
 }
 
-interface WizardInfoCardProps {
-  /** Bubble content above the bill illustration */
-  message?: ReactNode;
-  /** Show paper-bill illustration below message */
-  showIllustration?: boolean;
-}
-
-/** Navy info card with optional Mia bubble + bill illustration (matches Figma left-column). */
-export function WizardInfoCard({ message, showIllustration = true }: WizardInfoCardProps) {
-  return (
-    <Box
-      aria-hidden={!message}
-      sx={(theme) => ({
-        position: "relative",
-        overflow: "hidden",
-        borderRadius: 3,
-        p: { xs: 3, md: 4 },
-        minHeight: { md: 540 },
-        background: `radial-gradient(70% 60% at 30% 20%, ${theme.palette.brand.navyLight} 0%, ${theme.palette.brand.navyMid} 50%, ${theme.palette.brand.navyDeep} 100%)`,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "flex-start",
-        color: "#fff",
-        boxShadow: "0 16px 40px rgba(11,26,71,0.18)",
-      })}
-    >
-      {/* Subtle grid pattern overlay */}
-      <Box
-        aria-hidden
-        sx={(theme) => ({
-          position: "absolute",
-          inset: 0,
-          backgroundImage: `linear-gradient(${theme.palette.brand.gridLine} 1px, transparent 1px), linear-gradient(90deg, ${theme.palette.brand.gridLine} 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
-          maskImage:
-            "radial-gradient(80% 60% at 50% 30%, #000 30%, transparent 90%)",
-          WebkitMaskImage:
-            "radial-gradient(80% 60% at 50% 30%, #000 30%, transparent 90%)",
-          pointerEvents: "none",
-        })}
-      />
-
-      {/* Mia-style message bubble */}
-      {message && (
-        <Box
-          sx={{
-            position: "relative",
-            zIndex: 1,
-            bgcolor: "rgba(11,26,71,0.5)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: 2,
-            p: 2.25,
-            mb: 3,
-            backdropFilter: "blur(2px)",
-          }}
-        >
-          <Box
-            sx={(theme) => ({
-              position: "absolute",
-              top: -12,
-              right: -12,
-              width: 30,
-              height: 30,
-              borderRadius: "8px",
-              bgcolor: theme.palette.secondary.main,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#fff",
-            })}
-          >
-            <InfoOutlinedIcon sx={{ fontSize: 18 }} />
-          </Box>
-          <Typography
-            sx={{
-              fontSize: { xs: "13px", md: "14px" },
-              lineHeight: 1.6,
-              color: "rgba(255,255,255,0.95)",
-              textAlign: "right",
-            }}
-          >
-            {message}
-          </Typography>
-        </Box>
-      )}
-
-      {/* Paper bill illustration */}
-      {showIllustration && (
-        <Box
-          sx={{
-            position: "relative",
-            zIndex: 1,
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: 220,
-          }}
-        >
-          <Box
-            component="svg"
-            viewBox="0 0 220 280"
-            sx={{
-              width: "85%",
-              maxWidth: 240,
-              filter: "drop-shadow(0 18px 36px rgba(0,0,0,0.35))",
-              transform: "rotate(-8deg)",
-            }}
-            aria-hidden
-          >
-            <defs>
-              <linearGradient id="paperGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#ffffff" />
-                <stop offset="100%" stopColor="#e8ecf5" />
-              </linearGradient>
-            </defs>
-            <rect x="14" y="14" width="192" height="252" rx="8" fill="url(#paperGrad)" />
-            {/* header */}
-            <rect x="28" y="28" width="86" height="10" rx="2" fill="#c5cde2" />
-            <rect x="28" y="44" width="60" height="6" rx="2" fill="#dde3f3" />
-            {/* table-ish lines */}
-            {[70, 86, 102, 118, 134, 150, 166].map((y, i) => (
-              <g key={i}>
-                <rect x="28" y={y} width="60" height="4" rx="1" fill="#dde3f3" />
-                <rect x="118" y={y} width="74" height="4" rx="1" fill="#eef2fa" />
-              </g>
-            ))}
-            {/* footer block */}
-            <rect x="28" y="188" width="164" height="60" rx="4" fill="#eef2fa" />
-            <rect x="36" y="200" width="80" height="6" rx="2" fill="#c5cde2" />
-            <rect x="36" y="214" width="120" height="6" rx="2" fill="#dde3f3" />
-            <rect x="36" y="228" width="100" height="6" rx="2" fill="#dde3f3" />
-          </Box>
-          {/* Floating % and + symbols */}
-          <Box
-            aria-hidden
-            sx={{
-              position: "absolute",
-              top: "12%",
-              left: "8%",
-              fontSize: 36,
-              fontWeight: 800,
-              color: "rgba(255,255,255,0.35)",
-            }}
-          >
-            %
-          </Box>
-          <Box
-            aria-hidden
-            sx={{
-              position: "absolute",
-              bottom: "10%",
-              right: "8%",
-              fontSize: 32,
-              fontWeight: 800,
-              color: "rgba(255,255,255,0.3)",
-            }}
-          >
-            +
-          </Box>
-        </Box>
-      )}
-    </Box>
-  );
-}
+export type WizardLayoutVariant = "default" | "centered" | "fullWidth";
 
 export interface WizardLayoutProps {
-  /** Display step number (1..total). Used in indicator. */
   displayStep: number;
-  /** Total display steps. */
   totalSteps?: number;
-  /** Title shown at top of right column. */
   title: ReactNode;
-  /** Subtitle shown under title. */
   subtitle?: ReactNode;
-  /** Info card message (Mia speech bubble). */
   infoMessage?: ReactNode;
-  /** Hide the info card entirely (for ResultsDisplay etc.). */
   hideInfoCard?: boolean;
-  /** Right column content (form / selection / etc.) */
+  layoutVariant?: WizardLayoutVariant;
+  hideStepChrome?: boolean;
+  onResetCalculator?: () => void;
+  ordinanceDocumentUrl?: string;
+  ordinancePreviewSrc?: string;
+  ordinanceTitle?: string;
   children: ReactNode;
 }
 
 /**
- * Standard two-column wizard layout matching Figma:
- *  - Right (RTL): step indicator, title, subtitle, content slot.
- *  - Left: navy info card with Mia bubble + paper-bill illustration.
+ * Calculator wizard shell — sidebar left, content right (LTR grid + RTL text in content).
  */
 export default function WizardLayout({
   displayStep,
@@ -257,60 +390,165 @@ export default function WizardLayout({
   subtitle,
   infoMessage,
   hideInfoCard = false,
+  layoutVariant = "default",
+  hideStepChrome = false,
+  onResetCalculator,
+  ordinanceDocumentUrl,
+  ordinancePreviewSrc,
+  ordinanceTitle,
   children,
 }: WizardLayoutProps) {
-  return (
-    <Container maxWidth="lg" sx={{ py: { xs: 4, md: 7 } }}>
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr", md: hideInfoCard ? "1fr" : "1.05fr 1fr" },
-          gap: { xs: 4, md: 5 },
-          alignItems: "stretch",
-        }}
-      >
-        {/* Right column (RTL first) — content */}
-        <Box sx={{ display: "flex", flexDirection: "column" }}>
-          <StepIndicator displayStep={displayStep} total={totalSteps} />
+  const isCentered = layoutVariant === "centered";
+  const isFullWidth = layoutVariant === "fullWidth" || hideInfoCard;
 
-          <Typography
-            component="h1"
-            sx={(theme) => ({
-              fontFamily: 'var(--font-heebo), "Heebo", sans-serif',
-              fontWeight: 800,
-              fontSize: { xs: "26px", md: "34px" },
-              color: theme.palette.brand.navyDeep,
-              lineHeight: 1.2,
-              letterSpacing: "-0.4px",
-              mb: subtitle ? 1.5 : 3,
-            })}
-          >
-            {title}
-          </Typography>
-
-          {subtitle && (
+  if (isCentered) {
+    return (
+      <Box sx={{ bgcolor: "#FFFFFF", width: "100%" }}>
+        <Container maxWidth="md" sx={{ py: { xs: 4, md: 6 }, bgcolor: "#FFFFFF" }}>
+          <Box sx={{ textAlign: "center", mb: 3 }}>
             <Typography
+              component="h1"
+              sx={(theme) => ({
+                fontWeight: 700,
+                fontSize: { xs: "20px", md: "24px" },
+                lineHeight: 1,
+                color: theme.palette.brand.scanTitle,
+                mb: 1,
+              })}
+            >
+              {title}
+            </Typography>
+            {subtitle && (
+              <Typography
+                sx={(theme) => ({
+                  fontSize: { xs: "16px", md: "18px" },
+                  color: theme.palette.brand.textMain,
+                })}
+              >
+                {subtitle}
+              </Typography>
+            )}
+          </Box>
+
+          <Box
+            sx={{
+              position: "relative",
+              borderRadius: "30px",
+              border: "1px solid",
+              borderColor: "divider",
+              overflow: "hidden",
+              minHeight: 320,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              p: { xs: 2, md: 3 },
+              backgroundImage: `repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 18px,
+                rgba(0,0,0,0.03) 18px,
+                rgba(0,0,0,0.03) 19px
+              )`,
+            }}
+          >
+            <Box
               sx={{
-                fontSize: { xs: "14px", md: "16px" },
-                color: "#5a6788",
-                lineHeight: 1.6,
-                mb: { xs: 3, md: 4 },
+                position: "relative",
+                zIndex: 1,
+                width: "100%",
+                maxWidth: 645,
+                bgcolor: "background.paper",
+                borderRadius: "20px",
+                p: 3,
+                boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
               }}
             >
-              {subtitle}
-            </Typography>
+              {children}
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ bgcolor: "#FFFFFF", width: "100%" }}>
+      <Container
+        maxWidth="lg"
+        sx={{
+          py: { xs: 4, md: 7 },
+          bgcolor: "#FFFFFF",
+        }}
+      >
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              md: isFullWidth ? "1fr" : "minmax(320px, 446px) minmax(0, 1.05fr)",
+            },
+            gap: { xs: 4, md: 5 },
+            alignItems: "stretch",
+            direction: "ltr",
+          }}
+        >
+          {!hideInfoCard && (
+            <Box sx={{ display: { xs: "none", md: "block" } }}>
+              <WizardInfoCard
+                message={infoMessage}
+                onReset={onResetCalculator}
+                ordinanceDocumentUrl={ordinanceDocumentUrl}
+                ordinancePreviewSrc={ordinancePreviewSrc}
+                ordinanceTitle={ordinanceTitle}
+              />
+            </Box>
           )}
 
-          <Box sx={{ flex: 1 }}>{children}</Box>
-        </Box>
-
-        {/* Left column — navy info card */}
-        {!hideInfoCard && (
-          <Box sx={{ display: { xs: "none", md: "block" } }}>
-            <WizardInfoCard message={infoMessage} />
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              minWidth: 0,
+              direction: "rtl",
+            }}
+          >
+            {!hideStepChrome && (
+              <>
+                <StepIndicator displayStep={displayStep} total={totalSteps} />
+                {title ? (
+                  <Typography
+                    component="h1"
+                    sx={(theme) => ({
+                      fontWeight: 700,
+                      fontSize: { xs: "26px", md: "32px" },
+                      lineHeight: { xs: 1.2, md: "44px" },
+                      color: theme.palette.brand.textMain,
+                      mb: subtitle ? 1.25 : 3,
+                      textAlign: "right",
+                    })}
+                  >
+                    {title}
+                  </Typography>
+                ) : null}
+                {subtitle && (
+                  <Typography
+                    sx={(theme) => ({
+                      fontSize: { xs: "16px", md: "18px" },
+                      lineHeight: { md: "24px" },
+                      color: theme.palette.brand.textMain,
+                      mb: { xs: 3, md: 4 },
+                      textAlign: "right",
+                    })}
+                  >
+                    {subtitle}
+                  </Typography>
+                )}
+              </>
+            )}
+            <Box sx={{ flex: 1, minWidth: 0 }}>{children}</Box>
           </Box>
-        )}
-      </Box>
-    </Container>
+        </Box>
+      </Container>
+    </Box>
   );
 }

@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useReducer, useImperativeHandle, forwardRef, Dispatch } from 'react';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
-import DocumentPreviewPopover from '@/components/common/DocumentPreviewPopover';
 import InitialInfoStep from './steps/InitialInfoStep';
+import CityBillStep from './steps/CityBillStep';
 import InitialWaiverStep from './steps/InitialWaiverStep';
 import DataEntryStep from './steps/DataEntryStep';
 import ExemptionsStep from './steps/ExemptionsStep';
@@ -148,16 +148,17 @@ export const initialState: WizardState = {
 };
 
 // ── Step definitions ──
-// 0: InitialInfoStep
-// 1: InitialWaiverStep
-// 2: DataEntryStep
-// 3: ExemptionsStep (skipped for business)
-// 4: DisclaimerStep
-// 5: ResultsGateStep (coupon UI inline when payment + under/overpay)
-// 6: ResultsDisplayStep
-// 7: AppealStep
+// 0: InitialInfoStep (property type)
+// 1: CityBillStep (city + bill upload)
+// 2: InitialWaiverStep
+// 3: DataEntryStep
+// 4: ExemptionsStep (skipped for business)
+// 5: DisclaimerStep
+// 6: ResultsGateStep (coupon UI inline when payment + under/overpay)
+// 7: ResultsDisplayStep
+// 8: AppealStep
 
-const EXEMPTIONS_STEP = 3;
+const EXEMPTIONS_STEP = 4;
 
 // ── Actions ──
 
@@ -282,6 +283,7 @@ export function getContactRedirectReason(state: WizardState): WizardState['conta
 
 const STEP_COMPONENTS = [
   InitialInfoStep,
+  CityBillStep,
   InitialWaiverStep,
   DataEntryStep,
   ExemptionsStep,
@@ -297,13 +299,15 @@ interface StepMeta {
   subtitle?: string;
   infoMessage?: string;
   hideInfoCard?: boolean;
+  layoutVariant?: 'default' | 'centered' | 'fullWidth';
+  hideStepChrome?: boolean;
 }
 
 /**
  * Map internal step index → display metadata for WizardLayout.
  * Display steps: 1=Welcome, 2=Property details, 3=Exemptions, 4=Disclaimer, 5=Results.
  */
-function getStepMeta(internalStep: number): StepMeta {
+function getStepMeta(internalStep: number, propertyType: WizardState['propertyType']): StepMeta {
   switch (internalStep) {
     case 0:
       return {
@@ -315,52 +319,63 @@ function getStepMeta(internalStep: number): StepMeta {
       };
     case 1:
       return {
-        displayStep: 1,
-        title: "פרטים אישיים והעלאת שובר",
-        subtitle: "מלאו את הפרטים שלכם והעלו את שובר הארנונה",
+        displayStep: 2,
+        title: 'ברוכים הבאים למחשבון הארנונה',
+        subtitle:
+          'תוך שניות תקבל הערכה מדויקת הכוללת שימוש בפטורים והנחות.',
         infoMessage:
-          "אנחנו זקוקים לפרטים שלך כדי להפיק לך דוח מפורט. הנתונים נשמרים מאובטחים ולא נחלוק אותם עם צד שלישי.",
+          'יש להעלות צילום ברור או קובץ של דו"ח ארנונה דו-חודשי, כדי שהמחשבון יוכל לחלץ את הנתונים.',
       };
     case 2:
       return {
         displayStep: 2,
-        title: "פרטי נכס",
-        subtitle: "מלאו את פרטי הנכס לקבלת חישוב מדויק",
-        infoMessage:
-          "ככל שהפרטים מדויקים יותר, כך החישוב יהיה קרוב יותר למציאות. ניתן לראות את הסיווג והאזור בצו הארנונה של הרשות.",
+        title: 'המערכת סורקת את הנתונים,',
+        subtitle: 'זה יקח כמה שניות, קצת סבלנות',
+        hideInfoCard: true,
+        layoutVariant: 'centered',
       };
     case 3:
       return {
         displayStep: 3,
-        title: "פטורים והנחות",
-        subtitle: "האם אתה זכאי להנחות? בחרו את כל ההנחות שמתאימות לכם",
+        title:
+          propertyType === 'business'
+            ? 'בואו נזין את פרטי העסק'
+            : 'בואו נזין את פרטי הנכס',
         infoMessage:
-          "הנחה משמעותית כאשר ההנחה לחודשים היא יותר מ-100 ש\"ח אחרת יחשב כהנחה בלבד (לא משמעותית).",
+          'המחשבון משך את הנתונים מתוך דו"ח הארנונה וודאו שהנתונים נכונים ומלאו את השדות הנותרים.',
       };
     case 4:
       return {
         displayStep: 4,
-        title: "הצהרה",
-        subtitle: "אנא קראו ואשרו את ההצהרה לפני המשך",
+        title: 'פטורים והנחות',
+        subtitle: 'האם אתה זכאי להנחות? בחרו את כל ההנחות שמתאימות לכם',
         infoMessage:
-          "ההצהרה היא תנאי משפטי להפעלת השירות. אנו מתחייבים לפעול בהתאם לחוקי הפרטיות הישראליים.",
+          'בואו נבדוק אם מגיעה לך הנחה על הארנונה. בחר את ההנחות הרלוונטיות מהרשימה.',
       };
     case 5:
       return {
-        displayStep: 5,
-        title: "תוצאות החישוב",
-        subtitle: "מיד תקבלו את התוצאות המלאות",
-        hideInfoCard: false,
+        displayStep: 4,
+        title: 'הצהרה ואישור',
         infoMessage:
-          "התוצאות נשלפות בזמן אמת מצו הארנונה העדכני של העירייה. ניתן להוריד את הדוח המלא לאחר התשלום.",
+          'בואו נבדוק אם מגיעה לך הנחה על הארנונה. בחר את ההנחות הרלוונטיות מהרשימה.',
       };
     case 6:
       return {
         displayStep: 5,
-        title: "תוצאות החישוב",
+        title: '',
         hideInfoCard: true,
+        layoutVariant: 'fullWidth',
+        hideStepChrome: true,
       };
     case 7:
+      return {
+        displayStep: 5,
+        title: '',
+        hideInfoCard: true,
+        layoutVariant: 'fullWidth',
+        hideStepChrome: true,
+      };
+    case 8:
       return {
         displayStep: 5,
         title: "הכנת השגה לעירייה",
@@ -427,7 +442,7 @@ const CalculatorWizard = forwardRef<CalculatorWizardHandle, CalculatorWizardProp
   );
 
   const redirectReason =
-    state.currentStep >= EXEMPTIONS_STEP && state.currentStep <= 4
+    state.currentStep >= EXEMPTIONS_STEP && state.currentStep <= 5
       ? getContactRedirectReason(state)
       : null;
 
@@ -448,7 +463,15 @@ const CalculatorWizard = forwardRef<CalculatorWizardHandle, CalculatorWizardProp
   //     ? `צו הארנונה — ${state.cityData.cityName}`
   //     : 'צו הארנונה';
 
-  const stepMeta = getStepMeta(state.currentStep);
+  const stepMeta = getStepMeta(state.currentStep, state.propertyType);
+  const ordinancePreviewSrc =
+    state.citySlug && isVercelBlobPublicUrl(ordinanceUrl ?? '')
+      ? `/api/view-pdf/${encodeURIComponent(state.citySlug)}`
+      : undefined;
+  const ordinanceTitle =
+    state.cityData?.cityName != null && String(state.cityData.cityName).trim() !== ''
+      ? `צו הארנונה — ${state.cityData.cityName}`
+      : 'צו הארנונה';
 
   return (
     <CalculatorFeaturesContext.Provider value={featuresContextValue}>
@@ -459,6 +482,12 @@ const CalculatorWizard = forwardRef<CalculatorWizardHandle, CalculatorWizardProp
         subtitle={stepMeta.subtitle}
         infoMessage={stepMeta.infoMessage}
         hideInfoCard={stepMeta.hideInfoCard}
+        layoutVariant={stepMeta.layoutVariant}
+        hideStepChrome={stepMeta.hideStepChrome}
+        onResetCalculator={() => dispatch({ type: 'RESET_CALCULATOR' })}
+        ordinanceDocumentUrl={ordinanceUrl}
+        ordinancePreviewSrc={ordinancePreviewSrc}
+        ordinanceTitle={ordinanceTitle}
       >
         {StepComponent && (
           <StepComponent

@@ -13,6 +13,7 @@ import AddIcon from '@mui/icons-material/Add';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import type { StepProps } from '../CalculatorWizard';
+import { wizardNavRowSx, wizardPrimaryButtonSx, wizardSecondaryButtonSx } from '../wizardStyles';
 import type { SelectedExemption } from '../CalculatorWizard';
 import type { IExemptionSubSection, IExemptionSection } from '@/lib/types/city-tariff';
 import { useLeadUpdate } from '@/hooks/useLeadUpdate';
@@ -227,45 +228,19 @@ export default function ExemptionsStep({ state, dispatch ,sx}: StepProps) {
         </Box>
       )}
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mt: 4, gap: 2, flexWrap: 'wrap' }}>
+      <Box sx={wizardNavRowSx}>
         <Button
           variant="outlined"
           onClick={() => dispatch({ type: 'PREV_STEP' })}
           startIcon={<ChevronRightIcon />}
-          sx={(theme) => ({
-            borderRadius: '999px',
-            px: 3.5,
-            py: 1.5,
-            fontSize: '15px',
-            fontWeight: 600,
-            borderColor: '#cdd2e0',
-            color: theme.palette.brand.navyDeep,
-            '& .MuiButton-startIcon': { mr: 0.5, ml: -0.5 },
-            '&:hover': {
-              borderColor: theme.palette.brand.blue,
-              bgcolor: 'rgba(26,86,224,0.04)',
-            },
-          })}
+          sx={wizardSecondaryButtonSx}
         >
-          חזרה
+          לשלב הקודם
         </Button>
         <Button
           variant="contained"
           endIcon={<ChevronLeftIcon />}
-          sx={(theme) => ({
-            bgcolor: theme.palette.brand.blue,
-            color: '#fff',
-            borderRadius: '999px',
-            px: 4,
-            py: 1.5,
-            fontSize: '16px',
-            fontWeight: 700,
-            boxShadow: `0 10px 24px ${theme.palette.brand.blue}40`,
-            '& .MuiButton-endIcon': { ml: 0.75, mr: -0.5 },
-            '&:hover': {
-              bgcolor: theme.palette.brand.blueDark,
-            },
-          })}
+          sx={wizardPrimaryButtonSx}
           onClick={() => {
           updateLead(state.leadId, state.calculationIndex, {
             abandonmentStage: 'exemptions',
@@ -275,7 +250,7 @@ export default function ExemptionsStep({ state, dispatch ,sx}: StepProps) {
           });
           dispatch({ type: 'NEXT_STEP' });
         }}>
-          {hasAnySelection ? 'המשך לשלב הבא' : 'דלג'}
+          {hasAnySelection ? 'לשלב הבא' : 'דלג'}
         </Button>
       </Box>
     </Box>

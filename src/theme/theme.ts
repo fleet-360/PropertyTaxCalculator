@@ -11,6 +11,22 @@ declare module '@mui/material/styles' {
       blueDark: string;
       blueLight: string;
       gridLine: string;
+      accent: string;
+      textMain: string;
+      textMuted: string;
+      textMutedBtn: string;
+      borderField: string;
+      borderCard: string;
+      borderBtn: string;
+      borderResults: string;
+      uploadBorder: string;
+      infoBg: string;
+      infoBorder: string;
+      sidebarBg: string;
+      stepRing: string;
+      disabledBg: string;
+      successGreen: string;
+      scanTitle: string;
     };
   }
   interface PaletteOptions {
@@ -22,6 +38,22 @@ declare module '@mui/material/styles' {
       blueDark: string;
       blueLight: string;
       gridLine: string;
+      accent: string;
+      textMain: string;
+      textMuted: string;
+      textMutedBtn: string;
+      borderField: string;
+      borderCard: string;
+      borderBtn: string;
+      borderResults: string;
+      uploadBorder: string;
+      infoBg: string;
+      infoBorder: string;
+      sidebarBg: string;
+      stepRing: string;
+      disabledBg: string;
+      successGreen: string;
+      scanTitle: string;
     };
   }
 }
@@ -53,13 +85,29 @@ const theme = createTheme({
       main: '#f59e0b',
     },
     brand: {
-      navyDeep: '#0B1A47',
+      navyDeep: '#2D2D2D',
       navyMid: '#152762',
       navyLight: '#1E3580',
-      blue: '#1A56E0',
-      blueDark: '#1247C2',
-      blueLight: '#3D78F0',
-      gridLine: 'rgba(255,255,255,0.06)',
+      blue: '#0055FC',
+      blueDark: '#0043C6',
+      blueLight: '#1D5EFF',
+      gridLine: 'rgba(255,255,255,0.08)',
+      accent: '#3E4CE8',
+      textMain: '#2D2D2D',
+      textMuted: '#727782',
+      textMutedBtn: '#797979',
+      borderField: '#EBECF0',
+      borderCard: '#EEEEEE',
+      borderBtn: '#8E8E8E',
+      borderResults: '#CCCCCC',
+      uploadBorder: '#B8C8EE',
+      infoBg: '#32344A',
+      infoBorder: '#6BE6F4',
+      sidebarBg: '#0055FC',
+      stepRing: '#1A94B2',
+      disabledBg: '#D5D7DA',
+      successGreen: '#1AB24A',
+      scanTitle: '#3E4CE8',
     },
   },
   typography: {
