@@ -93,6 +93,12 @@ const DEFAULT_MESSAGES = [
     isActive: true,
   },
   {
+    messageId: 'step-7-checkout',
+    title: '💳 רק עוד צעד אחד',
+    description: 'מיד אחרי התשלום נכין עבורך את מכתב ההשגה ונשלח אותו ישירות למייל.',
+    isActive: true,
+  },
+  {
     messageId: 'error-measurement',
     title: '📏 טעות במדידה?',
     description: 'אם אתה סבור שהשטח הרשום בעירייה אינו תואם את השטח בפועל, הזן את השטח המתוקן ונבדוק את ההפרש.',

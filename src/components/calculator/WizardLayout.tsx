@@ -24,15 +24,25 @@ export function StepIndicator({ displayStep, total }: StepIndicatorProps) {
         flexDirection: "row",
         alignItems: "center",
         gap: 1.5,
-        justifyContent: "flex-end",
+        justifyContent: "flex-start",
         mb: { xs: 3, md: 4 },
         width: "100%",
-        direction: "ltr",
       }}
     >
+      <Typography
+        sx={(theme) => ({
+          fontSize: "14px",
+          fontWeight: 500,
+          lineHeight: "20px",
+          color: theme.palette.brand.textMain,
+          flexShrink: 0,
+        })}
+      >
+        שלב {displayStep} מתוך {total}
+      </Typography>
       <Box sx={{ display: "flex", flexDirection: "row", gap: 1.5 }} aria-hidden>
         {Array.from({ length: total }).map((_, i) => {
-          const stepNum = total - i;
+          const stepNum = i + 1;
           const isCurrent = stepNum === displayStep;
           const isPast = stepNum < displayStep;
           return (
@@ -46,9 +56,11 @@ export function StepIndicator({ displayStep, total }: StepIndicatorProps) {
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
-                bgcolor: isPast || isCurrent ? theme.palette.brand.blueDark : "#FAFAFA",
-                border:
-                  isPast || isCurrent ? "none" : "1.5px solid #E9EAEB",
+                bgcolor:
+                  isPast || isCurrent
+                    ? theme.palette.brand.blueDark
+                    : "#FAFAFA",
+                border: isPast || isCurrent ? "none" : "1.5px solid #E9EAEB",
                 boxShadow: isCurrent
                   ? `0 0 0 2px #FFFFFF, 0 0 0 4px ${theme.palette.brand.stepRing}`
                   : "none",
@@ -80,17 +92,6 @@ export function StepIndicator({ displayStep, total }: StepIndicatorProps) {
           );
         })}
       </Box>
-      <Typography
-        sx={(theme) => ({
-          fontSize: "14px",
-          fontWeight: 500,
-          lineHeight: "20px",
-          color: theme.palette.brand.textMain,
-          flexShrink: 0,
-        })}
-      >
-        שלב {displayStep} מתוך {total}
-      </Typography>
     </Box>
   );
 }
@@ -104,7 +105,10 @@ export interface WizardInfoCardProps {
   ordinanceTitle?: string;
 }
 
-function parseInfoMessage(message: ReactNode): { lead?: string; body?: ReactNode } {
+function parseInfoMessage(message: ReactNode): {
+  lead?: string;
+  body?: ReactNode;
+} {
   if (typeof message !== "string") {
     return { body: message };
   }
@@ -134,12 +138,11 @@ export function WizardInfoCard({
     <Box
       sx={(theme) => ({
         position: "relative",
-        overflow: "hidden",
         borderRadius: "30px",
         width: { md: 446 },
         maxWidth: "100%",
         minHeight: { md: 540 },
-        height: { md: 540 },
+        height: { md: 740 },
         bgcolor: theme.palette.brand.sidebarBg,
         display: "flex",
         flexDirection: "column",
@@ -175,7 +178,6 @@ export function WizardInfoCard({
           flex: 1,
           p: { xs: 2.5, md: "18px 19px 24px" },
           minHeight: { md: 540 },
-          direction: "rtl",
         }}
       >
         {message && (
@@ -190,7 +192,6 @@ export function WizardInfoCard({
               flexDirection: "column",
               alignItems: "flex-start",
               gap: 1.25,
-              direction: "rtl",
             })}
           >
             <Box
@@ -214,7 +215,6 @@ export function WizardInfoCard({
                   fontWeight: 600,
                   lineHeight: "20px",
                   color: "#fff",
-                  textAlign: "right",
                   width: "100%",
                 }}
               >
@@ -227,7 +227,6 @@ export function WizardInfoCard({
                   fontSize: "15px",
                   lineHeight: "20px",
                   color: "#fff",
-                  textAlign: "right",
                   width: "100%",
                 }}
               >
@@ -294,9 +293,10 @@ export function WizardInfoCard({
             <Box
               sx={{
                 position: "relative",
+                flexShrink: 0,
                 zIndex: 1,
-                width: "88%",
-                maxWidth: 320,
+                width: "120%",
+                maxWidth: 620,
                 aspectRatio: "4 / 5",
                 transform: "rotate(-8deg)",
                 filter: "drop-shadow(0 18px 36px rgba(0,0,0,0.35))",
@@ -306,7 +306,7 @@ export function WizardInfoCard({
                 src="/images/calculator/doc-bill.png"
                 alt=""
                 fill
-                sizes="320px"
+                sizes="720px"
                 style={{ objectFit: "contain" }}
               />
             </Box>
@@ -322,7 +322,6 @@ export function WizardInfoCard({
             justifyContent: "center",
             mt: "auto",
             pt: 2,
-            direction: "rtl",
           }}
         >
           {hasOrdinance ? (
@@ -333,7 +332,9 @@ export function WizardInfoCard({
               triggerLabel="צפיה בצו הארנונה"
               triggerAriaLabel="צפיה בצו הארנונה"
               triggerVariant="outlined"
-              triggerStartIcon={<DescriptionOutlinedIcon sx={{ fontSize: 16 }} />}
+              triggerStartIcon={
+                <DescriptionOutlinedIcon sx={{ fontSize: 16 }} />
+              }
               triggerSx={wizardSidebarActionButtonSx}
             />
           ) : (
@@ -404,7 +405,10 @@ export default function WizardLayout({
   if (isCentered) {
     return (
       <Box sx={{ bgcolor: "#FFFFFF", width: "100%" }}>
-        <Container maxWidth="md" sx={{ py: { xs: 4, md: 6 }, bgcolor: "#FFFFFF" }}>
+        <Container
+          maxWidth="md"
+          sx={{ py: { xs: 4, md: 6 }, bgcolor: "#FFFFFF" }}
+        >
           <Box sx={{ textAlign: "center", mb: 3 }}>
             <Typography
               component="h1"
@@ -432,35 +436,15 @@ export default function WizardLayout({
 
           <Box
             sx={{
-              position: "relative",
-              borderRadius: "30px",
-              border: "1px solid",
-              borderColor: "divider",
-              overflow: "hidden",
-              minHeight: 320,
               display: "flex",
-              alignItems: "center",
               justifyContent: "center",
-              p: { xs: 2, md: 3 },
-              backgroundImage: `repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 18px,
-                rgba(0,0,0,0.03) 18px,
-                rgba(0,0,0,0.03) 19px
-              )`,
+              width: "100%",
             }}
           >
             <Box
               sx={{
-                position: "relative",
-                zIndex: 1,
                 width: "100%",
                 maxWidth: 645,
-                bgcolor: "background.paper",
-                borderRadius: "20px",
-                p: 3,
-                boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
               }}
             >
               {children}
@@ -485,31 +469,19 @@ export default function WizardLayout({
             display: "grid",
             gridTemplateColumns: {
               xs: "1fr",
-              md: isFullWidth ? "1fr" : "minmax(320px, 446px) minmax(0, 1.05fr)",
+              md: isFullWidth
+                ? "1fr"
+                : "minmax(0, 1.05fr) minmax(320px, 446px)",
             },
             gap: { xs: 4, md: 5 },
             alignItems: "stretch",
-            direction: "ltr",
           }}
         >
-          {!hideInfoCard && (
-            <Box sx={{ display: { xs: "none", md: "block" } }}>
-              <WizardInfoCard
-                message={infoMessage}
-                onReset={onResetCalculator}
-                ordinanceDocumentUrl={ordinanceDocumentUrl}
-                ordinancePreviewSrc={ordinancePreviewSrc}
-                ordinanceTitle={ordinanceTitle}
-              />
-            </Box>
-          )}
-
           <Box
             sx={{
               display: "flex",
               flexDirection: "column",
               minWidth: 0,
-              direction: "rtl",
             }}
           >
             {!hideStepChrome && (
@@ -524,7 +496,6 @@ export default function WizardLayout({
                       lineHeight: { xs: 1.2, md: "44px" },
                       color: theme.palette.brand.textMain,
                       mb: subtitle ? 1.25 : 3,
-                      textAlign: "right",
                     })}
                   >
                     {title}
@@ -537,7 +508,6 @@ export default function WizardLayout({
                       lineHeight: { md: "24px" },
                       color: theme.palette.brand.textMain,
                       mb: { xs: 3, md: 4 },
-                      textAlign: "right",
                     })}
                   >
                     {subtitle}
@@ -547,6 +517,18 @@ export default function WizardLayout({
             )}
             <Box sx={{ flex: 1, minWidth: 0 }}>{children}</Box>
           </Box>
+
+          {!hideInfoCard && (
+            <Box sx={{ display: { xs: "none", md: "block" } }}>
+              <WizardInfoCard
+                message={infoMessage}
+                onReset={onResetCalculator}
+                ordinanceDocumentUrl={ordinanceDocumentUrl}
+                ordinancePreviewSrc={ordinancePreviewSrc}
+                ordinanceTitle={ordinanceTitle}
+              />
+            </Box>
+          )}
         </Box>
       </Container>
     </Box>

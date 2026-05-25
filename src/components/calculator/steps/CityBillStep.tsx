@@ -6,13 +6,12 @@ import Typography from '@mui/material/Typography';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import type { StepProps } from '../CalculatorWizard';
 import TaxBillUpload from '../TaxBillUpload';
-import { findByPropertyCode } from '@/lib/calculator';
+import { useBillExtraction } from '../BillExtractionContext';
 import {
   wizardFieldSx,
   wizardInstructionSx,
@@ -41,8 +40,7 @@ export default function CityBillStep({ state, dispatch }: StepProps) {
   );
 
   const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [isExtracting, setIsExtracting] = useState(false);
-  const [extractionError, setExtractionError] = useState('');
+  const { startExtraction, resetExtraction } = useBillExtraction();
 
   useEffect(() => {
     dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-0-default' });
@@ -58,7 +56,6 @@ export default function CityBillStep({ state, dispatch }: StepProps) {
 
   const handleSelectCity = async (city: CityOption | null) => {
     setSelectedCity(city);
-    setExtractionError('');
     if (city) {
       dispatch({ type: 'SET_CITY', payload: { slug: city.slug } });
       try {
@@ -74,97 +71,29 @@ export default function CityBillStep({ state, dispatch }: StepProps) {
     }
   };
 
-  const handleFileReady = useCallback((file: File | null) => {
-    setPendingFile(file);
-    setExtractionError('');
-  }, []);
-
-  const handleNext = useCallback(async () => {
-    if (pendingFile) {
-      setIsExtracting(true);
-      setExtractionError('');
-      try {
-        const formData = new FormData();
-        formData.append('file', pendingFile);
-        formData.append('documentType', 'tax_bill');
-        const trimmedCity = (selectedCity?.cityName ?? state.cityData?.cityName)?.trim();
-        if (trimmedCity) {
-          formData.append('promptOptions', JSON.stringify({ expectedCityName: trimmedCity }));
-        }
-
-        const response = await fetch('/api/vision/extract', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          let msg = 'שגיאה בעיבוד המסמך';
-          try {
-            const errData = await response.json();
-            if (typeof errData?.error === 'string') msg = errData.error;
-          } catch {
-            /* ignore */
-          }
-          setExtractionError(msg);
-          return;
-        }
-
-        const result = await response.json();
-        if (!result.success) {
-          const w = Array.isArray(result.warnings) ? result.warnings.join('. ') : '';
-          setExtractionError(w || 'לא ניתן היה לחלץ נתונים מהמסמך');
-          return;
-        }
-
-        if (result.data) {
-          const fieldsToApply: Record<string, unknown> = {};
-          for (const [key, field] of Object.entries(result.data)) {
-            const f = field as { value?: unknown };
-            if (f && f.value !== undefined && f.value !== null) {
-              if (key === 'bimonthlyPayment') {
-                fieldsToApply['reportedPayment'] = f.value;
-              } else if (
-                key === 'propertyPurposeDescription' ||
-                key === 'subTypeDescription' ||
-                key === 'ratePerSqm' ||
-                key === 'annualPayment'
-              ) {
-                // display-only fields
-              } else {
-                fieldsToApply[key] = f.value;
-              }
-            }
-          }
-          dispatch({ type: 'UPDATE_FIELDS_BULK', payload: fieldsToApply });
-
-          if (fieldsToApply.classificationCode && state.cityData) {
-            const match = findByPropertyCode(
-              state.cityData,
-              fieldsToApply.classificationCode as string,
-            );
-            if (match) {
-              dispatch({
-                type: 'UPDATE_FIELDS_BULK',
-                payload: {
-                  propertyPurpose: match.typeCode,
-                  subType: match.subtypeCode,
-                  zone: match.zoneCode,
-                },
-              });
-            }
-          }
-        }
-      } catch {
-        setExtractionError('שגיאה בעיבוד המסמך');
-        return;
-      } finally {
-        setIsExtracting(false);
+  const handleFileReady = useCallback(
+    (file: File | null) => {
+      setPendingFile(file);
+      // A new file invalidates any previous extraction state so the next step
+      // doesn't auto-advance on stale results.
+      if (state.extractionStatus !== 'idle') {
+        resetExtraction();
       }
+    },
+    [resetExtraction, state.extractionStatus],
+  );
+
+  const handleNext = useCallback(() => {
+    if (pendingFile) {
+      void startExtraction({
+        file: pendingFile,
+        expectedCityName: selectedCity?.cityName ?? state.cityData?.cityName,
+      });
     }
     dispatch({ type: 'NEXT_STEP' });
-  }, [pendingFile, dispatch, state.cityData, selectedCity?.cityName]);
+  }, [pendingFile, startExtraction, selectedCity?.cityName, state.cityData?.cityName, dispatch]);
 
-  const canProceed = Boolean(selectedCity) && !state.isLoading && !isExtracting;
+  const canProceed = Boolean(selectedCity) && !state.isLoading;
 
   return (
     <Box
@@ -214,8 +143,6 @@ export default function CityBillStep({ state, dispatch }: StepProps) {
         />
       </Box>
 
-      {extractionError && <Alert severity="error">{extractionError}</Alert>}
-
       <Box sx={{ ...wizardNavRowSx, width: '100%' }}>
         <Button
           variant="outlined"
@@ -229,17 +156,10 @@ export default function CityBillStep({ state, dispatch }: StepProps) {
           variant="contained"
           disabled={!canProceed}
           onClick={handleNext}
-          endIcon={!isExtracting ? <ChevronLeftIcon /> : undefined}
+          endIcon={<ChevronLeftIcon />}
           sx={wizardPrimaryButtonSx}
         >
-          {isExtracting ? (
-            <>
-              <CircularProgress size={20} sx={{ mr: 1 }} color="inherit" />
-              מחלץ נתונים...
-            </>
-          ) : (
-            'לשלב הבא'
-          )}
+          לשלב הבא
         </Button>
       </Box>
     </Box>

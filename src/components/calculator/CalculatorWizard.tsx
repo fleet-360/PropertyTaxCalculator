@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useReducer, useImperativeHandle, forwardRef, Dispatch } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useImperativeHandle, forwardRef, Dispatch } from 'react';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import InitialInfoStep from './steps/InitialInfoStep';
@@ -14,6 +14,7 @@ import ResultsDisplayStep from './steps/ResultsDisplayStep';
 import AppealStep from './steps/AppealStep';
 import ContactRedirectStep from './steps/ContactRedirectStep';
 import { CalculatorFeaturesContext } from './CalculatorFeaturesContext';
+import { BillExtractionContext, type BillExtractionContextValue } from './BillExtractionContext';
 import WizardLayout from './WizardLayout';
 
 import type { ISelectedExemption } from '@/lib/types/lead';
@@ -23,6 +24,7 @@ import {
 } from '@/lib/types/system-config';
 import { priceAfterCoupon } from '@/lib/priceAfterCoupon';
 import { isVercelBlobPublicUrl } from '@/lib/ordinancePdf';
+import { findByPropertyCode } from '@/lib/calculator';
 import type { AppliedWizardCoupon } from './wizardTypes';
 import { SxProps } from '@mui/material';
 import { Theme } from '@emotion/react';
@@ -85,6 +87,13 @@ export interface WizardState {
   calculationResult: any | null;
   // Loading
   isLoading: boolean;
+  // Tax-bill extraction (kicked off in CityBillStep, finishes asynchronously while the
+  // user is on InitialWaiverStep — the video loader doubles as the loading state).
+  extractionStatus: 'idle' | 'extracting' | 'success' | 'error';
+  extractionError: string | null;
+  // AppealStep loading phase — lets the wizard shell swap to the centered video-loader
+  // layout (no sidebar, no step chrome) while the appeal letter is generated or signed.
+  appealPhase: 'idle' | 'generating' | 'finalize';
   // Contact redirect reason (when calculation can't proceed)
   contactRedirectReason: 'area' | 'designations' | 'city' | 'other_city' | 'error' | null;
   /** Draft input for coupon (shown alongside payment on results gate / appeal) */
@@ -136,6 +145,9 @@ export const initialState: WizardState = {
   consentGiven: false,
   calculationResult: null,
   isLoading: false,
+  extractionStatus: 'idle',
+  extractionError: null,
+  appealPhase: 'idle',
   contactRedirectReason: null,
   couponCodeDraft: '',
   appliedCoupon: null,
@@ -178,19 +190,20 @@ export type WizardAction =
   | { type: 'SET_CLASSIFICATION_ERROR'; payload: WizardState['classificationError'] }
   | { type: 'SET_CALCULATION_RESULT'; payload: any }
   | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'START_EXTRACTION' }
+  | { type: 'APPLY_EXTRACTION_RESULT'; payload: Record<string, { value?: unknown } | undefined> }
+  | { type: 'FAIL_EXTRACTION'; payload: string }
+  | { type: 'RESET_EXTRACTION' }
+  | { type: 'SET_APPEAL_PHASE'; payload: WizardState['appealPhase'] }
   | { type: 'SET_CONTACT_REDIRECT'; payload: WizardState['contactRedirectReason'] }
   | { type: 'SET_LEAD_ID'; payload: string }
   | { type: 'SET_CALCULATION_INDEX'; payload: number }
   | { type: 'SET_MIA_MESSAGE'; payload: string | string[] };
 
-export function shouldSkipExemptions(state: WizardState): boolean {
-  const exemptions = state.cityData?.exemptions ?? [];
-  console.log('Checking if should skip exemptions step with property type', state.propertyType, 'and exemptions', exemptions);
-  const type = state.propertyType; // 'private' | 'business'
-  const hasRelevant = exemptions.some(
-    (s: { applicableTo?: string }) => s?.applicableTo === 'both' || s.applicableTo === type,
-  );
-  return !hasRelevant;
+export function shouldSkipExemptions(_state: WizardState): boolean {
+  // The "exemptions" step now also hosts additional-area inputs and measurement /
+  // classification error reporting, so it must always be shown.
+  return false;
 }
 
 export function wizardReducer(state: WizardState, action: WizardAction): WizardState {
@@ -233,6 +246,54 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return { ...state, calculationResult: action.payload };
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
+    case 'START_EXTRACTION':
+      return { ...state, extractionStatus: 'extracting', extractionError: null };
+    case 'APPLY_EXTRACTION_RESULT': {
+      const data = action.payload || {};
+      const fieldsToApply: Record<string, unknown> = {};
+      for (const [key, field] of Object.entries(data)) {
+        if (!field) continue;
+        const f = field as { value?: unknown };
+        if (f.value === undefined || f.value === null) continue;
+        if (key === 'bimonthlyPayment') {
+          fieldsToApply['reportedPayment'] = f.value;
+        } else if (
+          key === 'propertyPurposeDescription' ||
+          key === 'subTypeDescription' ||
+          key === 'ratePerSqm' ||
+          key === 'annualPayment'
+        ) {
+          // display-only fields — skip
+        } else {
+          fieldsToApply[key] = f.value;
+        }
+      }
+
+      if (fieldsToApply.classificationCode && state.cityData) {
+        const match = findByPropertyCode(
+          state.cityData,
+          fieldsToApply.classificationCode as string,
+        );
+        if (match) {
+          fieldsToApply.propertyPurpose = match.typeCode;
+          fieldsToApply.subType = match.subtypeCode;
+          fieldsToApply.zone = match.zoneCode;
+        }
+      }
+
+      return {
+        ...state,
+        ...fieldsToApply,
+        extractionStatus: 'success',
+        extractionError: null,
+      };
+    }
+    case 'FAIL_EXTRACTION':
+      return { ...state, extractionStatus: 'error', extractionError: action.payload };
+    case 'RESET_EXTRACTION':
+      return { ...state, extractionStatus: 'idle', extractionError: null };
+    case 'SET_APPEAL_PHASE':
+      return { ...state, appealPhase: action.payload };
     case 'RESET_CALCULATOR':
       return { ...initialState };
     case 'SET_CONTACT_REDIRECT':
@@ -307,7 +368,11 @@ interface StepMeta {
  * Map internal step index → display metadata for WizardLayout.
  * Display steps: 1=Welcome, 2=Property details, 3=Exemptions, 4=Disclaimer, 5=Results.
  */
-function getStepMeta(internalStep: number, propertyType: WizardState['propertyType']): StepMeta {
+function getStepMeta(
+  internalStep: number,
+  propertyType: WizardState['propertyType'],
+  appealPhase: WizardState['appealPhase'] = 'idle',
+): StepMeta {
   switch (internalStep) {
     case 0:
       return {
@@ -376,12 +441,23 @@ function getStepMeta(internalStep: number, propertyType: WizardState['propertyTy
         hideStepChrome: true,
       };
     case 8:
+      if (appealPhase === 'generating' || appealPhase === 'finalize') {
+        return {
+          displayStep: 5,
+          title:
+            appealPhase === 'generating'
+              ? 'המערכת מכינה את מכתב ההשגה'
+              : 'שולחים את ההשגה למייל',
+          subtitle: 'זה ייקח כמה שניות, קצת סבלנות',
+          hideInfoCard: true,
+          layoutVariant: 'centered',
+        };
+      }
       return {
         displayStep: 5,
         title: "הכנת השגה לעירייה",
         subtitle: "מערכת ה-AI שלנו תכין עבורכם מכתב מקצועי",
-        infoMessage:
-          "מכתב ההשגה נכתב בנוסח מקצועי על-ידי מומחי ארנונה ומשפט. תוכלו להוריד ולשלוח לעירייה.",
+        infoMessage: "ממש תכף תקבל את ההשגה שלך למייל!",
       };
     default:
       return {
@@ -409,6 +485,74 @@ const CalculatorWizard = forwardRef<CalculatorWizardHandle, CalculatorWizardProp
   const features = mergeFeatures(props.features);
   const { onMiaMessage, onOrdinanceUrl } = props;
   const [state, dispatch] = useReducer(wizardReducer, initialState);
+
+  // Bumped every time a new extraction is kicked off — older in-flight requests
+  // compare against this and silently drop their results.
+  const extractionTokenRef = useRef(0);
+
+  const startExtraction = useCallback<BillExtractionContextValue['startExtraction']>(
+    async ({ file, expectedCityName }) => {
+      const token = ++extractionTokenRef.current;
+      dispatch({ type: 'START_EXTRACTION' });
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('documentType', 'tax_bill');
+        const trimmed = expectedCityName?.trim();
+        if (trimmed) {
+          formData.append('promptOptions', JSON.stringify({ expectedCityName: trimmed }));
+        }
+
+        const response = await fetch('/api/vision/extract', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (extractionTokenRef.current !== token) return;
+
+        if (!response.ok) {
+          let msg = 'שגיאה בעיבוד המסמך';
+          try {
+            const errData = await response.json();
+            if (typeof errData?.error === 'string') msg = errData.error;
+          } catch {
+            /* ignore parse error */
+          }
+          dispatch({ type: 'FAIL_EXTRACTION', payload: msg });
+          return;
+        }
+
+        const result = await response.json();
+        if (extractionTokenRef.current !== token) return;
+
+        if (!result?.success) {
+          const w = Array.isArray(result?.warnings) ? result.warnings.join('. ') : '';
+          dispatch({
+            type: 'FAIL_EXTRACTION',
+            payload: w || 'לא ניתן היה לחלץ נתונים מהמסמך',
+          });
+          return;
+        }
+
+        dispatch({ type: 'APPLY_EXTRACTION_RESULT', payload: result.data ?? {} });
+      } catch {
+        if (extractionTokenRef.current !== token) return;
+        dispatch({ type: 'FAIL_EXTRACTION', payload: 'שגיאה בעיבוד המסמך' });
+      }
+    },
+    [],
+  );
+
+  const resetExtraction = useCallback<BillExtractionContextValue['resetExtraction']>(() => {
+    extractionTokenRef.current++;
+    dispatch({ type: 'RESET_EXTRACTION' });
+  }, []);
+
+  const extractionContextValue = useMemo<BillExtractionContextValue>(
+    () => ({ startExtraction, resetExtraction }),
+    [startExtraction, resetExtraction],
+  );
 
   useImperativeHandle(ref, () => ({
     resetCalculator: () => dispatch({ type: 'RESET_CALCULATOR' }),
@@ -463,7 +607,7 @@ const CalculatorWizard = forwardRef<CalculatorWizardHandle, CalculatorWizardProp
   //     ? `צו הארנונה — ${state.cityData.cityName}`
   //     : 'צו הארנונה';
 
-  const stepMeta = getStepMeta(state.currentStep, state.propertyType);
+  const stepMeta = getStepMeta(state.currentStep, state.propertyType, state.appealPhase);
   const ordinancePreviewSrc =
     state.citySlug && isVercelBlobPublicUrl(ordinanceUrl ?? '')
       ? `/api/view-pdf/${encodeURIComponent(state.citySlug)}`
@@ -475,28 +619,30 @@ const CalculatorWizard = forwardRef<CalculatorWizardHandle, CalculatorWizardProp
 
   return (
     <CalculatorFeaturesContext.Provider value={featuresContextValue}>
-      <WizardLayout
-        displayStep={stepMeta.displayStep}
-        totalSteps={5}
-        title={stepMeta.title}
-        subtitle={stepMeta.subtitle}
-        infoMessage={stepMeta.infoMessage}
-        hideInfoCard={stepMeta.hideInfoCard}
-        layoutVariant={stepMeta.layoutVariant}
-        hideStepChrome={stepMeta.hideStepChrome}
-        onResetCalculator={() => dispatch({ type: 'RESET_CALCULATOR' })}
-        ordinanceDocumentUrl={ordinanceUrl}
-        ordinancePreviewSrc={ordinancePreviewSrc}
-        ordinanceTitle={ordinanceTitle}
-      >
-        {StepComponent && (
-          <StepComponent
-            key={state.currentStep}
-            state={state}
-            dispatch={dispatch}
-          />
-        )}
-      </WizardLayout>
+      <BillExtractionContext.Provider value={extractionContextValue}>
+        <WizardLayout
+          displayStep={stepMeta.displayStep}
+          totalSteps={5}
+          title={stepMeta.title}
+          subtitle={stepMeta.subtitle}
+          infoMessage={stepMeta.infoMessage}
+          hideInfoCard={stepMeta.hideInfoCard}
+          layoutVariant={stepMeta.layoutVariant}
+          hideStepChrome={stepMeta.hideStepChrome}
+          onResetCalculator={() => dispatch({ type: 'RESET_CALCULATOR' })}
+          ordinanceDocumentUrl={ordinanceUrl}
+          ordinancePreviewSrc={ordinancePreviewSrc}
+          ordinanceTitle={ordinanceTitle}
+        >
+          {StepComponent && (
+            <StepComponent
+              key={state.currentStep}
+              state={state}
+              dispatch={dispatch}
+            />
+          )}
+        </WizardLayout>
+      </BillExtractionContext.Provider>
     </CalculatorFeaturesContext.Provider>
   );
 });

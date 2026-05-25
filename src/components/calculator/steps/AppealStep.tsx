@@ -1,91 +1,134 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
-import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import CircularProgress from '@mui/material/CircularProgress';
-import DownloadIcon from '@mui/icons-material/Download';
-import EmailIcon from '@mui/icons-material/Email';
-import DummyPaymentDialog from '@/components/calculator/DummyPaymentDialog';
-import CouponPaymentSection from '@/components/calculator/CouponPaymentSection';
-import AppealSignaturePad from '@/components/calculator/AppealSignaturePad';
-import AppealMissingFieldsDialog from '@/components/calculator/AppealMissingFieldsDialog';
-import { getAppealDocumentMissingItems } from '@/components/calculator/appealDocumentCompleteness';
+import { useEffect, useState, useCallback } from "react";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import Paper from "@mui/material/Paper";
+import Alert from "@mui/material/Alert";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Checkbox from "@mui/material/Checkbox";
+import Link from "@mui/material/Link";
+import DownloadIcon from "@mui/icons-material/Download";
+import EmailIcon from "@mui/icons-material/Email";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import DummyPaymentDialog from "@/components/calculator/DummyPaymentDialog";
+import CouponPaymentSection from "@/components/calculator/CouponPaymentSection";
+import AppealSignaturePad from "@/components/calculator/AppealSignaturePad";
+import AppealMissingFieldsDialog from "@/components/calculator/AppealMissingFieldsDialog";
+import WizardVideoLoader from "@/components/calculator/WizardVideoLoader";
+import { getAppealDocumentMissingItems } from "@/components/calculator/appealDocumentCompleteness";
 import {
   buildAppealGeneratePayload,
   isValidAppealEmail,
   withMeasurementErrorClaimed,
-} from '@/components/calculator/appealGeneratePayload';
-import type { WizardState } from '@/components/calculator/CalculatorWizard';
-import { useCalculatorFeatures } from '../CalculatorFeaturesContext';
-import { useEmailSend } from '@/hooks/useEmailSend';
-import type { StepProps } from '../CalculatorWizard';
+} from "@/components/calculator/appealGeneratePayload";
+import type { WizardState } from "@/components/calculator/CalculatorWizard";
+import { useCalculatorFeatures } from "../CalculatorFeaturesContext";
+import { useEmailSend } from "@/hooks/useEmailSend";
+import type { StepProps } from "../CalculatorWizard";
+import {
+  wizardPrimaryButtonSx,
+  wizardResultsCardSx,
+  wizardSecondaryButtonSx,
+} from "../wizardStyles";
 
-const APPEAL_WAIVER_TEXT = `אני החתום מטה, מצהיר ומאשר בזאת, כי מחשבון הארנונה איננו מהווה ייעוץ משפטי ו/או תחליף לייעוץ משפטי וכי כתב ההשגה אשר נערך עבורי מתבסס על נתונים שאני הזנתי במחשבון, והינם לעזר בלבד.
+const APPEAL_WAIVER_TEXT = `אני החתום/ה מטה, מצהיר ומאשר בזאת, כי מחשבון הארנונה איננו מהווה ייעוץ משפטי ו/או תחליף לייעוץ משפטי וכי כתב ההשגה אשר נערך עבורי מתבסס על נתונים שאני הזנתי במחשבון, והינם לעזר בלבד. לאחר שעיינתי בתקנון האתר ובמדיניות הפרטיות, אני מצהיר כי לא אבוא בעצמי ו/או באמצעות מי מטעמי בכל טענה ו/או תלונה ו/או תביעה כנגד מחשבון הארנונה ומנהליו בכל מקרה של שימוש במחשבון הארנונה ובהגשת ההשגה וברור לי כי יתכן ומנהל הארנונה יקבע כי דין ההשגה להידחות ובמקרה כזה אהיה זכאי להגיש ערר בתוך 30 ימים ממועד דחיית ההשגה.
+הריני מצהיר/ה כי עם קבלת כתב ההשגה באמצעות האימייל התמלאו התחייבויות מחשבון הארנונה כלפיי ואני אהיה רשאי/ת להחליט אם להגיש את ההשגה באתר העירייה או באמצעות הדואר בנוסח שהוצע ע"י מחשבון הארנונה או לתקן את הנוסח לפי דעתי האישית או עפ"י ייעוץ שאקבל בנושא. 
+הריני מצהיר מסכים כי ההשגה הוכנה באמצעות כלי AI וברור לי כי יתכנו סטיות ו/או אי דיוקים בנתוני ההשגה, בדומה לכל כלי AI המוצעים למשתמשי הרשת.
+אני מאשר/ת ומסכים/ה כי השימוש במחשבון הארנונה והכנת ההשגה נעשו על סמך החלטתי והסכמתי לאחר שברור לי משמעויות הדבר ואין לי צפייה כי מחשבון הארנונה מהווה ייצוג משפטי כלשהו עבורי. `;
 
-לאחר שעיינתי בתקנון האתר ובמדיניות הפרטיות, אני מצהיר כי לא אבוא בעצמי ו/או באמצעות מי מטעמי בכל טענה ו/או תלונה ו/או תביעה כנגד מחשבון הארנונה ומנהליו בכל מקרה של שימוש במחשבון הארנונה ו בהגשת ההשגה וברור לי כי יתכן ומנהל הארנונה יקבע כי דין ההשגה להידחות ובמקרה כזה אהיה זכאי להגיש ערר בתוך 30 ימים ממועד דחיית ההשגה.
-
-הריני מצהיר כי עם קבלת כתב ההשגה באמצעות האימייל התמלאו התחייבויות מחשבון הארנונה כלפיי ואני אהיה זכאי להגיש את ההשגה באתר העירייה או באמצעות הדואר.
-
-קראתי את התקנון ומדיניות הפרטיות ואני מסכים ומאשר`;
-
-type FlowPhase = 'intro' | 'generating' | 'sign' | 'finalize' | 'done';
+type FlowPhase =
+  | "intro"
+  | "checkout"
+  | "generating"
+  | "sign"
+  | "finalize"
+  | "done";
 
 export default function AppealStep({ state, dispatch }: StepProps) {
   const { paymentEnabled, appealChargeAmount } = useCalculatorFeatures();
   const { sendEmail } = useEmailSend();
   const [appealWaiverAccepted, setAppealWaiverAccepted] = useState(false);
 
-  const [flow, setFlow] = useState<FlowPhase>('intro');
+  const [flow, setFlow] = useState<FlowPhase>("intro");
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [draftPdfBase64, setDraftPdfBase64] = useState<string | null>(null);
   const [signedPdfBase64, setSignedPdfBase64] = useState<string | null>(null);
   /** Subject metadata returned from the generate endpoint — forwarded to email. */
-  const [appealSubjectType, setAppealSubjectType] = useState<string | undefined>();
-  const [appealExemptionDescription, setAppealExemptionDescription] = useState<string | undefined>();
+  const [appealSubjectType, setAppealSubjectType] = useState<
+    string | undefined
+  >();
+  const [appealExemptionDescription, setAppealExemptionDescription] = useState<
+    string | undefined
+  >();
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [signatureError, setSignatureError] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   /** Optional override (מ"ר) — enables structured תיקון שטחים letter when > 0 */
-  const [appealCorrectedAreaInput, setAppealCorrectedAreaInput] = useState(() =>
-    state.measurementError != null && state.measurementError.claimed > 0
-      ? String(state.measurementError.claimed)
-      : '',
+  const [appealCorrectedAreaInput, setAppealCorrectedAreaInput] = useState(
+    () =>
+      state.measurementError != null && state.measurementError.claimed > 0
+        ? String(state.measurementError.claimed)
+        : "",
   );
   const [missingFieldsDialogOpen, setMissingFieldsDialogOpen] = useState(false);
   const [missingDocumentItems, setMissingDocumentItems] = useState<
     ReturnType<typeof getAppealDocumentMissingItems>
   >([]);
+  /** Checkout view — coupon field is collapsed behind a "יש לך קוד קופון?" link. */
+  const [couponExpanded, setCouponExpanded] = useState(false);
 
   useEffect(() => {
-    dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-7-default' });
+    if (flow === "checkout") {
+      dispatch({ type: "SET_MIA_MESSAGE", payload: "step-7-checkout" });
+      return;
+    }
+    dispatch({ type: "SET_MIA_MESSAGE", payload: "step-7-default" });
+  }, [dispatch, flow]);
+
+  // Mirror the local flow phase into wizard state so the shell can switch to the
+  // centered video-loader layout (no sidebar, no title chrome) while generating /
+  // finalizing the appeal. Always reset to 'idle' when leaving the step.
+  useEffect(() => {
+    if (flow === "generating" || flow === "finalize") {
+      dispatch({ type: "SET_APPEAL_PHASE", payload: flow });
+    } else {
+      dispatch({ type: "SET_APPEAL_PHASE", payload: "idle" });
+    }
+  }, [dispatch, flow]);
+
+  useEffect(() => {
+    return () => {
+      dispatch({ type: "SET_APPEAL_PHASE", payload: "idle" });
+    };
   }, [dispatch]);
 
   const result = state.calculationResult ?? {};
   const reported = state.bimonthlyPayment ?? 0;
-  const calculated = result.calculatedBimonthly ?? result.calculated ?? reported;
+  const calculated =
+    result.calculatedBimonthly ?? result.calculated ?? reported;
   const biMonthlySavings = reported - calculated;
   const annualSavings = biMonthlySavings * 6;
-  const cityName = (state.cityData?.cityName as string | undefined)?.trim() || state.citySlug || '';
+  const cityName =
+    (state.cityData?.cityName as string | undefined)?.trim() ||
+    state.citySlug ||
+    "";
 
   const sendInvoice = useCallback(
-    (from?: Pick<WizardState, 'email' | 'fullName'>) => {
+    (from?: Pick<WizardState, "email" | "fullName">) => {
       const email = from?.email ?? state.email;
       const fullName = from?.fullName ?? state.fullName;
       if (!email?.trim()) return;
       void sendEmail({
-        type: 'invoice',
+        type: "invoice",
         to: email.trim(),
         payload: {
           fullName,
-          itemDescription: 'הכנת מכתב השגה — מחשבון הארנונה',
+          itemDescription: "הכנת מכתב השגה — מחשבון הארנונה",
           amountNis: appealChargeAmount,
           date: new Date().toISOString(),
         },
@@ -98,11 +141,11 @@ export default function AppealStep({ state, dispatch }: StepProps) {
     async (pdfBase64: string): Promise<boolean> => {
       const to = state.email?.trim();
       if (!to || !isValidAppealEmail(to)) {
-        setEmailError('כתובת מייל לא תקינה');
+        setEmailError("כתובת מייל לא תקינה");
         return false;
       }
       const res = await sendEmail({
-        type: 'appeal_pdf',
+        type: "appeal_pdf",
         to,
         payload: {
           fullName: state.fullName,
@@ -116,55 +159,73 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         },
       });
       if (!res.success) {
-        setEmailError(res.error ?? 'שליחת המייל נכשלה');
+        setEmailError(res.error ?? "שליחת המייל נכשלה");
         return false;
       }
       setEmailError(null);
       return true;
     },
-    [annualSavings, appealExemptionDescription, appealSubjectType, calculated, cityName, reported, sendEmail, state.email, state.fullName],
+    [
+      annualSavings,
+      appealExemptionDescription,
+      appealSubjectType,
+      calculated,
+      cityName,
+      reported,
+      sendEmail,
+      state.email,
+      state.fullName,
+    ],
   );
 
   const beginGenerationFlow = useCallback(
     async (wizardOverride?: WizardState) => {
-    const w = wizardOverride ?? state;
-    setGenerateError(null);
-    setSignatureError(null);
-    setFlow('generating');
-    sendInvoice({ email: w.email, fullName: w.fullName });
-    try {
-      const base = buildAppealGeneratePayload(w);
-      const parsedSqm = parseFloat(appealCorrectedAreaInput.trim().replace(',', '.'));
-      const fromField = Number.isFinite(parsedSqm) && parsedSqm > 0 ? parsedSqm : 0;
-      const fromWizard =
-        w.measurementError != null && w.measurementError.claimed > 0
-          ? w.measurementError.claimed
-          : 0;
-      const claimedSqm = fromField > 0 ? fromField : fromWizard;
-      const body =
-        claimedSqm > 0 ? withMeasurementErrorClaimed(base, claimedSqm) : base;
-      const res = await fetch('/api/appeals/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      const data = (await res.json()) as { error?: string; pdfBase64?: string; subjectType?: string; exemptionDescription?: string };
-      if (!res.ok) {
-        throw new Error(data.error || 'הכנת מכתב ההשגה נכשלה');
+      const w = wizardOverride ?? state;
+      setGenerateError(null);
+      setSignatureError(null);
+      setFlow("generating");
+      sendInvoice({ email: w.email, fullName: w.fullName });
+      try {
+        const base = buildAppealGeneratePayload(w);
+        const parsedSqm = parseFloat(
+          appealCorrectedAreaInput.trim().replace(",", "."),
+        );
+        const fromField =
+          Number.isFinite(parsedSqm) && parsedSqm > 0 ? parsedSqm : 0;
+        const fromWizard =
+          w.measurementError != null && w.measurementError.claimed > 0
+            ? w.measurementError.claimed
+            : 0;
+        const claimedSqm = fromField > 0 ? fromField : fromWizard;
+        const body =
+          claimedSqm > 0 ? withMeasurementErrorClaimed(base, claimedSqm) : base;
+        const res = await fetch("/api/appeals/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = (await res.json()) as {
+          error?: string;
+          pdfBase64?: string;
+          subjectType?: string;
+          exemptionDescription?: string;
+        };
+        if (!res.ok) {
+          throw new Error(data.error || "הכנת מכתב ההשגה נכשלה");
+        }
+        if (!data.pdfBase64) {
+          throw new Error("תשובת שרת לא תקינה");
+        }
+        setDraftPdfBase64(data.pdfBase64);
+        setAppealSubjectType(data.subjectType);
+        setAppealExemptionDescription(data.exemptionDescription);
+        setFlow("sign");
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "שגיאה";
+        setGenerateError(msg);
+        setFlow("intro");
       }
-      if (!data.pdfBase64) {
-        throw new Error('תשובת שרת לא תקינה');
-      }
-      setDraftPdfBase64(data.pdfBase64);
-      setAppealSubjectType(data.subjectType);
-      setAppealExemptionDescription(data.exemptionDescription);
-      setFlow('sign');
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'שגיאה';
-      setGenerateError(msg);
-      setFlow('intro');
-    }
-  },
+    },
     [appealCorrectedAreaInput, sendInvoice, state],
   );
 
@@ -180,10 +241,20 @@ export default function AppealStep({ state, dispatch }: StepProps) {
 
   const handleSubmit = () => {
     if (paymentEnabled) {
-      setPaymentDialogOpen(true);
+      setCouponExpanded(false);
+      setFlow("checkout");
       return;
     }
     startGenerationWithCompletenessCheck();
+  };
+
+  const handleCheckoutPay = () => {
+    setPaymentDialogOpen(true);
+  };
+
+  const handleCheckoutBack = () => {
+    setPaymentDialogOpen(false);
+    setFlow("intro");
   };
 
   const handlePaymentConfirm = () => {
@@ -193,7 +264,7 @@ export default function AppealStep({ state, dispatch }: StepProps) {
 
   const handleMissingFieldsSubmit = (updates: Partial<WizardState>) => {
     const merged = { ...state, ...updates } as WizardState;
-    dispatch({ type: 'UPDATE_FIELDS_BULK', payload: updates });
+    dispatch({ type: "UPDATE_FIELDS_BULK", payload: updates });
     setMissingFieldsDialogOpen(false);
     setMissingDocumentItems([]);
     void beginGenerationFlow(merged);
@@ -207,54 +278,59 @@ export default function AppealStep({ state, dispatch }: StepProps) {
   const handleGoToDataEntryForAppeal = () => {
     setMissingFieldsDialogOpen(false);
     setMissingDocumentItems([]);
-    dispatch({ type: 'SET_STEP', step: 2 });
+    dispatch({ type: "SET_STEP", step: 2 });
   };
 
   const handleEmptySignature = () => {
-    setSignatureError('נא לחתום באזור החתימה לפני האישור');
+    setSignatureError("נא לחתום באזור החתימה לפני האישור");
   };
 
   const handleSignatureConfirmed = async (signaturePngBase64: string) => {
     setSignatureError(null);
     if (!isValidAppealEmail(state.email)) {
-      setSignatureError('נא למלא כתובת מייל תקינה בשלב פרטי הקשר במחשבון לפני חתימה.');
+      setSignatureError(
+        "נא למלא כתובת מייל תקינה בשלב פרטי הקשר במחשבון לפני חתימה.",
+      );
       return;
     }
     if (!draftPdfBase64) {
-      setSignatureError('חסר מסמך — נסו שוב מההתחלה');
+      setSignatureError("חסר מסמך — נסו שוב מההתחלה");
       return;
     }
 
-    setFlow('finalize');
+    setFlow("finalize");
     setEmailSent(false);
     setEmailError(null);
 
     try {
-      const applyRes = await fetch('/api/appeals/apply-signature', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const applyRes = await fetch("/api/appeals/apply-signature", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           draftPdfBase64,
           signaturePngBase64,
         }),
       });
-      const applyData = (await applyRes.json()) as { error?: string; pdfBase64?: string };
+      const applyData = (await applyRes.json()) as {
+        error?: string;
+        pdfBase64?: string;
+      };
       if (!applyRes.ok) {
-        throw new Error(applyData.error || 'מיזוג החתימה נכשל');
+        throw new Error(applyData.error || "מיזוג החתימה נכשל");
       }
       if (!applyData.pdfBase64) {
-        throw new Error('תשובת שרת לא תקינה');
+        throw new Error("תשובת שרת לא תקינה");
       }
       const signed = applyData.pdfBase64;
       setSignedPdfBase64(signed);
       const ok = await sendAppealPdfToUser(signed);
       setEmailSent(ok);
-      setFlow('done');
+      setFlow("done");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'שגיאה';
+      const msg = e instanceof Error ? e.message : "שגיאה";
       setSignatureError(msg);
       setSignedPdfBase64(null);
-      setFlow('sign');
+      setFlow("sign");
     }
   };
 
@@ -271,31 +347,35 @@ export default function AppealStep({ state, dispatch }: StepProps) {
       const binary = atob(signedPdfBase64);
       const bytes = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const blob = new Blob([bytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = 'michtav-hashaga-chatum.pdf';
+      a.download = "michtav-hashaga-chatum.pdf";
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      setEmailError('הורדת הקובץ נכשלה');
+      setEmailError("הורדת הקובץ נכשלה");
     }
   };
 
   const canStart =
-    appealWaiverAccepted && state.fullName.trim().length > 0 && state.calculationResult != null;
+    appealWaiverAccepted &&
+    state.fullName.trim().length > 0 &&
+    state.calculationResult != null;
 
-  if (flow === 'done') {
+  if (flow === "done") {
     return (
       <Box sx={{ pt: 5 }}>
         {emailSent ? (
-          <Alert severity="success" sx={{ mb: 3, fontSize: '1.05rem' }}>
+          <Alert severity="success" sx={{ mb: 3, fontSize: "1.05rem" }}>
             מכתב ההשגה החתום נשלח לכתובת {state.email?.trim()}.
           </Alert>
         ) : (
           <Alert severity="warning" sx={{ mb: 3 }}>
-            {emailError || signatureError || 'לא הצלחנו לשלוח את המייל. ניתן לנסות שוב או להוריד את הקובץ.'}
+            {emailError ||
+              signatureError ||
+              "לא הצלחנו לשלוח את המייל. ניתן לנסות שוב או להוריד את הקובץ."}
           </Alert>
         )}
 
@@ -303,18 +383,37 @@ export default function AppealStep({ state, dispatch }: StepProps) {
           תודה שהשתמשת במחשבון הארנונה
         </Typography>
 
-        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            justifyContent: "center",
+            flexWrap: "wrap",
+          }}
+        >
           {signedPdfBase64 && (
-            <Button variant="contained" startIcon={<DownloadIcon />} onClick={downloadSignedPdf}>
+            <Button
+              variant="contained"
+              startIcon={<DownloadIcon />}
+              onClick={downloadSignedPdf}
+            >
               הורד PDF חתום
             </Button>
           )}
           {signedPdfBase64 && !emailSent && (
-            <Button variant="outlined" startIcon={<EmailIcon />} onClick={() => void handleRetryEmail()}>
+            <Button
+              variant="outlined"
+              startIcon={<EmailIcon />}
+              onClick={() => void handleRetryEmail()}
+            >
               שלח שוב למייל
             </Button>
           )}
-          <Button variant="outlined" onClick={() => dispatch({ type: 'RESET_CALCULATOR' })} href="/#hero">
+          <Button
+            variant="outlined"
+            onClick={() => dispatch({ type: "RESET_CALCULATOR" })}
+            href="/#hero"
+          >
             חזרה לדף הבית
           </Button>
         </Box>
@@ -322,25 +421,24 @@ export default function AppealStep({ state, dispatch }: StepProps) {
     );
   }
 
-  if (flow === 'generating' || flow === 'finalize') {
-    return (
-      <Box sx={{ pt: 6, textAlign: 'center' }}>
-        <CircularProgress sx={{ mb: 2 }} aria-label="טוען" />
-        <Typography>
-          {flow === 'generating' ? 'מכינים את מכתב ההשגה…' : 'משלבים חתימה ושולחים למייל…'}
-        </Typography>
-      </Box>
-    );
+  if (flow === "generating" || flow === "finalize") {
+    // Centered layout (set via getStepMeta for step 8 + this phase) supplies the
+    // Hebrew title/subtitle above; render only the brand video here.
+    return <WizardVideoLoader />;
   }
 
-  if (flow === 'sign' && draftPdfBase64) {
+  if (flow === "sign" && draftPdfBase64) {
     return (
       <Box>
         <Typography variant="h5" textAlign="center" mb={2}>
           חתימה על מכתב ההשגה
         </Typography>
         {signatureError && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setSignatureError(null)}>
+          <Alert
+            severity="error"
+            sx={{ mb: 2 }}
+            onClose={() => setSignatureError(null)}
+          >
             {signatureError}
           </Alert>
         )}
@@ -353,12 +451,156 @@ export default function AppealStep({ state, dispatch }: StepProps) {
           <AppealSignaturePad
             onConfirm={(png) => void handleSignatureConfirmed(png)}
             onEmptySignature={handleEmptySignature}
-            disabled={flow !== 'sign'}
+            disabled={flow !== "sign"}
           />
         </Paper>
-        <Button variant="outlined" onClick={() => dispatch({ type: 'PREV_STEP' })}>
+        <Button
+          variant="outlined"
+          onClick={() => dispatch({ type: "PREV_STEP" })}
+        >
           חזרה
         </Button>
+      </Box>
+    );
+  }
+
+  if (flow === "checkout") {
+    return (
+      <Box>
+        <Box
+          sx={[
+            wizardResultsCardSx as never,
+            {
+              maxWidth: 560,
+              mx: { xs: 0, md: "auto" },
+            },
+          ]}
+        >
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="flex-start"
+            sx={{ mb: 2 }}
+          >
+            <Box sx={{ textAlign: "right" }}>
+              <Typography
+                sx={{
+                  fontWeight: 700,
+                  fontSize: { xs: "20px", md: "24px" },
+                  lineHeight: "32px",
+                }}
+              >
+                סיכום תשלום -
+              </Typography>
+              <Typography
+                sx={(theme) => ({
+                  fontSize: "14px",
+                  color: theme.palette.brand.textMuted,
+                  mt: 0.5,
+                })}
+              >
+                הכנת מסמך השגה
+              </Typography>
+            </Box>
+          </Stack>
+
+          <Box
+            sx={(theme) => ({
+              borderTop: `1px solid ${theme.palette.divider}`,
+              pt: 3,
+              mb: 2,
+            })}
+          >
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <Typography
+                sx={{ fontWeight: 500, fontSize: { xs: "24px", md: "32px" } }}
+              >
+                ₪{appealChargeAmount.toLocaleString("he-IL")}
+              </Typography>
+              <Typography
+                sx={{ fontWeight: 500, fontSize: { xs: "18px", md: "24px" } }}
+              >
+                סך הכל לתשלום
+              </Typography>
+            </Stack>
+          </Box>
+
+          <Box sx={{ textAlign: "end", mb: 2 }}>
+            {state.appliedCoupon || couponExpanded ? (
+              <CouponPaymentSection
+                state={state}
+                dispatch={dispatch}
+                context="appeal"
+                density="checkout"
+              />
+            ) : (
+              <Typography
+                component="div"
+                sx={(theme) => ({
+                  fontSize: "14px",
+                  color: theme.palette.brand.textMuted,
+                })}
+              >
+                יש לך קוד קופון?{" "}
+                <Link
+                  component="button"
+                  type="button"
+                  onClick={() => setCouponExpanded(true)}
+                  sx={(theme) => ({
+                    color: theme.palette.brand.blue,
+                    fontWeight: 500,
+                    textDecoration: "underline",
+                    "&:hover": { textDecoration: "underline" },
+                  })}
+                >
+                  לחץ כאן
+                </Link>
+              </Typography>
+            )}
+          </Box>
+
+          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <Button
+              variant="contained"
+              onClick={handleCheckoutPay}
+              endIcon={<ChevronLeftIcon />}
+              sx={[wizardPrimaryButtonSx as never, { px: 2.5, py: 1 }]}
+            >
+              לתשלום
+            </Button>
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-start",
+            mt: 3,
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={handleCheckoutBack}
+            sx={wizardSecondaryButtonSx}
+          >
+            חזרה
+          </Button>
+        </Box>
+
+        <DummyPaymentDialog
+          open={paymentDialogOpen}
+          onClose={() => setPaymentDialogOpen(false)}
+          onConfirm={handlePaymentConfirm}
+          amountNis={appealChargeAmount}
+          title="תשלום השגה (הדגמה)"
+          state={state}
+          dispatch={dispatch}
+          context="appeal"
+        />
       </Box>
     );
   }
@@ -411,8 +653,11 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         />
       </Paper> */}
 
-      <Paper variant="outlined" sx={{ p: 2, mb: 2, maxHeight: 320, overflowY: 'auto', lineHeight: 1.8 }}>
-        <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
+      <Paper
+        variant="outlined"
+        sx={{ p: 2, mb: 2, maxHeight: 320, overflowY: "auto", lineHeight: 1.8 }}
+      >
+        <Typography variant="body2" sx={{ whiteSpace: "pre-line" }}>
           {APPEAL_WAIVER_TEXT}
         </Typography>
       </Paper>
@@ -424,31 +669,26 @@ export default function AppealStep({ state, dispatch }: StepProps) {
             onChange={(e) => setAppealWaiverAccepted(e.target.checked)}
           />
         }
-        label="קראתי את מכתב הויתור ואני מסכים/ה ומאשר/ת"
+        label="קראתי והבנתי את כל האמור לעיל ואני מסכים/ה ומאשר/ת."
         sx={{ mb: 3 }}
       />
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-        <Button variant="outlined" onClick={() => dispatch({ type: 'PREV_STEP' })}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+        <Button
+          variant="outlined"
+          onClick={() => dispatch({ type: "PREV_STEP" })}
+        >
           חזרה
         </Button>
-        <Button variant="contained" disabled={!canStart} onClick={handleSubmit}>
-          תשלום והכנת השגה
+        <Button
+          variant="contained"
+          color="success"
+          disabled={!canStart}
+          onClick={handleSubmit}
+        >
+          {paymentEnabled ? "המשך לתשלום" : "הכנת השגה"}
         </Button>
       </Box>
-
-      <DummyPaymentDialog
-        open={paymentDialogOpen}
-        onClose={() => setPaymentDialogOpen(false)}
-        onConfirm={handlePaymentConfirm}
-        amountNis={appealChargeAmount}
-        title="תשלום השגה (הדגמה)"
-        state={state}
-        dispatch={dispatch}
-        context="appeal"
-      />
-
-    
 
       <AppealMissingFieldsDialog
         open={missingFieldsDialogOpen}

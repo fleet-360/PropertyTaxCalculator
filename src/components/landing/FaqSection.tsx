@@ -9,7 +9,6 @@ import {
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 
 const faqItems = [
   {
@@ -73,7 +72,7 @@ export default function FaqSection() {
             alignItems: "start",
           }}
         >
-          {/* Video preview placeholder (visually LEFT in RTL) */}
+          {/* Looping cube video (visually LEFT in RTL) */}
           <Box
             sx={(theme) => ({
               position: "relative",
@@ -81,72 +80,27 @@ export default function FaqSection() {
               overflow: "hidden",
               aspectRatio: "507 / 450",
               background: `linear-gradient(160deg, #eef1fa 0%, #d6deef 100%)`,
-              border: `1px solid ${theme.palette.brand.gridLine}`,
-              boxShadow: "0 12px 32px rgba(11,26,71,0.08)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
+
               order: { xs: 2, md: 2 },
             })}
-            role="button"
-            aria-label="צפייה בסרטון הסבר"
+            aria-label="סרטון הסבר"
           >
-            {/* Decorative isometric cubes pattern */}
             <Box
+              component="video"
+              src="/videos/cube.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
               aria-hidden
-              component="svg"
-              viewBox="0 0 240 240"
-              sx={{ width: "55%", height: "55%", opacity: 0.85 }}
-            >
-              <defs>
-                <linearGradient id="cubeLight" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#9eaef0" />
-                  <stop offset="100%" stopColor="#7d92e6" />
-                </linearGradient>
-                <linearGradient id="cubeMid" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#7d92e6" />
-                  <stop offset="100%" stopColor="#5b76dd" />
-                </linearGradient>
-                <linearGradient id="cubeDark" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#5b76dd" />
-                  <stop offset="100%" stopColor="#3d5dd5" />
-                </linearGradient>
-              </defs>
-              {[
-                [60, 60],
-                [120, 60],
-                [60, 120],
-                [120, 120],
-                [90, 90],
-                [150, 90],
-                [90, 150],
-              ].map(([x, y], i) => (
-                <g key={i} transform={`translate(${x},${y})`}>
-                  <polygon points="0,15 30,0 60,15 30,30" fill="url(#cubeLight)" />
-                  <polygon points="0,15 0,45 30,60 30,30" fill="url(#cubeMid)" />
-                  <polygon points="30,30 30,60 60,45 60,15" fill="url(#cubeDark)" />
-                </g>
-              ))}
-            </Box>
-
-            {/* Play button overlay */}
-            <Box
-              sx={(theme) => ({
-                position: "absolute",
-                width: 72,
-                height: 72,
-                borderRadius: "50%",
-                bgcolor: "rgba(255,255,255,0.95)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 12px 32px rgba(11,26,71,0.25)",
-                color: theme.palette.brand.blue,
-              })}
-            >
-              <PlayArrowIcon sx={{ fontSize: 40, ml: 0.5 }} />
-            </Box>
+              sx={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
           </Box>
 
           {/* FAQ accordion (visually RIGHT in RTL) */}
@@ -162,17 +116,28 @@ export default function FaqSection() {
                   expanded={isExpanded}
                   onChange={(_, exp) => setExpanded(exp ? panelId : false)}
                   sx={(theme) => ({
-                    bgcolor: "transparent",
-                    borderBottom: `1px solid ${isExpanded ? theme.palette.brand.blue : "#e3e7f1"}`,
+                    bgcolor: theme.palette.background.paper,
+                    border: `1px solid ${
+                      isExpanded
+                        ? theme.palette.brand.blue
+                        : theme.palette.brand.borderField
+                    }`,
+                    borderRadius: 2,
+                    mb: 1.5,
+                    overflow: "hidden",
+                    transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+                    boxShadow: isExpanded
+                      ? "0 4px 14px rgba(0,85,252,0.08)"
+                      : "none",
                     "&:before": { display: "none" },
+                    "&:last-of-type": { mb: 0 },
                     "& .MuiAccordionSummary-root": {
-                      px: 0,
-                      minHeight: 56,
-                      flexDirection: "row-reverse",
+                      px: { xs: 2, md: 2.5 },
+                      minHeight: 64,
                       "& .MuiAccordionSummary-content": {
                         ml: 1.5,
                         mr: 0,
-                        justifyContent: "flex-end",
+                        justifyContent: "flex-start",
                       },
                     },
                   })}
@@ -189,8 +154,10 @@ export default function FaqSection() {
                           justifyContent: "center",
                           bgcolor: isExpanded
                             ? theme.palette.brand.blue
-                            : "rgba(11,26,71,0.06)",
-                          color: isExpanded ? "#fff" : theme.palette.brand.navyDeep,
+                            : theme.palette.brand.borderField,
+                          color: isExpanded
+                            ? "#fff"
+                            : theme.palette.brand.navyDeep,
                           transition: "all 0.2s",
                         })}
                       >
@@ -210,13 +177,21 @@ export default function FaqSection() {
                       {item.q}
                     </Typography>
                   </AccordionSummary>
-                  <AccordionDetails sx={{ px: 0, pb: 2.5 }}>
+                  <AccordionDetails
+                    sx={(theme) => ({
+                      px: { xs: 2, md: 2.5 },
+                      pt: 0,
+                      pb: 2.5,
+                      borderTop: `1px solid ${theme.palette.brand.borderField}`,
+                      mt: 0.5,
+                    })}
+                  >
                     <Typography
                       sx={(theme) => ({
                         fontSize: { xs: "13px", md: "14px" },
-                        color: "#5a6788",
+                        color: theme.palette.brand.textMuted,
                         lineHeight: 1.7,
-                        textAlign: "right",
+                        pt: 1.5,
                       })}
                     >
                       {item.a}

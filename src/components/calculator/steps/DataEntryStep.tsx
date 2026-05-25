@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useEffect, useMemo, useRef, useCallback } from "react";
 import {
   useForm,
   Controller,
@@ -17,7 +17,6 @@ import MenuItem from "@mui/material/MenuItem";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
-import Divider from "@mui/material/Divider";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Alert from "@mui/material/Alert";
@@ -66,9 +65,6 @@ interface FormData {
   propertyNumber: string;
   propertyId: string;
   propertyArea: number;
-  coveredBalconyArea: number;
-  storageArea: number;
-  parkingArea: number;
   address: string;
   block: string;
   parcel: string;
@@ -78,7 +74,6 @@ interface FormData {
   reportedPayment: number;
   paymentPeriod: string;
   designations: { type: string; subtype: string; zone: string; area: number }[];
-  additionalAreas: { areaType: string; areaSqm: number }[];
   selectedFees: string[];
 }
 
@@ -106,9 +101,6 @@ function createDataEntrySchema(isBusiness: boolean) {
       propertyArea: isBusiness
         ? z.coerce.number().min(0)
         : z.coerce.number().positive("שטח חייב להיות גדול מ-0"),
-      coveredBalconyArea: z.coerce.number().min(0).default(0),
-      storageArea: z.coerce.number().min(0).default(0),
-      parkingArea: z.coerce.number().min(0).default(0),
       address: z.string(),
       block: z.string(),
       parcel: z.string(),
@@ -118,14 +110,6 @@ function createDataEntrySchema(isBusiness: boolean) {
       reportedPayment: z.coerce.number().positive("סכום חייב להיות גדול מ-0"),
       paymentPeriod: z.string().default("bimonthly"),
       designations: z.array(designationRowSchema).default([]),
-      additionalAreas: z
-        .array(
-          z.object({
-            areaType: z.string(),
-            areaSqm: z.coerce.number().min(0).default(0),
-          }),
-        )
-        .default([]),
       selectedFees: z.array(z.string()).default([]),
     })
     .superRefine((data, ctx) => {
@@ -363,7 +347,6 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
   const { submitConsent, linkConsents } = useConsentSubmit();
   const cityData = state.cityData;
   const isBusiness = state.propertyType === "business";
-  const hasAreaTypeDiscounts = !!(cityData?.areaTypeDiscounts?.length > 0);
   const hasCityFees = !!(cityData?.cityFees?.length > 0);
 
   // ── Mia message on mount ──
@@ -396,9 +379,6 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
       propertyNumber: state.propertyNumber,
       propertyId: state.propertyId,
       propertyArea: state.propertyArea || ("" as any),
-      coveredBalconyArea: state.coveredBalconyArea || ("" as any),
-      storageArea: state.storageArea || ("" as any),
-      parkingArea: state.parkingArea || ("" as any),
       address: state.address,
       block: state.block,
       parcel: state.parcel,
@@ -408,13 +388,6 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
       reportedPayment: state.reportedPayment || ("" as any),
       paymentPeriod: state.paymentPeriod || "bimonthly",
       designations: state.designations,
-      additionalAreas:
-        state.additionalAreas?.length > 0
-          ? state.additionalAreas
-          : (cityData?.areaTypeDiscounts ?? []).map((d: any) => ({
-              areaType: d.areaType,
-              areaSqm: "" as any,
-            })),
       selectedFees: state.selectedFees ?? [],
     },
   });
@@ -432,9 +405,6 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
   const watchedZone = watch("zone");
   const watchedArea = watch("propertyArea");
   // const watchedClassCode = watch('classificationCode');
-  const watchedBalcony = watch("coveredBalconyArea");
-  const watchedStorage = watch("storageArea");
-  const watchedParking = watch("parkingArea");
 
   // Refs to track previous values and prevent cascade loops
   const prevTypeRef = useRef(watchedType);
@@ -488,7 +458,7 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
     }
 
     if (!watchedType || !watchedSubType || !watchedZone) return null;
-    const totalArea =(Number(watchedArea) || 0) 
+    const totalArea = Number(watchedArea) || 0;
     if (totalArea <= 0) return null;
     try {
       const { rate, propertyCode } = findRate(
@@ -510,9 +480,6 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
     watchedSubType,
     watchedZone,
     watchedArea,
-    watchedBalcony,
-    watchedStorage,
-    watchedParking,
   ]);
 
   // ── Forward cascade: type changes → clear downstream ───────────
@@ -543,16 +510,6 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
     }
     setValue("classificationCode", "");
   }, [watchedSubType, watchedType, setValue, types]);
-
-  // ── Error report state ──
-  const [claimedArea, setClaimedArea] = useState<number>(
-    state.measurementError?.claimed ?? 0,
-  );
-  const [suggestedClass, setSuggestedClass] = useState(
-    state.classificationError?.suggested ?? "",
-  );
-  const allSubtypes: ISubType[] =
-    cityData?.types.flatMap((t: IPropertyType) => t.subtypes) ?? [];
 
   // ── Auto-save lead when name + phone are filled ──
   const watchedFullName = useWatch({ control, name: "fullName" });
@@ -631,23 +588,12 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
   ]);
 
   const onSubmit = async (data: FormData) => {
-    console.log("data", data);
     const fieldKeys = Object.keys(data) as (keyof FormData)[];
     for (const key of fieldKeys) {
       if (key === "designations") {
         dispatch({
           type: "SET_DESIGNATIONS",
           payload: data.designations as any,
-        });
-      } else if (key === "additionalAreas") {
-        // Filter out zero-area entries and dispatch
-        const filtered = (data.additionalAreas ?? []).filter(
-          (a) => a.areaSqm > 0,
-        );
-        dispatch({
-          type: "UPDATE_FIELD",
-          field: "additionalAreas",
-          value: filtered,
         });
       } else if (key === "selectedFees") {
         dispatch({
@@ -669,23 +615,6 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
       field: "bimonthlyPayment",
       value: bimonthly,
     });
-    // Dispatch error report data
-    if (claimedArea > 0) {
-      dispatch({
-        type: "SET_MEASUREMENT_ERROR",
-        payload: { claimed: claimedArea, attachment: "" },
-      });
-    } else {
-      dispatch({ type: "SET_MEASUREMENT_ERROR", payload: null });
-    }
-    if (suggestedClass) {
-      dispatch({
-        type: "SET_CLASSIFICATION_ERROR",
-        payload: { suggested: suggestedClass },
-      });
-    } else {
-      dispatch({ type: "SET_CLASSIFICATION_ERROR", payload: null });
-    }
 
     // Update lead with full property details
     if (data.phone && data.fullName) {
@@ -711,9 +640,6 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
                     ? { block: data.block, parcel: data.parcel }
                     : undefined,
                 propertyArea: data.propertyArea || undefined,
-                coveredBalconyArea: data.coveredBalconyArea || undefined,
-                storageArea: data.storageArea || undefined,
-                parkingArea: data.parkingArea || undefined,
                 classificationCode: data.classificationCode || undefined,
                 zone: isBusiness ? undefined : data.zone || undefined,
                 bimonthlyPayment: bimonthly || undefined,
@@ -744,9 +670,6 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
                     ? { block: data.block, parcel: data.parcel }
                     : undefined,
                 propertyArea: data.propertyArea || undefined,
-                coveredBalconyArea: data.coveredBalconyArea || undefined,
-                storageArea: data.storageArea || undefined,
-                parkingArea: data.parkingArea || undefined,
                 classificationCode: data.classificationCode || undefined,
                 zone: isBusiness ? undefined : data.zone || undefined,
                 bimonthlyPayment: bimonthly || undefined,
@@ -781,20 +704,17 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
         '[aria-invalid="true"]',
       );
       invalid?.scrollIntoView({ behavior: "smooth", block: "center" });
-      const focusTarget =
-        invalid?.matches("input, select, textarea, button")
-          ? invalid
-          : invalid?.querySelector<HTMLElement>(
-              "input, select, textarea, [tabindex]:not([tabindex='-1'])",
-            );
+      const focusTarget = invalid?.matches("input, select, textarea, button")
+        ? invalid
+        : invalid?.querySelector<HTMLElement>(
+            "input, select, textarea, [tabindex]:not([tabindex='-1'])",
+          );
       focusTarget?.focus({ preventScroll: true });
     });
   }, []);
 
   const showValidationAlert =
-    isSubmitted &&
-    !isSubmitSuccessful &&
-    Object.keys(errors).length > 0;
+    isSubmitted && !isSubmitSuccessful && Object.keys(errors).length > 0;
 
   const fieldsGridSx = {
     display: "grid",
@@ -836,7 +756,6 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
                 label="שם מלא *"
                 fullWidth
                 size="small"
-                sx={wizardFieldSx}
                 error={!!errors.fullName}
                 helperText={errors.fullName?.message}
               />
@@ -888,7 +807,12 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
         {/* Business designations */}
         {isBusiness && (
           <Box sx={fullRowSx}>
-            <Box sx={{ ...wizardSectionHeaderSx, mt: 1.5 }}>
+            <Box
+              sx={(theme) => ({
+                ...wizardSectionHeaderSx(theme),
+                mt: 1.5,
+              })}
+            >
               <Typography sx={wizardSectionTitleSx}>ייעודים עסקיים</Typography>
             </Box>
 
@@ -926,15 +850,14 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
           <>
             {" "}
             <Box sx={fullRowSx}>
-              <Typography
-                variant="subtitle1"
-                color="text.secondary"
-                fontWeight={600}
-                sx={{ mt: 1.5, mb: 0.5 }}
+              <Box
+                sx={(theme) => ({
+                  ...wizardSectionHeaderSx(theme),
+                  mt: 1.5,
+                })}
               >
-                סיווג הנכס
-              </Typography>
-              <Divider sx={{ mb: 0 }} />
+                <Typography sx={wizardSectionTitleSx}>סיווג הנכס</Typography>
+              </Box>
             </Box>
             <Box sx={{ minWidth: 0 }}>
               <Controller
@@ -1022,79 +945,6 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
                 )}
               />
             </Box>
-            {/* Dynamic area type fields OR legacy hardcoded fields */}
-            {hasAreaTypeDiscounts ? (
-              <>
-                {(cityData.areaTypeDiscounts as any[]).map(
-                  (d: any, idx: number) => (
-                    <Box key={d.areaType} sx={{ minWidth: 0 }}>
-                      <Controller
-                        name={`additionalAreas.${idx}.areaSqm` as const}
-                        control={control}
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            label={`${d.label} (מ"ר)`}
-                            type="number"
-                            fullWidth
-                            size="small"
-                            helperText={`הנחה ${d.discountPercent}%`}
-                          />
-                        )}
-                      />
-                    </Box>
-                  ),
-                )}
-              </>
-            ) : (
-              <>
-                <Box sx={{ minWidth: 0 }}>
-                  <Controller
-                    name="coveredBalconyArea"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label='מרפסת מקורה (מ"ר)'
-                        type="number"
-                        fullWidth
-                        size="small"
-                      />
-                    )}
-                  />
-                </Box>
-                <Box sx={{ minWidth: 0 }}>
-                  <Controller
-                    name="storageArea"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label='מחסן (מ"ר)'
-                        type="number"
-                        fullWidth
-                        size="small"
-                      />
-                    )}
-                  />
-                </Box>
-                <Box sx={{ minWidth: 0 }}>
-                  <Controller
-                    name="parkingArea"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label='חניה (מ"ר)'
-                        type="number"
-                        fullWidth
-                        size="small"
-                      />
-                    )}
-                  />
-                </Box>
-              </>
-            )}
             {/* City fees selection */}
             {hasCityFees &&
               (cityData.cityFees as any[]).some((f: any) => !f.isMandatory) && (
@@ -1163,15 +1013,14 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
 
         {/* 3. פרטי הנכס */}
         <Box sx={fullRowSx}>
-          <Typography
-            variant="subtitle1"
-            color="text.secondary"
-            fontWeight={600}
-            sx={{ mt: 1.5, mb: 0.5 }}
+          <Box
+            sx={(theme) => ({
+              ...wizardSectionHeaderSx(theme),
+              mt: 1.5,
+            })}
           >
-            פרטי הנכס
-          </Typography>
-          <Divider sx={{ mb: 0 }} />
+            <Typography sx={wizardSectionTitleSx}>פרטי הנכס</Typography>
+          </Box>
         </Box>
         <Box sx={{ minWidth: 0 }}>
           <Controller
@@ -1221,15 +1070,14 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
 
         {/* 4. תשלום */}
         <Box sx={fullRowSx}>
-          <Typography
-            variant="subtitle1"
-            color="text.secondary"
-            fontWeight={600}
-            sx={{ mt: 1.5, mb: 0.5 }}
+          <Box
+            sx={(theme) => ({
+              ...wizardSectionHeaderSx(theme),
+              mt: 1.5,
+            })}
           >
-            תשלום
-          </Typography>
-          <Divider sx={{ mb: 0 }} />
+            <Typography sx={wizardSectionTitleSx}>תשלום</Typography>
+          </Box>
         </Box>
         <Box sx={{ minWidth: 0 }}>
           <Controller
@@ -1270,97 +1118,6 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
           />
         </Box>
       </Box>
-
-      <Box sx={{ ...wizardSectionHeaderSx, mt: 3 }}>
-        <Typography sx={{ ...wizardSectionTitleSx, fontSize: '14px', fontWeight: 400 }}>
-          האם יש טעות בשטח הנכס?
-        </Typography>
-      </Box>
-
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 2,
-          mb: 2,
-          minWidth: 0,
-        }}
-      >
-        <Typography
-          component="span"
-          variant="body2"
-          sx={{ flexShrink: 0, width: "35%" }}
-        >
-          טעות במדידה
-        </Typography>
-        <TextField
-          type="number"
-          placeholder='שטח מתוקן (מ"ר)'
-          value={claimedArea || ""}
-          onChange={(e) => setClaimedArea(Number(e.target.value))}
-          onFocus={() =>
-            dispatch({ type: "SET_MIA_MESSAGE", payload: "error-measurement" })
-          }
-          inputProps={{
-            "aria-label": "שטח מתוקן במטרים רבועים",
-          }}
-          size="small"
-          sx={{ flex: 1, minWidth: 0 }}
-        />
-      </Box>
-
-      {isBusiness && (
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            mb: 2,
-            minWidth: 0,
-          }}
-        >
-          <Typography
-            component="span"
-            variant="body2"
-            sx={{ flexShrink: 0, width: "35%" }}
-          >
-            טעות בסיווג
-          </Typography>
-          <TextField
-            select
-            value={suggestedClass}
-            onChange={(e) => setSuggestedClass(e.target.value)}
-            onFocus={() =>
-              dispatch({
-                type: "SET_MIA_MESSAGE",
-                payload: "error-classification",
-              })
-            }
-            size="small"
-            sx={{ flex: 1, minWidth: 0 }}
-            SelectProps={{
-              displayEmpty: true,
-              renderValue: (value: unknown) => {
-                const v = value as string;
-                if (!v) return "בחר";
-                return (
-                  allSubtypes.find((s: ISubType) => s.code === v)?.label ?? v
-                );
-              },
-            }}
-            inputProps={{
-              "aria-label": "סיווג מוצע",
-            }}
-          >
-            <MenuItem value="">בחר</MenuItem>
-            {allSubtypes.map((s: ISubType) => (
-              <MenuItem key={s.code} value={s.code}>
-                {s.label}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Box>
-      )}
 
       <Box sx={wizardNavRowSx}>
         <Button

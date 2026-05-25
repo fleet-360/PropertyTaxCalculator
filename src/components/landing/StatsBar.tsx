@@ -11,6 +11,7 @@ import {
 } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 import { DURATION_MULTIPLIER } from "@/lib/animations";
+import bgPattern from "@/assets/partOfHomeBackground.png";
 
 type StatConfig = {
   target: number;
@@ -74,7 +75,7 @@ function RollingStat({ stat, index }: { stat: StatConfig; index: number }) {
       <Typography
         sx={{
           fontSize: { xs: "28px", sm: "36px", md: "48px" },
-          fontWeight: 800,
+          fontWeight: 300,
           color: "#fff",
           lineHeight: 1.1,
           fontVariantNumeric: "tabular-nums",
@@ -103,29 +104,106 @@ export default function StatsBar() {
       sx={{
         py: { xs: 6, md: 9 },
         bgcolor: "background.default",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
-      <Container maxWidth="lg">
+      {/* Continuation of the page-wide pixel-grid pattern on the sides of the
+          stats card. Same contrast / blend-mode treatment as the section above. */}
+      <Box
+        component="img"
+        src={bgPattern.src}
+        alt=""
+        aria-hidden="true"
+        sx={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: { xs: "70%", md: "45%" },
+          height: "auto",
+          pointerEvents: "none",
+          userSelect: "none",
+          filter: "contrast(2.6) brightness(0.95)",
+          mixBlendMode: "darken",
+        }}
+      />
+      <Box
+        component="img"
+        src={bgPattern.src}
+        alt=""
+        aria-hidden="true"
+        sx={{
+          position: "absolute",
+          top: 0,
+          right: 0,
+          width: { xs: "70%", md: "45%" },
+          height: "auto",
+          pointerEvents: "none",
+          userSelect: "none",
+          transform: "scaleX(-1)",
+          filter: "contrast(2.6) brightness(0.95)",
+          mixBlendMode: "darken",
+        }}
+      />
+
+      <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
         <Box
           sx={(theme) => ({
             position: "relative",
             borderRadius: { xs: "20px", md: "28px" },
             overflow: "hidden",
-            background: `
-              radial-gradient(60% 100% at 50% 0%, rgba(61,120,240,0.55) 0%, rgba(61,120,240,0) 70%),
-              linear-gradient(180deg, ${theme.palette.brand.navyLight} 0%, ${theme.palette.brand.navyMid} 50%, ${theme.palette.brand.navyDeep} 100%)
-            `,
+            // Solid navy fallback in case the video is still loading or fails to load.
+            // backgroundColor: theme.palette.brand.navyDeep,
             px: { xs: 3, md: 6 },
             py: { xs: 5, md: 6 },
             boxShadow: "0 30px 60px rgba(11,26,71,0.25)",
+            isolation: "isolate",
           })}
         >
-          {/* Subtle grid overlay */}
+          {/* Looping video texture (data/code particles) — sits at the very back. */}
+          <Box
+            component="video"
+            src="/videos/stats-bg.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            aria-hidden
+            sx={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              zIndex: 0,
+              pointerEvents: "none",
+            }}
+          />
+
+          {/* Tinted gradient overlay — keeps the brand colours dominant and the text legible
+              while letting the video texture shimmer through. */}
           <Box
             aria-hidden="true"
             sx={(theme) => ({
               position: "absolute",
               inset: 0,
+              zIndex: 1,
+              background: `
+                radial-gradient(60% 100% at 50% 0%, rgba(61,120,240,0.45) 0%, rgba(61,120,240,0) 70%),
+                linear-gradient(180deg, ${theme.palette.brand.navyLight}E6 0%, ${theme.palette.brand.navyMid}F2 50%, ${theme.palette.brand.navyDeep}F2 100%)
+              `,
+              pointerEvents: "none",
+            })}
+          />
+
+          {/* Subtle grid overlay (kept for the brand grid texture). */}
+          <Box
+            aria-hidden="true"
+            sx={(theme) => ({
+              position: "absolute",
+              inset: 0,
+              zIndex: 2,
               backgroundImage: `linear-gradient(${theme.palette.brand.gridLine} 1px, transparent 1px), linear-gradient(90deg, ${theme.palette.brand.gridLine} 1px, transparent 1px)`,
               backgroundSize: "60px 60px",
               pointerEvents: "none",
@@ -137,7 +215,7 @@ export default function StatsBar() {
           />
 
           <Box
-            sx={{ position: "relative", zIndex: 1 }}
+            sx={{ position: "relative", zIndex: 3 }}
             role="group"
             aria-label="נתונים סטטיסטיים"
           >

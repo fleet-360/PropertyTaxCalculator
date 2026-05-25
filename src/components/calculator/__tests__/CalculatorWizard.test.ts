@@ -40,16 +40,16 @@ describe('wizardReducer', () => {
     expect(result.currentStep).toBe(0);
   });
 
-  it('NEXT_STEP skips exemptions (step 4) for business', () => {
+  it('NEXT_STEP does not skip step 4 for business (now hosts area/error inputs)', () => {
     const state = makeState({ currentStep: 3, propertyType: 'business' });
     const result = wizardReducer(state, { type: 'NEXT_STEP' });
-    expect(result.currentStep).toBe(5); // skips 4
+    expect(result.currentStep).toBe(4);
   });
 
-  it('PREV_STEP skips exemptions (step 4) backward for business', () => {
+  it('PREV_STEP does not skip step 4 backward for business', () => {
     const state = makeState({ currentStep: 5, propertyType: 'business' });
     const result = wizardReducer(state, { type: 'PREV_STEP' });
-    expect(result.currentStep).toBe(3); // skips 4
+    expect(result.currentStep).toBe(4);
   });
 
   it('NEXT_STEP does NOT skip exemptions for private when exemptions exist', () => {
@@ -64,10 +64,12 @@ describe('wizardReducer', () => {
     expect(result.currentStep).toBe(4);
   });
 
-  it('NEXT_STEP skips exemptions for private when no relevant exemptions', () => {
+  it('NEXT_STEP does not skip step 4 for private even when no relevant exemptions', () => {
+    // Step 4 now also hosts the additional-area inputs and measurement /
+    // classification error reporting, so it must always be shown.
     const state = makeState({ currentStep: 3, propertyType: 'private' });
     const result = wizardReducer(state, { type: 'NEXT_STEP' });
-    expect(result.currentStep).toBe(5);
+    expect(result.currentStep).toBe(4);
   });
 
   it('SET_PROPERTY_TYPE updates propertyType', () => {

@@ -7,14 +7,15 @@ import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import DummyPaymentDialog from "@/components/calculator/DummyPaymentDialog";
 import CouponPaymentSection from "@/components/calculator/CouponPaymentSection";
+import ResultsDetailsCard from "@/components/calculator/ResultsDetailsCard";
 import { StepIndicator } from "../WizardLayout";
 import { useCalculatorFeatures } from "../CalculatorFeaturesContext";
 import { useEmailSend } from "@/hooks/useEmailSend";
 import type { StepProps } from "../CalculatorWizard";
+import type { AreaBreakdownItem, AppliedFee } from "@/lib/types/calculator";
 import {
   wizardPrimaryButtonSx,
   wizardResultsCardSx,
@@ -56,6 +57,10 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
     result.calculatedBimonthly ?? result.calculated ?? reported;
   const biMonthlySavings = Math.max(0, reported - calculated);
   const annualSavings = biMonthlySavings * 6;
+  const tenYearSavings = annualSavings * 10;
+  const areaBreakdown: AreaBreakdownItem[] | undefined = result.areaBreakdown;
+  const appliedFees: AppliedFee[] | undefined = result.appliedFees;
+  const totalFeesBimonthly: number | undefined = result.totalFeesBimonthly;
 
   const goToDetailedResults = () => dispatch({ type: "NEXT_STEP" });
 
@@ -93,13 +98,15 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
           fontWeight: 700,
           fontSize: { xs: "18px", md: "20px" },
           lineHeight: "27px",
-          textAlign: "right",
           color: theme.palette.brand.textMain,
           mb: { xs: 3, md: 4 },
         })}
       >
-        לפי התחשיב שלנו מגיעה לך{" "}
-        <Box component="span" sx={(theme) => ({ color: theme.palette.brand.successGreen })}>
+        לפי התחשיב שלנו מגיעה לך
+        <Box
+          component="span"
+          sx={(theme) => ({ color: theme.palette.brand.successGreen })}
+        >
           הנחה משמעותית
         </Box>{" "}
         בתשלום הארנונה!
@@ -115,55 +122,31 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
         alignItems: "stretch",
       }}
     >
-      <Box sx={wizardResultsCardSx}>
-        <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ mb: 3 }}>
-          <DescriptionOutlinedIcon sx={{ fontSize: 40, color: "action.disabled" }} />
-          <Box sx={{ flex: 1 }}>
-            <Typography sx={{ fontWeight: 700, fontSize: "24px", lineHeight: "32px", mb: 1 }}>
-              תוצאות המחשבון:
-            </Typography>
-            <Typography sx={{ fontWeight: 500, fontSize: "16px" }}>
-              גובה ההנחה השנתי שמגיע לך:
-            </Typography>
-            <Typography sx={{ fontWeight: 500, fontSize: "32px", mt: 1 }}>
-              ₪{annualSavings.toLocaleString("he-IL")}
-            </Typography>
-          </Box>
-        </Stack>
-        <Box
-          sx={{
-            filter: "blur(5px)",
-            userSelect: "none",
-            pointerEvents: "none",
-            opacity: 0.85,
-          }}
-          aria-hidden
-        >
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Box
-              key={i}
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                py: 1.5,
-                borderBottom: "1px solid",
-                borderColor: "divider",
-              }}
-            >
-              <Box sx={{ width: "40%", height: 12, bgcolor: "action.hover", borderRadius: 1 }} />
-              <Box sx={{ width: "25%", height: 12, bgcolor: "action.hover", borderRadius: 1 }} />
-            </Box>
-          ))}
-        </Box>
-      </Box>
-
       <Stack spacing={3}>
         <Box sx={wizardResultsCardSx}>
-          <Typography sx={{ fontWeight: 700, fontSize: "24px", lineHeight: "32px", mb: 2 }}>
+          <Typography
+            sx={{
+              fontWeight: 700,
+              fontSize: "24px",
+              lineHeight: "32px",
+              mb: 2,
+            }}
+          >
             סיכום תשלום — לצפייה בתוצאות המחשבון המפורטות
           </Typography>
-          <Box sx={{ borderTop: "1px solid", borderColor: "divider", pt: 3, mb: 3 }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-end">
+          <Box
+            sx={{
+              borderTop: "1px solid",
+              borderColor: "divider",
+              pt: 3,
+              mb: 3,
+            }}
+          >
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="flex-end"
+            >
               <Box>
                 <Typography sx={{ fontWeight: 500, fontSize: "32px" }}>
                   ₪{calculatorChargeAmount.toLocaleString("he-IL")}
@@ -177,7 +160,11 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
               </Typography>
             </Stack>
           </Box>
-          <CouponPaymentSection state={state} dispatch={dispatch} context="results_gate" />
+          <CouponPaymentSection
+            state={state}
+            dispatch={dispatch}
+            context="results_gate"
+          />
           <Button
             variant="contained"
             fullWidth
@@ -189,11 +176,30 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
           </Button>
         </Box>
       </Stack>
+      <ResultsDetailsCard
+        reported={reported}
+        calculated={calculated}
+        biMonthlySavings={biMonthlySavings}
+        annualSavings={annualSavings}
+        tenYearSavings={tenYearSavings}
+        areaBreakdown={areaBreakdown}
+        appliedFees={appliedFees}
+        totalFeesBimonthly={totalFeesBimonthly}
+        blurred
+      />
     </Box>
   );
 
   const simpleActions = (
-    <Box sx={{ display: "flex", justifyContent: "center", gap: 2, flexWrap: "wrap", mt: 3 }}>
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        gap: 2,
+        flexWrap: "wrap",
+        mt: 3,
+      }}
+    >
       <Button
         variant="outlined"
         onClick={() => dispatch({ type: "SET_STEP", step: 0 })}
@@ -201,7 +207,11 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
       >
         חזרה להתחלה
       </Button>
-      <Button variant="contained" onClick={handlePrimaryClick} sx={wizardPrimaryButtonSx}>
+      <Button
+        variant="contained"
+        onClick={handlePrimaryClick}
+        sx={wizardPrimaryButtonSx}
+      >
         {paymentEnabled ? "תשלום וצפייה בתוצאות" : "צפה בתוצאות מפורטות"}
       </Button>
     </Box>

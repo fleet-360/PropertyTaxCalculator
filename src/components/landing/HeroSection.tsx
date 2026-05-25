@@ -4,6 +4,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import Link from "next/link";
 import Image from "next/image";
 import heroMockup from "@/assets/hero-imac-mockup.png";
+import heroBg from "@/assets/heroBackgroundcolor.jpg";
 
 const BENEFITS = [
   "דיוק בחישוב",
@@ -21,44 +22,43 @@ export default function HeroSection() {
         position: "relative",
         minHeight: { xs: "auto", md: "78vh" },
         pt: { xs: "120px", md: "120px" },
-        pb: { xs: "80px", md: "60px" },
-        overflow: "hidden",
-        background: `
-          radial-gradient(60% 50% at 70% 30%, rgba(61,120,240,0.45) 0%, rgba(61,120,240,0) 70%),
-          radial-gradient(100% 80% at 50% 60%, ${theme.palette.brand.navyMid} 0%, ${theme.palette.brand.navyDeep} 75%)
-        `,
+        pb: { xs: "30px", md: "20px" },
+        // overflow: "hidden",
+        // Solid navy fallback (in case the image is still loading or fails).
+        // Background photo (gradient + grid texture baked in).
+        backgroundImage: `url(${heroBg.src})`,
+        backgroundSize: "cover",
+        backgroundPosition: "right center",
+        backgroundRepeat: "no-repeat",
+        opacity: 0.9,
       })}
     >
-      {/* Subtle grid pattern overlay */}
+      {/* One continuous, smooth wave at the bottom of the hero — high on the
+          LEFT, gently descending to the RIGHT. A single cubic-bezier guarantees
+          a clean curve with no artefacts (peaks around x=15%, y=18% then sweeps
+          down to x=100%, y=78%). */}
       <Box
         aria-hidden="true"
+        component="svg"
+        viewBox="0 0 1440 320"
+        preserveAspectRatio="none"
         sx={(theme) => ({
-          position: "absolute",
-          inset: 0,
-          backgroundImage: `linear-gradient(${theme.palette.brand.gridLine} 1px, transparent 1px), linear-gradient(90deg, ${theme.palette.brand.gridLine} 1px, transparent 1px)`,
-          backgroundSize: "80px 80px",
-          pointerEvents: "none",
-          maskImage:
-            "radial-gradient(100% 70% at 50% 30%, #000 40%, transparent 100%)",
-          WebkitMaskImage:
-            "radial-gradient(100% 70% at 50% 30%, #000 40%, transparent 100%)",
-        })}
-      />
-
-      {/* White curve at bottom-left */}
-      <Box
-        aria-hidden="true"
-        sx={{
           position: "absolute",
           bottom: -1,
           left: 0,
-          width: { xs: "100%", md: "55%" },
-          height: { xs: 80, md: 160 },
-          bgcolor: "background.default",
-          borderTopRightRadius: { xs: "60px 40px", md: "200px 120px" },
+          width: "100%",
+          height: { xs: 100, md: 160 },
+          display: "block",
           zIndex: 1,
-        }}
-      />
+          color: theme.palette.background.default,
+          overflow: "visible",
+        })}
+      >
+        <path
+          d="M0,320 L0,-200 C 400,600 800,280 3840,-1600 L3440,320 Z"
+          fill="currentColor"
+        />
+      </Box>
 
       <Container maxWidth="xl" sx={{ position: "relative", zIndex: 2 }}>
         <Box
@@ -66,22 +66,27 @@ export default function HeroSection() {
             display: "grid",
             gridTemplateColumns: { xs: "1fr", md: "1.05fr 1fr" },
             alignItems: "center",
-            gap: { xs: 6, md: 4, lg: 6 },
+            gap: { xs: 4, md: 1, lg: 1 },
             width: "100%",
           }}
         >
           {/* Right column (RTL) — Text content */}
-          <Box sx={{ color: "#fff", textAlign: { xs: "center", md: "right" } }}>
+          <Box
+            sx={{
+              color: "#fff",
+              textAlign: { xs: "center", md: "left" },
+              alignSelf: { xs: "center", md: "flex-start" },
+            }}
+          >
             <Typography
               component="h1"
               sx={{
-                fontFamily:
-                  'var(--font-heebo), "Heebo", "Inter", sans-serif',
+                fontFamily: 'var(--font-heebo), "Heebo", "Inter", sans-serif',
                 fontWeight: 800,
                 fontSize: { xs: "42px", sm: "54px", md: "62px", lg: "76px" },
-                lineHeight: 1.05,
+                lineHeight: 1.55,
                 letterSpacing: "-1.5px",
-                mb: { xs: 2, md: 3 },
+                mt: { xs: 1, md: 1 },
                 color: "#fff",
                 whiteSpace: { md: "nowrap" },
               }}
@@ -92,7 +97,7 @@ export default function HeroSection() {
               sx={{
                 fontSize: { xs: "18px", md: "24px" },
                 fontWeight: 500,
-                lineHeight: 1.4,
+                lineHeight: 0.4,
                 mb: { xs: 2, md: 3 },
                 color: "#fff",
                 opacity: 0.95,
@@ -107,7 +112,7 @@ export default function HeroSection() {
                 gap: { xs: 1, md: 1.5 },
                 justifyContent: { xs: "center", md: "flex-start" },
                 alignItems: "center",
-                mb: { xs: 4, md: 5 },
+                mb: { xs: 2, md: 3 },
                 fontSize: { xs: "14px", md: "17px" },
                 fontWeight: 500,
                 color: "#fff",
@@ -148,9 +153,9 @@ export default function HeroSection() {
                 bgcolor: theme.palette.brand.blue,
                 color: "#fff",
                 borderRadius: "999px",
-                px: { xs: 3.5, md: 5 },
+                px: { xs: 1, md: 2 },
                 py: { xs: 1.5, md: 2 },
-                fontSize: { xs: "16px", md: "19px" },
+                fontSize: { xs: "12px", md: "14px" },
                 fontWeight: 700,
                 boxShadow: "0px 14px 36px rgba(26,86,224,0.45)",
                 "& .MuiButton-endIcon": { ml: 0.75, mr: -0.5 },
@@ -170,16 +175,18 @@ export default function HeroSection() {
               order: { xs: -1, md: 1 },
               position: "relative",
               width: "100%",
-              mb: { md: "-160px", lg: "-200px" },
+              mt: { xs: 6, md: 8 },
+              zIndex: 3,
             }}
           >
             <Image
               src={heroMockup}
               alt=""
               priority
+              unoptimized
               sizes="(max-width: 768px) 100vw, 55vw"
               style={{
-                width: "100%",
+                width: "105%",
                 height: "auto",
                 objectFit: "contain",
               }}

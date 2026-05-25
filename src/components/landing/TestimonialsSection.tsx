@@ -2,7 +2,6 @@
 import { Box, Container, Typography } from "@mui/material";
 import Image from "next/image";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 import photoBlonde from "@/assets/testimonial-photo-0-blonde.png";
 import photoMan from "@/assets/testimonial-photo-1-man.png";
 import photoCurly from "@/assets/testimonial-photo-2-curly.png";
@@ -22,34 +21,29 @@ const videoTestimonials: VideoTestimonial[] = [
 type QuoteTestimonial = {
   text: string;
   author: string;
-  initial: string;
-  avatarBg: string;
+  avatar: string;
 };
 
 const quoteTestimonials: QuoteTestimonial[] = [
   {
-    text: "ארנונה במשך זין שדרש שמהי שאמשי וחודשים בנהוקות באוקת, בענה משלמש שמע מצוץ. הצפוי על שעמשי דיכ צפינ לתואסור.",
-    author: "ניר סימון",
-    initial: "נ",
-    avatarBg: "#fbcfe8",
+    text: `"לא היה לי מושג בכלל איזה פטורים יש בצו הארנונה ובתקנות. בזכות מחשבון הארנונה, נפתחו בפניי כל הפטורים הרלבנטיים לי ויכולתי להגיש השגה ולקבל החזר"`,
+    author: "ניר מימון",
+    avatar: "/images/testimonials/nir.png",
   },
   {
-    text: '"הרשתי לעורך זין שדרש שמהי שאמשי לעדיותי וגן 1,500 ש"ח, בעיק תרסה במגויב לקרוצ ההמלשבל יוצא אש סוס שצמשולא לשטר לעמולש שלא יוטולא?"',
-    author: "ישראל ישראלי",
-    initial: "י",
-    avatarBg: "#dbeafe",
+    text: `"הרגשנו במשך הרבה חודשים שאנחנו משלמים ארנונה גבוה מידי, בעקבות שימוש במחשבון הארנונה ביססנו את טענותינו והגשנו השגה לעירייה"  פשוט מושלם. תודה למחשבון הארנונה"`,
+    author: "קבוצת פרידנזון",
+    avatar: "/images/testimonials/friendzone.png",
   },
   {
-    text: '"שמיהי לעורך זין שדרש שמהי שאמשי לעדיותי וגן 1,500 ש"ח, בעיק תרסה במגויב לקרוצ ההמלשבל יוצא אש סוס שצמשולא לשטר לעמולש שלא יוטולא?"',
-    author: "אורטל בטן",
-    initial: "א",
-    avatarBg: "#fde68a",
+    text: `“פניתי לעורך דין שדרש ממני 700 ₪ עבור ייעוץ ראשוני ו- 1,500 ₪ על כתיבת ההשגה בזכות המחשבון עשיתי את זה בעשירית מהסכום ומבלי לצאת מהבית"`,
+    author: "מלי אהרון",
+    avatar: "/images/testimonials/mali.png",
   },
   {
-    text: '"סי ידיא בכלל לאל לכש אכמ ייח שטר אש 6 חודאיות שלמש יישוצ לואט די ידלצויית? זה פניטים פעאם נושמ, לעיריזיב התי שיקטלא העיוצ מלאל?"',
-    author: "עדי לוי",
-    initial: "ע",
-    avatarBg: "#c7d2fe",
+    text: `"מי ידע בכלל שעל נכס ריק יש פטור של 6 חודשים? ולמי יש זמן לנסוע לעירייה? זה פיתרון פשוט מושלם. תודה למחשבון הארנונה"`,
+    author: "סיגל גזית",
+    avatar: "/images/testimonials/sigal.png",
   },
 ];
 
@@ -64,33 +58,47 @@ export default function TestimonialsSection() {
       }}
     >
       <Container maxWidth="lg">
-        {/* Title with quote decoration */}
+        {/* Title with decorative quote mark */}
         <Box sx={{ textAlign: "center", mb: { xs: 5, md: 7 } }}>
           <Box
-            sx={(theme) => ({
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 1,
-              color: theme.palette.brand.blueLight,
-              opacity: 0.5,
-              mb: -1.5,
-            })}
+            sx={{
+              position: "relative",
+              display: "inline-block",
+            }}
           >
-            <FormatQuoteIcon sx={{ fontSize: 36, transform: "scaleX(-1)" }} />
+            {/* Decorative typographic quote — sits behind the title at the start (right side in RTL) */}
+            <Box
+              aria-hidden
+              sx={(theme) => ({
+                position: "absolute",
+                top: { xs: -40, md: -50 },
+                left: { xs: -80, md: -100 },
+                fontFamily: '"Georgia", "Times New Roman", serif',
+                fontWeight: 700,
+                fontSize: { xs: "164px", md: "196px" },
+                lineHeight: 1,
+                color: theme.palette.brand.blueLight,
+                opacity: 0.3,
+                userSelect: "none",
+                pointerEvents: "none",
+              })}
+            >
+              &rdquo;
+            </Box>
+            <Typography
+              component="h2"
+              sx={(theme) => ({
+                position: "relative",
+                fontFamily: 'var(--font-heebo), "Heebo", sans-serif',
+                fontWeight: 800,
+                fontSize: { xs: "26px", md: "36px" },
+                color: theme.palette.brand.navyDeep,
+                letterSpacing: "-0.3px",
+              })}
+            >
+              לקוחות שלנו ממליצים
+            </Typography>
           </Box>
-          <Typography
-            component="h2"
-            sx={(theme) => ({
-              fontFamily: 'var(--font-heebo), "Heebo", sans-serif',
-              fontWeight: 800,
-              fontSize: { xs: "26px", md: "36px" },
-              color: theme.palette.brand.navyDeep,
-              letterSpacing: "-0.3px",
-            })}
-          >
-            לקוחות שלנו ממליצים
-          </Typography>
         </Box>
 
         {/* Video thumbnails (3 cards) */}
@@ -153,6 +161,7 @@ export default function TestimonialsSection() {
                   transition: "transform 0.25s ease",
                   color: theme.palette.brand.blue,
                   zIndex: 2,
+                  opacity: 0.5,
                 })}
               >
                 <PlayArrowIcon sx={{ fontSize: { xs: 32, md: 36 }, ml: 0.5 }} />
@@ -197,7 +206,6 @@ export default function TestimonialsSection() {
                   fontSize: "12.5px",
                   color: "#5a6788",
                   lineHeight: 1.6,
-                  textAlign: "right",
                   flex: 1,
                 }}
               >
@@ -209,27 +217,26 @@ export default function TestimonialsSection() {
                   alignItems: "center",
                   gap: 1,
                   mt: "auto",
-                  flexDirection: "row-reverse",
-                  justifyContent: "flex-end",
                 }}
               >
                 <Box
                   sx={{
-                    width: 28,
-                    height: 28,
+                    position: "relative",
+                    width: 32,
+                    height: 32,
                     borderRadius: "50%",
-                    bgcolor: q.avatarBg,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    color: (theme) => theme.palette.brand.navyDeep,
+                    overflow: "hidden",
                     flexShrink: 0,
+                    bgcolor: "#f1f4fb",
                   }}
-                  aria-hidden
                 >
-                  {q.initial}
+                  <Image
+                    src={q.avatar}
+                    alt={`תמונה של ${q.author}`}
+                    fill
+                    sizes="32px"
+                    style={{ objectFit: "cover" }}
+                  />
                 </Box>
                 <Typography
                   sx={(theme) => ({
