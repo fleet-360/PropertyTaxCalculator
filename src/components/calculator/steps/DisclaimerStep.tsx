@@ -1,19 +1,29 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import Button from '@mui/material/Button';
-import type { StepProps } from '../CalculatorWizard';
-import { useLeadUpdate } from '@/hooks/useLeadUpdate';
-import { CONSENT_TEXTS } from '@/lib/consent/consentTexts';
-import { useConsentSubmit } from '@/hooks/useConsentSubmit';
+import { useEffect } from "react";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Paper from "@mui/material/Paper";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Checkbox from "@mui/material/Checkbox";
+import Button from "@mui/material/Button";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import type { StepProps } from "../CalculatorWizard";
+import { useLeadUpdate } from "@/hooks/useLeadUpdate";
+import { CONSENT_TEXTS } from "@/lib/consent/consentTexts";
+import { useConsentSubmit } from "@/hooks/useConsentSubmit";
+import {
+  wizardNavRowSx,
+  wizardPrimaryButtonSx,
+  wizardSecondaryButtonSx,
+} from "../wizardStyles";
 
 /** Mia messages seeded in `seed-mia-messages.ts` — merged into one bubble on the disclaimer step. */
-const DISCLAIMER_MIA_MESSAGE_IDS = ['step-4-note-accuracy', 'step-4-note-ordinance'] as const;
+const DISCLAIMER_MIA_MESSAGE_IDS = [
+  "step-4-note-accuracy",
+  "step-4-note-ordinance",
+] as const;
 
 const DISCLAIMER_TEXT = CONSENT_TEXTS.legal_disclaimer.text;
 
@@ -23,57 +33,79 @@ export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
 
   useEffect(() => {
     dispatch({
-      type: 'SET_MIA_MESSAGE',
+      type: "SET_MIA_MESSAGE",
       payload: [...DISCLAIMER_MIA_MESSAGE_IDS],
     });
   }, [dispatch]);
 
   return (
     <Box sx={sx}>
-      <Typography variant="h5" textAlign="center" mb={3}>
-        הצהרה ואישור
-      </Typography>
-
-      <Paper
-        variant="outlined"
-        sx={{ p: 3, mb: 3, maxHeight: 260, overflowY: 'auto', lineHeight: 1.8 }}
+      <Typography
+        sx={{
+          fontSize: "16px",
+          lineHeight: "22px",
+          color: "text.primary",
+          mb: 3,
+        }}
       >
-        <Typography variant="body1">{DISCLAIMER_TEXT}</Typography>
-      </Paper>
+        {DISCLAIMER_TEXT}
+      </Typography>
 
       <FormControlLabel
         control={
           <Checkbox
             checked={state.consentGiven}
             onChange={(e) =>
-              dispatch({ type: 'UPDATE_FIELD', field: 'consentGiven', value: e.target.checked })
+              dispatch({
+                type: "UPDATE_FIELD",
+                field: "consentGiven",
+                value: e.target.checked,
+              })
             }
+            sx={(theme) => ({
+              color: "#cdd2e0",
+              "&.Mui-checked": { color: theme.palette.brand.blue },
+            })}
           />
         }
-        label="קראתי את התקנון ומדיניות הפרטיות ואני מסכים/ה ומאשר/ת"
+        label={
+          <Typography sx={{ fontSize: "18px", fontWeight: 400 }}>
+            קראתי ואני מסכים/ה
+          </Typography>
+        }
       />
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-        <Button variant="outlined" onClick={() => dispatch({ type: 'PREV_STEP' })}>
-          חזרה
+      <Box sx={wizardNavRowSx}>
+        <Button
+          variant="outlined"
+          onClick={() => dispatch({ type: "PREV_STEP" })}
+          startIcon={<ChevronRightIcon />}
+          sx={wizardSecondaryButtonSx}
+        >
+          לשלב הקודם
         </Button>
         <Button
           variant="contained"
           disabled={!state.consentGiven}
+          endIcon={<ChevronLeftIcon />}
+          sx={wizardPrimaryButtonSx}
           onClick={() => {
-            submitConsent(state.leadId, state.phone, 'legal_disclaimer', true);
+            submitConsent(state.leadId, state.phone, "legal_disclaimer", true);
             updateLead(state.leadId, state.calculationIndex, {
-              abandonmentStage: 'disclaimer',
+              abandonmentStage: "disclaimer",
             });
-            dispatch({ type: 'SET_LOADING', payload: true });
+            dispatch({ type: "SET_LOADING", payload: true });
             if (state.designations.length > 1) {
-              dispatch({ type: 'SET_LOADING', payload: false });
-              dispatch({ type: 'SET_CONTACT_REDIRECT', payload: 'designations' });
+              dispatch({ type: "SET_LOADING", payload: false });
+              dispatch({
+                type: "SET_CONTACT_REDIRECT",
+                payload: "designations",
+              });
               return;
             }
-            fetch('/api/tax-rates/calculate', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+            fetch("/api/tax-rates/calculate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 citySlug: state.citySlug,
                 propertyType: state.propertyPurpose,
@@ -91,7 +123,7 @@ export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
                 childrenCount: state.childrenCount,
                 correctedAreaSqm: state.measurementError?.claimed,
                 designations:
-                  state.propertyType === 'business'
+                  state.propertyType === "business"
                     ? state.designations.map((d) => ({
                         typeCode: d.type,
                         subtypeCode: d.subtype,
@@ -99,8 +131,14 @@ export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
                         areaSqm: d.area,
                       }))
                     : undefined,
-                additionalAreas: state.additionalAreas.length > 0 ? state.additionalAreas : undefined,
-                selectedFees: state.selectedFees.length > 0 ? state.selectedFees : undefined,
+                additionalAreas:
+                  state.additionalAreas.length > 0
+                    ? state.additionalAreas
+                    : undefined,
+                selectedFees:
+                  state.selectedFees.length > 0
+                    ? state.selectedFees
+                    : undefined,
               }),
             })
               .then((r) => {
@@ -108,23 +146,23 @@ export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
                 return r.json();
               })
               .then((data) => {
-                dispatch({ type: 'SET_CALCULATION_RESULT', payload: data });
-                dispatch({ type: 'SET_LOADING', payload: false });
+                dispatch({ type: "SET_CALCULATION_RESULT", payload: data });
+                dispatch({ type: "SET_LOADING", payload: false });
                 // Save calculation result to lead
                 updateLead(state.leadId, state.calculationIndex, {
-                  abandonmentStage: 'results_gate',
+                  abandonmentStage: "results_gate",
                   calculationResult: data,
                   calculationStatus: data.outcome,
                 });
-                dispatch({ type: 'NEXT_STEP' });
+                dispatch({ type: "NEXT_STEP" });
               })
               .catch(() => {
-                dispatch({ type: 'SET_LOADING', payload: false });
-                dispatch({ type: 'SET_CONTACT_REDIRECT', payload: 'error' });
+                dispatch({ type: "SET_LOADING", payload: false });
+                dispatch({ type: "SET_CONTACT_REDIRECT", payload: "error" });
               });
           }}
         >
-          חשב תוצאות
+          לשלב הבא
         </Button>
       </Box>
     </Box>

@@ -224,7 +224,7 @@ export default function FooterLegalLinks() {
       <Typography
         sx={{
           fontSize: { xs: '12px', sm: '13px' },
-          color: '#141414',
+          color: 'rgba(255,255,255,0.72)',
           lineHeight: 1.5,
           wordBreak: 'break-word',
           maxWidth: '100%',

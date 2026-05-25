@@ -15,41 +15,76 @@ import {
   ListItemText,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import Link from "next/link";
-import logo from "@/assets/icon-with-text-no-background.png";
+import Image from "next/image";
+import navbarLogo from "@/assets/navbar-logo.png";
 import { BLOG_PATHS } from "@/lib/blog/routes";
 
 const NAV_HEIGHT = 84;
-/** Padding-top for `main` under the fixed floating navbar (px). Matches former spacer in this file. */
-export const NAVBAR_MAIN_PADDING_TOP = { xs: `${NAV_HEIGHT + 12}px`, sm: `${NAV_HEIGHT + 16}px` } as const;
+export const NAVBAR_MAIN_PADDING_TOP = {
+  xs: `${NAV_HEIGHT + 12}px`,
+  sm: `${NAV_HEIGHT + 16}px`,
+} as const;
 const FLOAT_TOP = { xs: 12, sm: 16 };
 const FLOAT_INSET = { xs: 1.5, sm: 2, md: 3 };
-/** Ignore tiny scroll jitter (px). */
 const SCROLL_DIRECTION_DELTA = 6;
-/** Always show the bar when near the top of the page. */
 const SCROLL_TOP_THRESHOLD = 32;
 
 const navItemsLanding = [
-  { label: "בית", href: "#hero" },
-  { label: "מחשבון", href: "#calculator-section" },
-  { label: "המלצות", href: "#testimonials" },
-  { label: "מאמרים", href: BLOG_PATHS.home },
-  { label: "צור קשר", href: "/contact" },
+  { label: "דף הבית", href: "#hero" },
+  { label: "המחשבון", href: "/calculator" },
+  { label: "ממליצים", href: "#testimonials" },
+  { label: "חשוב לדעת", href: BLOG_PATHS.home },
+  { label: "יצירת קשר", href: "/contact" },
 ];
 
 const navItemsRoutes = [
-  { label: "בית", href: "/" },
-  { label: "מחשבון", href: "/#calculator-section" },
-  { label: "המלצות", href: "/#testimonials" },
-  { label: "מאמרים", href: BLOG_PATHS.home },
-  { label: "צור קשר", href: "/contact" },
+  { label: "דף הבית", href: "/" },
+  { label: "המחשבון", href: "/calculator" },
+  { label: "ממליצים", href: "/#testimonials" },
+  { label: "חשוב לדעת", href: BLOG_PATHS.home },
+  { label: "יצירת קשר", href: "/contact" },
 ];
 
 export type NavbarVariant = "landing" | "routes";
 
-export default function Navbar({ variant = "landing" }: { variant?: NavbarVariant }) {
+function BrandLogo() {
+  return (
+    <Box
+      component={Link}
+      href="/"
+      aria-label="מחשבון הארנונה - דף הבית"
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        textDecoration: "none",
+        cursor: "pointer",
+        height: { xs: 38, md: 48 },
+      }}
+    >
+      <Image
+        src={navbarLogo}
+        alt="מחשבון הארנונה"
+        priority
+        sizes="(max-width: 768px) 150px, 190px"
+        style={{
+          width: "auto",
+          height: "100%",
+          objectFit: "contain",
+        }}
+      />
+    </Box>
+  );
+}
+
+export default function Navbar({
+  variant = "landing",
+}: {
+  variant?: NavbarVariant;
+}) {
   const navItems = variant === "routes" ? navItemsRoutes : navItemsLanding;
-  const ctaHref =  "/#calculator-section";
+  const ctaHref = "/calculator";
   const [mobileOpen, setMobileOpen] = useState(false);
   const [navHidden, setNavHidden] = useState(false);
   const lastScrollY = useRef(0);
@@ -86,19 +121,6 @@ export default function Navbar({ variant = "landing" }: { variant?: NavbarVarian
     if (mobileOpen) setNavHidden(false);
   }, [mobileOpen]);
 
-  const logoComponent = () => (
-    <Box
-      aria-hidden="true"
-      sx={{
-        width: 100,
-        height: 100,
-        backgroundImage: `url(${logo.src})`,
-        backgroundSize: "contain",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    />
-  );
   return (
     <>
       <Box
@@ -130,10 +152,10 @@ export default function Navbar({ variant = "landing" }: { variant?: NavbarVarian
             backdropFilter: "blur(12px)",
             height: NAV_HEIGHT,
             justifyContent: "center",
-            borderRadius: 3,
+            borderRadius: "20px",
             overflow: "hidden",
             boxShadow:
-              "0px 8px 32px rgba(0,0,0,0.08), 0px 2px 8px rgba(0,0,0,0.04)",
+              "0px 8px 32px rgba(11,26,71,0.08), 0px 2px 8px rgba(11,26,71,0.04)",
             transition: (theme) =>
               theme.transitions.create(
                 ["border-radius", "box-shadow", "transform"],
@@ -142,43 +164,22 @@ export default function Navbar({ variant = "landing" }: { variant?: NavbarVarian
                   easing: theme.transitions.easing.easeInOut,
                 },
               ),
-            animation: "navbarEnter 0.98s cubic-bezier(0.22, 1, 0.36, 1) both",
-            "@keyframes navbarEnter": {
-              "0%": {
-                opacity: 0,
-                transform: "scaleX(0.55) scaleY(0.9)",
-                transformOrigin: "50% 0%",
-              },
-              "100%": {
-                opacity: 1,
-                transform: "scaleX(1) scaleY(1)",
-                transformOrigin: "50% 0%",
-              },
-            },
           }}
         >
-          <Container maxWidth="xl" sx={{ px: "44px" }}>
-            <Toolbar disableGutters sx={{ gap: "43px" }}>
-              {/* Right side — Logo */}
-              <Box
-                component={Link}
-                href="/"
-                sx={{
-                  display: {xs:"none","md":"flex"},
-                  alignItems: "center",
-                  gap: 1.5,
-                  textDecoration: "none",
-                  cursor: "pointer",
-                }}
-              >
-                {/* TODO: Replace with actual logo image */}
-                {logoComponent()}
+          <Container maxWidth="xl" sx={{ px: { xs: "20px", md: "32px" } }}>
+            <Toolbar disableGutters sx={{ gap: { xs: 2, md: 4 } }}>
+              {/* Right side (RTL) — Logo */}
+              <Box sx={{ display: { xs: "none", md: "flex" } }}>
+                <BrandLogo />
               </Box>
+
               {/* Center — Nav items (desktop) */}
               <Box
                 sx={{
                   display: { xs: "none", md: "flex" },
-                  gap: 5,
+                  gap: { md: 4, lg: 6 },
+                  flexGrow: 1,
+                  justifyContent: "center",
                 }}
               >
                 {navItems.map((item) => (
@@ -186,73 +187,76 @@ export default function Navbar({ variant = "landing" }: { variant?: NavbarVarian
                     key={item.label}
                     component={item.href.startsWith("/") ? Link : "a"}
                     href={item.href}
-                    sx={{
-                      color: "#4a4a6a",
+                    sx={(theme) => ({
+                      color: theme.palette.brand.navyDeep,
                       fontSize: "16px",
                       fontWeight: 500,
                       textDecoration: "none",
                       cursor: "pointer",
                       transition: "color 0.2s",
-                      "&:hover": { color: "#F28B00" },
-                    }}
+                      whiteSpace: "nowrap",
+                      "&:hover": { color: theme.palette.brand.blue },
+                    })}
                   >
                     {item.label}
                   </Typography>
                 ))}
               </Box>
-              {/* Left side — CTA button (in RTL this appears on visual left) */}
+
+              {/* Left side (RTL) — CTA button */}
               <Box
                 sx={{
                   display: { xs: "none", md: "flex" },
                   alignItems: "center",
-                  ml: "auto",
                 }}
               >
                 <Button
-                  component={variant === "routes" ? Link : "a"}
+                  component={Link}
                   href={ctaHref}
                   variant="contained"
-                  sx={{
-                    bgcolor: "#1a1a1a",
+                  endIcon={<ChevronLeftIcon />}
+                  sx={(theme) => ({
+                    bgcolor: theme.palette.brand.blue,
                     color: "#fff",
-                    borderRadius: "21px",
-                    px: 3.5,
-                    py: 1.2,
+                    borderRadius: "999px",
+                    px: 2.75,
+                    py: 1.1,
                     fontSize: "15px",
                     fontWeight: 700,
-                    minWidth: 130,
-                    height: 42,
-                    "&:hover": { bgcolor: "#F28B00" },
-                  }}
+                    boxShadow: "0px 8px 20px rgba(26,86,224,0.25)",
+                    "& .MuiButton-endIcon": { ml: 0.5, mr: -0.5 },
+                    "&:hover": {
+                      bgcolor: theme.palette.brand.blueDark,
+                      boxShadow: "0px 8px 24px rgba(26,86,224,0.35)",
+                    },
+                  })}
                 >
-                  חשב עכשיו
+                  חישוב הארנונה
                 </Button>
               </Box>
 
-              {/* Mobile menu button */}
-              <IconButton
-                aria-label="פתח תפריט ניווט"
-                sx={{ display: { md: "none" }, color: "#4a4a6a",m:"auto" }}
-                onClick={() => setMobileOpen(true)}
+              {/* Mobile: logo + menu button */}
+              <Box
+                sx={{
+                  display: { xs: "flex", md: "none" },
+                  width: "100%",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
               >
-                <MenuIcon />
-              </IconButton>
+                <BrandLogo />
+                <IconButton
+                  aria-label="פתח תפריט ניווט"
+                  sx={(theme) => ({ color: theme.palette.brand.navyDeep })}
+                  onClick={() => setMobileOpen(true)}
+                >
+                  <MenuIcon />
+                </IconButton>
+              </Box>
             </Toolbar>
           </Container>
         </AppBar>
       </Box>
-
-      {/* Spacer: account for floating offset + bar height */}
-      {/* <Box
-        sx={{
-          height: { xs: NAV_HEIGHT + 12, sm: NAV_HEIGHT + 16 },
-          transition: (theme) =>
-            theme.transitions.create("height", {
-              duration: theme.transitions.duration.shorter,
-              easing: theme.transitions.easing.easeInOut,
-            }),
-        }}
-      /> */}
 
       {/* Mobile drawer */}
       <Drawer
@@ -262,14 +266,8 @@ export default function Navbar({ variant = "landing" }: { variant?: NavbarVarian
         aria-label="תפריט ניווט"
       >
         <Box sx={{ width: 280, pt: 2, m: "auto" }}>
-          {/* Logo in drawer */}
-          <Box
-            sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, mb: 2 }}
-          >
-           {logoComponent()}
-            <Typography sx={{ fontWeight: 700, fontSize: "18px" }}>
-              ארנונה חכמה
-            </Typography>
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+            <BrandLogo />
           </Box>
           <List>
             {navItems.map((item) => (
@@ -294,20 +292,20 @@ export default function Navbar({ variant = "landing" }: { variant?: NavbarVarian
             ))}
             <ListItem disablePadding sx={{ px: 2, mt: 2 }}>
               <Button
-                component={variant === "routes" ? Link : "a"}
+                component={Link}
                 href={ctaHref}
                 variant="contained"
                 fullWidth
                 onClick={() => setMobileOpen(false)}
-                sx={{
-                  bgcolor: "#1a1a1a",
-                  borderRadius: "21px",
+                sx={(theme) => ({
+                  bgcolor: theme.palette.brand.blue,
+                  borderRadius: "999px",
                   py: 1.2,
                   fontWeight: 700,
-                  "&:hover": { bgcolor: "#F28B00" },
-                }}
+                  "&:hover": { bgcolor: theme.palette.brand.blueDark },
+                })}
               >
-                חשב עכשיו
+                חישוב הארנונה
               </Button>
             </ListItem>
           </List>

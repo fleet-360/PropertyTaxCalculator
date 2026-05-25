@@ -10,15 +10,13 @@ vi.mock('@/hooks/useLeadUpdate', () => ({
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import ContactRedirectStep from '@/components/calculator/steps/ContactRedirectStep';
 import ResultsGateStep from '@/components/calculator/steps/ResultsGateStep';
 import InitialWaiverStep from '@/components/calculator/steps/InitialWaiverStep';
 import { CalculatorFeaturesContext } from '@/components/calculator/CalculatorFeaturesContext';
 import { initialState, type WizardState } from '@/components/calculator/CalculatorWizard';
-
-// Simple RTL theme for MUI
-const theme = createTheme({ direction: 'rtl' });
+import theme from '@/theme/theme';
 
 function renderWithTheme(ui: React.ReactElement) {
   return render(<ThemeProvider theme={theme}>{ui}</ThemeProvider>);
@@ -147,12 +145,12 @@ describe('ResultsGateStep', () => {
     expect(screen.getByText(/החישוב תואם/)).toBeInTheDocument();
   });
 
-  it('outcome="overpaying" → shows eligible for discount', () => {
+  it('outcome="overpaying" → shows discount headline', () => {
     const state = makeState({
       calculationResult: { outcome: 'overpaying', savingsBimonthly: 200 },
     });
     renderWithTheme(<ResultsGateStep state={state} dispatch={dispatch} />);
-    expect(screen.getByText(/זכאי להנחה/)).toBeInTheDocument();
+    expect(screen.getByText(/הנחה משמעותית/)).toBeInTheDocument();
   });
 
   it('outcome="underpaying" → shows mismatch', () => {
@@ -191,9 +189,9 @@ describe('ResultsGateStep', () => {
     );
     fireEvent.click(screen.getByText('תשלום וצפייה בתוצאות'));
     const dialog = screen.getByRole('dialog');
-    expect(within(dialog).getByText('תשלום (הדגמה)')).toBeInTheDocument();
-    expect(within(dialog).getByText(/סכום להצגה:/)).toBeInTheDocument();
-    fireEvent.click(screen.getByText('אישור והמשך'));
+    expect(within(dialog).getByText('תשלום מאובטח')).toBeInTheDocument();
+    expect(within(dialog).getByText(/מסך תשלום לדוגמה/)).toBeInTheDocument();
+    fireEvent.click(screen.getByText('שלם והמשך'));
     expect(dispatch).toHaveBeenCalledWith({ type: 'NEXT_STEP' });
   });
 });
@@ -208,13 +206,13 @@ describe('InitialWaiverStep', () => {
 
   it('renders waiver text and checkbox', () => {
     renderWithTheme(<InitialWaiverStep state={state} dispatch={dispatch} />);
-    expect(screen.getByText('אישור שמירת פרטים')).toBeInTheDocument();
+    expect(screen.getByText(/שמירת הנתונים האישיים/)).toBeInTheDocument();
     expect(screen.getByText('קראתי ואני מסכים/ה')).toBeInTheDocument();
   });
 
   it('next button disabled when checkbox unchecked', () => {
     renderWithTheme(<InitialWaiverStep state={state} dispatch={dispatch} />);
-    const nextButton = screen.getByText('המשך לשלב הבא');
+    const nextButton = screen.getByText('לשלב הבא');
     expect(nextButton).toBeDisabled();
   });
 
@@ -222,7 +220,7 @@ describe('InitialWaiverStep', () => {
     renderWithTheme(<InitialWaiverStep state={state} dispatch={dispatch} />);
     const checkbox = screen.getByRole('checkbox');
     fireEvent.click(checkbox);
-    const nextButton = screen.getByText('המשך לשלב הבא');
+    const nextButton = screen.getByText('לשלב הבא');
     expect(nextButton).toBeEnabled();
   });
 });

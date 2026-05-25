@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, type MouseEvent } from 'react';
+import { useState, useMemo, type MouseEvent, type ReactNode } from 'react';
 import type { SxProps, Theme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -19,6 +19,9 @@ export interface DocumentPreviewPopoverProps {
   downloadLabel?: string;
   downloadFileName?: string;
   triggerSx?: SxProps<Theme>;
+  /** `outlined` — sidebar-style bordered button (e.g. wizard info card). */
+  triggerVariant?: 'text' | 'outlined';
+  triggerStartIcon?: ReactNode;
 }
 
 function defaultFileNameFromUrl(url: string): string {
@@ -41,6 +44,8 @@ export default function DocumentPreviewPopover({
   downloadLabel = 'הורדת הקובץ',
   downloadFileName,
   triggerSx,
+  triggerVariant = 'text',
+  triggerStartIcon,
 }: DocumentPreviewPopoverProps) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
@@ -72,18 +77,23 @@ export default function DocumentPreviewPopover({
     <>
       <Button
         type="button"
-        variant="text"
-        color="primary"
+        variant={triggerVariant === 'outlined' ? 'outlined' : 'text'}
+        color={triggerVariant === 'outlined' ? 'inherit' : 'primary'}
+        startIcon={triggerStartIcon}
         onClick={handleOpen}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={triggerAriaLabel ?? triggerLabel}
-        sx={[, ...(Array.isArray(triggerSx) ? triggerSx : triggerSx ? [triggerSx] : []), { zIndex: 10, textTransform: 'none', fontWeight: 600 }]}
+        sx={[
+          ...(Array.isArray(triggerSx) ? triggerSx : triggerSx ? [triggerSx] : []),
+          {
+            zIndex: 10,
+            textTransform: 'none',
+            fontWeight: triggerVariant === 'outlined' ? 400 : 600,
+          },
+        ]}
       >
-        <span>
-
-          {triggerLabel}
-        </span>
+        {triggerLabel}
       </Button>
       <Popover
         open={open}
