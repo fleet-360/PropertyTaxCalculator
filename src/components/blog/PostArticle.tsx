@@ -13,13 +13,7 @@ import { formatPostDateHe, formatPostDateISO } from '@/lib/dates';
 import BlockRenderer from '@/components/editor/BlockRenderer';
 import ShareButtons from '@/components/blog/ShareButtons';
 import TableOfContents from '@/components/blog/TableOfContents';
-
-interface BlockData {
-  id: string;
-  type: string;
-  data: Record<string, any>;
-  order: number;
-}
+import type { BlockData } from '@/components/editor/types';
 
 interface PostData {
   title: string;
