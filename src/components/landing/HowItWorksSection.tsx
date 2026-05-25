@@ -115,7 +115,7 @@ function StepCard({ step, index }: { step: Step; index: number }) {
           sx={() => ({
             display: "inline-block",
             fontFamily: '"Inter", var(--font-heebo), sans-serif',
-            fontSize: { xs: "44px", md: "62px" },
+            fontSize: { xs: "40px", md: "52px" },
             fontWeight: 700,
             lineHeight: 0.9,
             letterSpacing: "-2px",

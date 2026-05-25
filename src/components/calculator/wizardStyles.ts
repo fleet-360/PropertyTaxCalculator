@@ -143,6 +143,22 @@ export const wizardUploadZoneSx: SxProps<Theme> = (theme) => ({
   },
 });
 
+/** Container shown after a file is selected — mirrors the upload zone shape. */
+export const wizardUploadReadyZoneSx: SxProps<Theme> = (theme) => ({
+  border: `1px dashed ${theme.palette.brand.uploadBorder}`,
+  borderRadius: "6px",
+  bgcolor: theme.palette.background.paper,
+  px: { xs: 2, md: 4 },
+  py: 3,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 1,
+  minHeight: 208,
+  position: "relative",
+});
+
 export const wizardResultsCardSx: SxProps<Theme> = (theme) => ({
   border: `1px solid ${theme.palette.brand.borderResults}`,
   borderRadius: "30px",

@@ -1,4 +1,5 @@
-'use client'
+'use client';
+
 import Link from 'next/link';
 import MuiLink from '@mui/material/Link';
 import Card from '@mui/material/Card';
@@ -7,8 +8,8 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { blogCategoryPath, blogPostPath } from '@/lib/blog/routes';
-import { formatPostDateHe } from '@/lib/dates';
 
 interface PostCardProps {
   post: {
@@ -17,8 +18,8 @@ interface PostCardProps {
     slug: string;
     excerpt?: string;
     featuredImage?: string;
-    author: string;
-    category: string;
+    author?: string;
+    category?: string;
     publishedAt?: Date | string;
   };
 }
@@ -27,71 +28,79 @@ export default function PostCard({ post }: PostCardProps) {
   return (
     <Card
       component="article"
-      sx={{
+      elevation={0}
+      sx={(theme) => ({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'box-shadow 0.3s ease, transform 0.2s ease',
-        '&:hover': {
-          boxShadow: '0 8px 25px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.08)',
-          transform: 'translateY(-2px)',
-        },
         borderRadius: 2,
         overflow: 'hidden',
-      }}
+        border: `1px solid ${theme.palette.brand.borderCard}`,
+        boxShadow: 'none',
+        transition: 'box-shadow 0.25s ease, transform 0.2s ease, border-color 0.25s ease',
+        '&:hover': {
+          boxShadow: '0 12px 28px rgba(11,26,71,0.10)',
+          transform: 'translateY(-2px)',
+          borderColor: theme.palette.brand.blueLight,
+        },
+      })}
     >
       <Box sx={{ position: 'relative' }}>
         {post.featuredImage ? (
           <CardMedia
             component="img"
-            height="220"
+            height="180"
             image={post.featuredImage}
             alt={post.title}
             sx={{ objectFit: 'cover' }}
           />
         ) : (
           <Box
-            sx={{
-              height: 220,
-              background: (theme) =>
-                `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+            sx={(theme) => ({
+              height: 180,
+              background: `linear-gradient(135deg, ${theme.palette.brand.navyMid} 0%, ${theme.palette.brand.blue} 100%)`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-            }}
+            })}
           >
             <Typography
-              variant="h4"
+              variant="h5"
               sx={{
-                color: 'rgba(255,255,255,0.3)',
+                color: 'rgba(255,255,255,0.4)',
                 fontWeight: 700,
                 userSelect: 'none',
               }}
             >
-              Blog
+              חשוב לדעת
             </Typography>
           </Box>
         )}
         {post.category && post.category !== 'Uncategorized' && (
           <Link
             href={blogCategoryPath(post.category)}
-            style={{ position: 'absolute', top: 12, insetInlineStart: 12, textDecoration: 'none' }}
+            style={{
+              position: 'absolute',
+              top: 12,
+              insetInlineStart: 12,
+              textDecoration: 'none',
+            }}
           >
             <Chip
               label={post.category}
               size="small"
               clickable
-              sx={{
-                backgroundColor: 'primary.main',
-                color: 'primary.contrastText',
+              sx={(theme) => ({
+                backgroundColor: theme.palette.brand.blue,
+                color: '#fff',
                 fontWeight: 600,
-                fontSize: '0.75rem',
+                fontSize: '0.72rem',
                 opacity: 0.95,
                 '&:hover': {
                   opacity: 1,
-                  backgroundColor: 'primary.dark',
+                  backgroundColor: theme.palette.brand.blueDark,
                 },
-              }}
+              })}
             />
           </Link>
         )}
@@ -102,21 +111,23 @@ export default function PostCard({ post }: PostCardProps) {
           flexGrow: 1,
           display: 'flex',
           flexDirection: 'column',
-          p: 3,
+          p: 2.5,
         }}
       >
         <Typography
           variant="h6"
           component="h2"
-          sx={{
+          sx={(theme) => ({
             fontWeight: 700,
             mb: 1,
-            lineHeight: 1.3,
+            lineHeight: 1.4,
+            fontSize: '15.5px',
+            color: theme.palette.brand.navyDeep,
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
-          }}
+          })}
         >
           <Link
             href={blogPostPath(post.slug)}
@@ -131,17 +142,17 @@ export default function PostCard({ post }: PostCardProps) {
 
         {post.excerpt && (
           <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
+            sx={(theme) => ({
               mb: 2,
               lineHeight: 1.6,
+              fontSize: '13px',
+              color: theme.palette.brand.textMuted,
               display: '-webkit-box',
-              WebkitLineClamp: 2,
+              WebkitLineClamp: 4,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
               flexGrow: 1,
-            }}
+            })}
           >
             {post.excerpt}
           </Typography>
@@ -149,42 +160,30 @@ export default function PostCard({ post }: PostCardProps) {
 
         <Box
           sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
             mt: 'auto',
-            pt: 2,
-            borderTop: '1px solid',
-            borderColor: 'divider',
+            pt: 1.5,
+            display: 'flex',
+            justifyContent: 'flex-end',
           }}
         >
-          <Typography variant="caption" color="text.secondary">
-            {post.author}
-          </Typography>
-          {post.publishedAt && (
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              component="time"
-              dateTime={
-                typeof post.publishedAt === 'string'
-                  ? post.publishedAt
-                  : post.publishedAt.toISOString()
-              }
-            >
-              {formatPostDateHe(post.publishedAt)}
-            </Typography>
-          )}
+          <MuiLink
+            component={Link}
+            href={blogPostPath(post.slug)}
+            underline="none"
+            sx={(theme) => ({
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.25,
+              fontSize: '13px',
+              fontWeight: 600,
+              color: theme.palette.brand.blue,
+              '&:hover': { color: theme.palette.brand.blueDark },
+            })}
+          >
+            המשך קריאה
+            <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
+          </MuiLink>
         </Box>
-
-        <MuiLink
-          component={Link}
-          href={blogPostPath(post.slug)}
-          underline="hover"
-          sx={{ display: 'inline-block', mt: 1.5, fontSize: '0.875rem', fontWeight: 600, color: 'primary.main' }}
-        >
-          קרא עוד &larr;
-        </MuiLink>
       </CardContent>
     </Card>
   );

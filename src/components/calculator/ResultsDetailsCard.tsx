@@ -109,7 +109,9 @@ export default function ResultsDetailsCard({
           >
             תוצאות המחשבון:
           </Typography>
-          <Typography sx={{ fontWeight: 500, fontSize: { xs: "17px", md: "18px" } }}>
+          <Typography
+            sx={{ fontWeight: 500, fontSize: { xs: "17px", md: "18px" } }}
+          >
             גובה ההנחה השנתי שמגיע לך:
           </Typography>
           <Typography

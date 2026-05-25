@@ -11,7 +11,6 @@ import TextField from "@mui/material/TextField";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import Link from "@mui/material/Link";
-import DownloadIcon from "@mui/icons-material/Download";
 import EmailIcon from "@mui/icons-material/Email";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import DummyPaymentDialog from "@/components/calculator/DummyPaymentDialog";
@@ -91,12 +90,18 @@ export default function AppealStep({ state, dispatch }: StepProps) {
   }, [dispatch, flow]);
 
   // Mirror the local flow phase into wizard state so the shell can hide its chrome
-  // (step indicator, title, sidebar) while we generate / finalize the appeal.
+  // (step indicator, title, sidebar) while we generate / sign / finalize / show the
+  // success screen. Each of these phases renders its own centered layout below.
   // We intentionally do NOT reset to 'idle' on unmount — the wizard navigates away
   // from this step before that matters, and resetting in cleanup would race with
   // the layout swap and bounce the user back to the intro screen.
   useEffect(() => {
-    if (flow === "generating" || flow === "finalize") {
+    if (
+      flow === "generating" ||
+      flow === "finalize" ||
+      flow === "sign" ||
+      flow === "done"
+    ) {
       dispatch({ type: "SET_APPEAL_PHASE", payload: flow });
     } else {
       dispatch({ type: "SET_APPEAL_PHASE", payload: "idle" });
@@ -217,6 +222,7 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         setAppealExemptionDescription(data.exemptionDescription);
         setFlow("sign");
       } catch (e) {
+        console.error("[AppealStep] generation failed:", e);
         const msg = e instanceof Error ? e.message : "שגיאה";
         setGenerateError(msg);
         setFlow("intro");
@@ -360,40 +366,96 @@ export default function AppealStep({ state, dispatch }: StepProps) {
     state.fullName.trim().length > 0 &&
     state.calculationResult != null;
 
+  const missingFieldsDialog = (
+    <AppealMissingFieldsDialog
+      open={missingFieldsDialogOpen}
+      items={missingDocumentItems}
+      state={state}
+      onClose={handleMissingDialogClose}
+      onSubmit={handleMissingFieldsSubmit}
+      onGoToDataEntry={handleGoToDataEntryForAppeal}
+    />
+  );
+
+  const generateErrorAlert = generateError ? (
+    <Alert
+      severity="error"
+      sx={{ mb: 2 }}
+      onClose={() => setGenerateError(null)}
+    >
+      {generateError}
+    </Alert>
+  ) : null;
+
   if (flow === "done") {
     return (
-      <Box sx={{ pt: 5 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          textAlign: "center",
+          py: { xs: 4, md: 8 },
+          px: 2,
+        }}
+      >
+        <Typography
+          component="h1"
+          sx={(theme) => ({
+            fontWeight: 700,
+            fontSize: { xs: "22px", md: "26px" },
+            lineHeight: 1.2,
+            color: theme.palette.brand.textMain,
+            mb: 1.5,
+          })}
+        >
+          מכתב ההשגה נשלח
+        </Typography>
+
         {emailSent ? (
-          <Alert severity="success" sx={{ mb: 3, fontSize: "1.05rem" }}>
-            מכתב ההשגה החתום נשלח לכתובת {state.email?.trim()}.
-          </Alert>
+          <>
+            <Typography
+              sx={(theme) => ({
+                fontSize: { xs: "14px", md: "15px" },
+                color: theme.palette.brand.textMain,
+                mb: 0.5,
+              })}
+            >
+              למייל: {state.email?.trim()}
+            </Typography>
+            <Typography
+              sx={(theme) => ({
+                fontSize: { xs: "14px", md: "15px" },
+                color: theme.palette.brand.textMuted,
+                mb: 3.5,
+              })}
+            >
+              תודה שהשתמשתם במחשבון הארנונה
+            </Typography>
+          </>
         ) : (
-          <Alert severity="warning" sx={{ mb: 3 }}>
+          <Alert severity="warning" sx={{ mb: 3, maxWidth: 480 }}>
             {emailError ||
               signatureError ||
               "לא הצלחנו לשלוח את המייל. ניתן לנסות שוב או להוריד את הקובץ."}
           </Alert>
         )}
 
-        <Typography textAlign="center" color="text.secondary" sx={{ mb: 3 }}>
-          תודה שהשתמשת במחשבון הארנונה
-        </Typography>
-
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            justifyContent: "center",
-            flexWrap: "wrap",
-          }}
+        <Stack
+          direction="row"
+          spacing={2}
+          flexWrap="wrap"
+          useFlexGap
+          justifyContent="center"
+          sx={{ mb: 4 }}
         >
           {signedPdfBase64 && (
             <Button
               variant="contained"
-              startIcon={<DownloadIcon />}
               onClick={downloadSignedPdf}
+              sx={[wizardPrimaryButtonSx as never, { px: 2.5, py: 1 }]}
             >
-              הורד PDF חתום
+              הורדת עותק חתום
             </Button>
           )}
           {signedPdfBase64 && !emailSent && (
@@ -401,18 +463,21 @@ export default function AppealStep({ state, dispatch }: StepProps) {
               variant="outlined"
               startIcon={<EmailIcon />}
               onClick={() => void handleRetryEmail()}
+              sx={[wizardSecondaryButtonSx as never, { px: 2.5, py: 1 }]}
             >
               שלח שוב למייל
             </Button>
           )}
-          <Button
-            variant="outlined"
-            onClick={() => dispatch({ type: "RESET_CALCULATOR" })}
-            href="/#hero"
-          >
-            חזרה לדף הבית
-          </Button>
-        </Box>
+        </Stack>
+
+        <Button
+          variant="outlined"
+          onClick={() => dispatch({ type: "RESET_CALCULATOR" })}
+          href="/#hero"
+          sx={[wizardSecondaryButtonSx as never, { px: 2.5, py: 1 }]}
+        >
+          חזרה לעמוד הבית
+        </Button>
       </Box>
     );
   }
@@ -464,34 +529,79 @@ export default function AppealStep({ state, dispatch }: StepProps) {
 
   if (flow === "sign" && draftPdfBase64) {
     return (
-      <Box>
-        <Typography variant="h5" textAlign="center" mb={2}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          textAlign: "center",
+          py: { xs: 2, md: 4 },
+          px: 2,
+        }}
+      >
+        <Typography
+          component="h1"
+          sx={(theme) => ({
+            fontWeight: 700,
+            fontSize: { xs: "22px", md: "26px" },
+            lineHeight: 1.2,
+            color: theme.palette.brand.textMain,
+            mb: 1,
+          })}
+        >
           חתימה על מכתב ההשגה
         </Typography>
+        <Typography
+          sx={(theme) => ({
+            fontSize: { xs: "14px", md: "16px" },
+            color: theme.palette.brand.textMain,
+            mb: 0.5,
+          })}
+        >
+          חתימה דיגיטלית על מסמך ההשגה
+        </Typography>
+        <Typography
+          sx={(theme) => ({
+            fontSize: { xs: "13px", md: "14px" },
+            color: theme.palette.brand.textMuted,
+            mb: { xs: 3, md: 4 },
+            maxWidth: 520,
+          })}
+        >
+          חתמו באזור למטה. החתימה תשולב במסמך ה-PDF ותישלח למייל שלכם.
+        </Typography>
+
         {signatureError && (
           <Alert
             severity="error"
-            sx={{ mb: 2 }}
+            sx={{ mb: 2, width: "100%", maxWidth: 520 }}
             onClose={() => setSignatureError(null)}
           >
             {signatureError}
           </Alert>
         )}
         {!isValidAppealEmail(state.email) && (
-          <Alert severity="warning" sx={{ mb: 2 }}>
+          <Alert
+            severity="warning"
+            sx={{ mb: 2, width: "100%", maxWidth: 520 }}
+          >
             נדרשת כתובת מייל תקינה בשלב פרטי הקשר כדי לשלוח את המסמך אוטומטית.
           </Alert>
         )}
-        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+
+        <Box sx={{ width: "100%", maxWidth: 645, mb: 3 }}>
           <AppealSignaturePad
+            variant="underline"
             onConfirm={(png) => void handleSignatureConfirmed(png)}
             onEmptySignature={handleEmptySignature}
             disabled={flow !== "sign"}
           />
-        </Paper>
+        </Box>
+
         <Button
           variant="outlined"
           onClick={() => dispatch({ type: "PREV_STEP" })}
+          sx={[wizardSecondaryButtonSx as never, { px: 2.5, py: 1 }]}
         >
           חזרה
         </Button>
@@ -502,6 +612,7 @@ export default function AppealStep({ state, dispatch }: StepProps) {
   if (flow === "checkout") {
     return (
       <Box>
+        {generateErrorAlert}
         <Box
           sx={[
             wizardResultsCardSx as never,
@@ -636,6 +747,8 @@ export default function AppealStep({ state, dispatch }: StepProps) {
           dispatch={dispatch}
           context="appeal"
         />
+
+        {missingFieldsDialog}
       </Box>
     );
   }
@@ -646,13 +759,9 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         הגשת השגה
       </Typography>
 
-      {/* {generateError && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setGenerateError(null)}>
-          {generateError}
-        </Alert>
-      )}
+      {generateErrorAlert}
 
-      {paymentEnabled && (
+      {/* {paymentEnabled && (
         <CouponPaymentSection state={state} dispatch={dispatch} context="appeal" />
       )} */}
 
@@ -725,14 +834,7 @@ export default function AppealStep({ state, dispatch }: StepProps) {
         </Button>
       </Box>
 
-      <AppealMissingFieldsDialog
-        open={missingFieldsDialogOpen}
-        items={missingDocumentItems}
-        state={state}
-        onClose={handleMissingDialogClose}
-        onSubmit={handleMissingFieldsSubmit}
-        onGoToDataEntry={handleGoToDataEntryForAppeal}
-      />
+      {missingFieldsDialog}
     </Box>
   );
 }

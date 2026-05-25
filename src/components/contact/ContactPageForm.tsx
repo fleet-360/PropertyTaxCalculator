@@ -3,17 +3,26 @@
 import ContactForm, {
   type ContactFormSubmitPayload,
   type ContactFormWithMessage,
+  type ContactFormProps,
 } from '@/components/contact/ContactForm';
 
 function isContactWithMessage(data: ContactFormSubmitPayload): data is ContactFormWithMessage {
   return 'message' in data && typeof data.message === 'string';
 }
 
-export default function ContactPageForm() {
+interface ContactPageFormProps {
+  showMessage?: boolean;
+  variant?: ContactFormProps['variant'];
+  source?: string;
+}
+
+export default function ContactPageForm({
+  showMessage = false,
+  variant = 'embedded',
+  source = 'contact_form',
+}: ContactPageFormProps) {
   const handleSubmit = async (data: ContactFormSubmitPayload) => {
-    if (!isContactWithMessage(data)) {
-      throw new Error('חסרה הודעה');
-    }
+    const message = isContactWithMessage(data) ? data.message : undefined;
 
     const res = await fetch('/api/leads', {
       method: 'POST',
@@ -22,8 +31,8 @@ export default function ContactPageForm() {
         fullName: data.fullName,
         phone: data.phone,
         email: data.email,
-        message: data.message,
-        source: 'contact_form',
+        ...(message ? { message } : {}),
+        source,
       }),
     });
 
@@ -35,5 +44,11 @@ export default function ContactPageForm() {
     }
   };
 
-  return <ContactForm onSubmit={handleSubmit} />;
+  return (
+    <ContactForm
+      onSubmit={handleSubmit}
+      showMessage={showMessage}
+      variant={variant}
+    />
+  );
 }

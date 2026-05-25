@@ -7,12 +7,25 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import SignaturePad from 'signature_pad';
+import {
+  wizardPrimaryButtonSx,
+  wizardSecondaryButtonSx,
+} from './wizardStyles';
+
+export type AppealSignaturePadVariant = 'boxed' | 'underline';
 
 export interface AppealSignaturePadProps {
   /** Raw base64 PNG (no data: prefix). */
   onConfirm: (signaturePngBase64: string) => void;
   onEmptySignature?: () => void;
   disabled?: boolean;
+  /**
+   * Visual variant.
+   * - `boxed` (default): full border around the canvas + inner title (legacy look).
+   * - `underline`: clean centered look — canvas with only a thin underline,
+   *   no inner title, pill-shaped buttons centered horizontally.
+   */
+  variant?: AppealSignaturePadVariant;
 }
 
 function resizeCanvas(canvas: HTMLCanvasElement, signaturePad: SignaturePad) {
@@ -33,6 +46,7 @@ export default function AppealSignaturePad({
   onConfirm,
   onEmptySignature,
   disabled,
+  variant = 'boxed',
 }: AppealSignaturePadProps) {
   const theme = useTheme();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -75,6 +89,56 @@ export default function AppealSignaturePad({
     const raw = dataUrl.replace(/^data:image\/png;base64,/, '');
     onConfirm(raw);
   };
+
+  if (variant === 'underline') {
+    return (
+      <Box sx={{ width: '100%' }}>
+        <Box
+          sx={(t) => ({
+            borderBottom: `1px solid ${t.palette.brand.borderResults}`,
+            mb: 3,
+            mx: 'auto',
+            maxWidth: 520,
+          })}
+        >
+          <canvas
+            ref={canvasRef}
+            aria-label="אזור חתימה — ציירו את חתימתכם כאן"
+            style={{
+              display: 'block',
+              width: '100%',
+              height: 180,
+              touchAction: 'none',
+            }}
+          />
+        </Box>
+        <Stack
+          direction="row"
+          spacing={2}
+          flexWrap="wrap"
+          useFlexGap
+          justifyContent="center"
+        >
+          <Button
+            variant="contained"
+            onClick={handleConfirm}
+            disabled={disabled}
+            sx={[wizardPrimaryButtonSx as never, { px: 2.5, py: 1 }]}
+          >
+            אשר החתימה
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={handleClear}
+            disabled={disabled}
+            sx={[wizardSecondaryButtonSx as never, { px: 2.5, py: 1 }]}
+          >
+            נקה החתימה
+          </Button>
+        </Stack>
+      </Box>
+    );
+  }
 
   return (
     <Box>
