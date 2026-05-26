@@ -102,7 +102,7 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
           mb: { xs: 3, md: 4 },
         })}
       >
-        לפי התחשיב שלנו מגיעה לך
+        לפי התחשיב שלנו מגיעה לך{" "}
         <Box
           component="span"
           sx={(theme) => ({ color: theme.palette.brand.successGreen })}
