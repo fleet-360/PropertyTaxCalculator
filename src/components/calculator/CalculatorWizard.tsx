@@ -75,7 +75,17 @@ export interface WizardState {
   // Errors
   measurementError: { claimed: number; attachment: string } | null;
   classificationError: { suggested: string } | null;
+  /** UI toggle: did the user say "yes" to having a measurement error? */
+  hasMeasurementError: 'yes' | 'no' | null;
+  /**
+   * UI toggle: did the user say the property has multiple classifications
+   * (e.g. industry + residential)? If "yes" the wizard cannot run the
+   * calculation automatically and redirects to ContactRedirectStep.
+   */
+  hasMultipleClassifications: 'yes' | 'no' | null;
   // Exemptions
+  /** UI toggle: did the user say they are eligible for any exemption? */
+  hasExemptions: 'yes' | 'no' | null;
   selectedExemptions: SelectedExemption[];
   householdSize: number;
   childrenCount: number;
@@ -95,7 +105,14 @@ export interface WizardState {
   // step can render its own centered layout (loader, signature page, success page).
   appealPhase: 'idle' | 'generating' | 'finalize' | 'sign' | 'done';
   // Contact redirect reason (when calculation can't proceed)
-  contactRedirectReason: 'area' | 'designations' | 'city' | 'other_city' | 'error' | null;
+  contactRedirectReason:
+    | 'area'
+    | 'designations'
+    | 'multiple_classifications'
+    | 'city'
+    | 'other_city'
+    | 'error'
+    | null;
   /** Draft input for coupon (shown alongside payment on results gate / appeal) */
   couponCodeDraft: string;
   /** Applied coupon — reused for calculator payment and appeal payment */
@@ -139,6 +156,9 @@ export const initialState: WizardState = {
   designations: [{ type: '', subtype: '', zone: '', area: 0 }],
   measurementError: null,
   classificationError: null,
+  hasMeasurementError: null,
+  hasMultipleClassifications: null,
+  hasExemptions: null,
   selectedExemptions: [],
   householdSize: 1,
   childrenCount: 0,

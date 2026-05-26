@@ -16,7 +16,13 @@ import { useLeadUpdate } from '@/hooks/useLeadUpdate';
 import ContactForm, { type ContactFormSubmitPayload } from '@/components/contact/ContactForm';
 
 interface ContactRedirectStepProps {
-  reason: 'area' | 'designations' | 'city' | 'other_city' | 'error';
+  reason:
+    | 'area'
+    | 'designations'
+    | 'multiple_classifications'
+    | 'city'
+    | 'other_city'
+    | 'error';
   dispatch: Dispatch<WizardAction>;
   state: WizardState;
 }
@@ -31,6 +37,10 @@ const MESSAGES: Record<ContactRedirectStepProps['reason'], { title: string; body
     body: `כאשר לנכס עסקי יש יותר מייעוד אחד, נדרש חישוב מותאם אישית. אנא צור קשר עם הצוות אולם, במקרה של נכס עסקי שיש לו מספר
 סיווגים שונים או שטחים נרחבים, מומלץ להיעזר במומחה בתחום הארנונה.
 האם תרצה להשאיר פרטים כדי שנציג יחזור אליך?`,
+  },
+  multiple_classifications: {
+    title: 'הנכס שלך כולל מספר סיווגים',
+    body: 'לאור מורכבות הטיפול בנכס בעל מספר סיווגים (לדוגמה תעשייה ומגורים או עירוב סיווגים אחר), המחשבון אינו מסוגל בשלב זה לבצע את החישוב באופן אוטומטי. אנא השאר פרטים ונציג יחזור אליך לצורך בדיקה אישית.',
   },
   city: {
     title: 'העיר אינה קיימת במאגר',

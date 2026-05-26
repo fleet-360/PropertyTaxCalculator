@@ -1,72 +1,141 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Alert from '@mui/material/Alert';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
-import MenuItem from '@mui/material/MenuItem';
-import CloseIcon from '@mui/icons-material/Close';
-import AddIcon from '@mui/icons-material/Add';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import type { StepProps } from '../CalculatorWizard';
+import { useEffect, useMemo } from "react";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Alert from "@mui/material/Alert";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import MenuItem from "@mui/material/MenuItem";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import CloseIcon from "@mui/icons-material/Close";
+import AddIcon from "@mui/icons-material/Add";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import type { StepProps } from "../CalculatorWizard";
 import {
   wizardNavRowSx,
   wizardPrimaryButtonSx,
   wizardSecondaryButtonSx,
   wizardSectionHeaderSx,
   wizardSectionTitleSx,
-} from '../wizardStyles';
-import type { SelectedExemption } from '../CalculatorWizard';
-import type { IExemptionSubSection, IExemptionSection } from '@/lib/types/city-tariff';
-import type { IPropertyType, ISubType } from '@/lib/models/CityTariff';
-import { useLeadUpdate } from '@/hooks/useLeadUpdate';
+} from "../wizardStyles";
+import type { SelectedExemption } from "../CalculatorWizard";
+import type {
+  IExemptionSubSection,
+  IExemptionSection,
+} from "@/lib/types/city-tariff";
+import type { IPropertyType, ISubType } from "@/lib/models/CityTariff";
+import { useLeadUpdate } from "@/hooks/useLeadUpdate";
 
 const MAX_ROWS = 3;
+
+type YesNo = "yes" | "no";
+
+/** Inline yes/no radio group — labels above the radios, RTL "כן" first. */
+function YesNoRadio({
+  value,
+  onChange,
+  ariaLabel,
+}: {
+  value: YesNo | null;
+  onChange: (v: YesNo) => void;
+  ariaLabel: string;
+}) {
+  return (
+    <RadioGroup
+      row
+      aria-label={ariaLabel}
+      value={value ?? ""}
+      onChange={(_, v) => onChange(v as YesNo)}
+      sx={{ gap: 3, flexShrink: 0 }}
+    >
+      <FormControlLabel
+        value="yes"
+        control={
+          <Radio
+            size="small"
+            sx={(theme) => ({
+              "&.Mui-checked": { color: theme.palette.brand.blueLight },
+            })}
+          />
+        }
+        label="כן"
+        labelPlacement="top"
+        sx={{ m: 0, "& .MuiFormControlLabel-label": { fontSize: 14 } }}
+      />
+      <FormControlLabel
+        value="no"
+        control={
+          <Radio
+            size="small"
+            sx={(theme) => ({
+              "&.Mui-checked": { color: theme.palette.brand.blueLight },
+            })}
+          />
+        }
+        label="לא"
+        labelPlacement="top"
+        sx={{ m: 0, "& .MuiFormControlLabel-label": { fontSize: 14 } }}
+      />
+    </RadioGroup>
+  );
+}
 
 export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
   const { updateLead } = useLeadUpdate();
   const cityData = state.cityData;
-  const isBusiness = state.propertyType === 'business';
+  const isBusiness = state.propertyType === "business";
   const hasAreaTypeDiscounts = !!(cityData?.areaTypeDiscounts?.length > 0);
 
   const allExemptionSections: IExemptionSection[] = cityData?.exemptions ?? [];
   const exemptionSections = useMemo(() => {
     const type = state.propertyType; // 'private' | 'business'
     return allExemptionSections.filter(
-      (s) => s.applicableTo === 'both' || s.applicableTo === type,
+      (s) => s.applicableTo === "both" || s.applicableTo === type,
     );
   }, [allExemptionSections, state.propertyType]);
 
   // ── Mia message on mount ──
   useEffect(() => {
-    dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-3-default' });
+    dispatch({ type: "SET_MIA_MESSAGE", payload: "step-3-default" });
   }, [dispatch]);
 
   // ── Initialize additionalAreas slots when city defines areaTypeDiscounts ──
   useEffect(() => {
     if (!hasAreaTypeDiscounts) return;
     if (state.additionalAreas?.length > 0) return;
-    const initial = (cityData.areaTypeDiscounts as { areaType: string }[]).map((d) => ({
-      areaType: d.areaType,
-      areaSqm: 0,
-    }));
-    dispatch({ type: 'UPDATE_FIELD', field: 'additionalAreas', value: initial });
+    const initial = (cityData.areaTypeDiscounts as { areaType: string }[]).map(
+      (d) => ({
+        areaType: d.areaType,
+        areaSqm: 0,
+      }),
+    );
+    dispatch({
+      type: "UPDATE_FIELD",
+      field: "additionalAreas",
+      value: initial,
+    });
   }, [hasAreaTypeDiscounts, state.additionalAreas, cityData, dispatch]);
 
-  const rows = state.selectedExemptions.length > 0
-    ? state.selectedExemptions
-    : [{ sectionCode: '', subSectionCode: '' }];
+  const rows =
+    state.selectedExemptions.length > 0
+      ? state.selectedExemptions
+      : [{ sectionCode: "", subSectionCode: "" }];
 
   // Check if any selected exemption requires restriction fields
   const needsHouseholdSize = useMemo(() => {
     return rows.some((row) => {
       if (!row.subSectionCode) return false;
-      const section = exemptionSections.find((s) => s.sectionCode === row.sectionCode);
-      const sub = section?.subSections?.find((s) => s.code === row.subSectionCode);
+      const section = exemptionSections.find(
+        (s) => s.sectionCode === row.sectionCode,
+      );
+      const sub = section?.subSections?.find(
+        (s) => s.code === row.subSectionCode,
+      );
       return sub?.restrictions?.minHouseholdSize;
     });
   }, [rows, exemptionSections]);
@@ -74,8 +143,12 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
   const needsChildrenCount = useMemo(() => {
     return rows.some((row) => {
       if (!row.subSectionCode) return false;
-      const section = exemptionSections.find((s) => s.sectionCode === row.sectionCode);
-      const sub = section?.subSections?.find((s) => s.code === row.subSectionCode);
+      const section = exemptionSections.find(
+        (s) => s.sectionCode === row.sectionCode,
+      );
+      const sub = section?.subSections?.find(
+        (s) => s.code === row.subSectionCode,
+      );
       return sub?.restrictions?.minChildren;
     });
   }, [rows, exemptionSections]);
@@ -87,7 +160,9 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
   // ── Handlers for the moved fields ──
   const handleAdditionalAreaChange = (index: number, value: number) => {
     // Ensure the array is fully sized (matches areaTypeDiscounts order).
-    const discounts = (cityData?.areaTypeDiscounts ?? []) as { areaType: string }[];
+    const discounts = (cityData?.areaTypeDiscounts ?? []) as {
+      areaType: string;
+    }[];
     const base =
       state.additionalAreas?.length === discounts.length
         ? state.additionalAreas
@@ -95,51 +170,55 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
             areaType: d.areaType,
             areaSqm: state.additionalAreas?.[i]?.areaSqm ?? 0,
           }));
-    const next = base.map((a, i) => (i === index ? { ...a, areaSqm: value } : a));
-    dispatch({ type: 'UPDATE_FIELD', field: 'additionalAreas', value: next });
+    const next = base.map((a, i) =>
+      i === index ? { ...a, areaSqm: value } : a,
+    );
+    dispatch({ type: "UPDATE_FIELD", field: "additionalAreas", value: next });
   };
 
   const handleClaimedAreaChange = (value: number) => {
     if (value > 0) {
       dispatch({
-        type: 'SET_MEASUREMENT_ERROR',
-        payload: { claimed: value, attachment: '' },
+        type: "SET_MEASUREMENT_ERROR",
+        payload: { claimed: value, attachment: "" },
       });
     } else {
-      dispatch({ type: 'SET_MEASUREMENT_ERROR', payload: null });
+      dispatch({ type: "SET_MEASUREMENT_ERROR", payload: null });
     }
   };
 
   const handleSuggestedClassChange = (value: string) => {
     if (value) {
       dispatch({
-        type: 'SET_CLASSIFICATION_ERROR',
+        type: "SET_CLASSIFICATION_ERROR",
         payload: { suggested: value },
       });
     } else {
-      dispatch({ type: 'SET_CLASSIFICATION_ERROR', payload: null });
+      dispatch({ type: "SET_CLASSIFICATION_ERROR", payload: null });
     }
   };
 
   const updateRows = (newRows: SelectedExemption[]) => {
-    dispatch({ type: 'SET_SELECTED_EXEMPTIONS', payload: newRows });
+    dispatch({ type: "SET_SELECTED_EXEMPTIONS", payload: newRows });
   };
 
   const handleSectionChange = (index: number, sectionCode: string) => {
     const newRows = [...rows];
-    newRows[index] = { sectionCode, subSectionCode: '' }; // Reset subsection on category change
+    newRows[index] = { sectionCode, subSectionCode: "" }; // Reset subsection on category change
     updateRows(newRows);
 
     // Dispatch Mia message for the selected exemption category
     if (sectionCode) {
-      const section = exemptionSections.find((s) => s.sectionCode === sectionCode);
+      const section = exemptionSections.find(
+        (s) => s.sectionCode === sectionCode,
+      );
       if (section?.miaMessageId) {
-        dispatch({ type: 'SET_MIA_MESSAGE', payload: section.miaMessageId });
+        dispatch({ type: "SET_MIA_MESSAGE", payload: section.miaMessageId });
       } else {
-        dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-3-default' });
+        dispatch({ type: "SET_MIA_MESSAGE", payload: "step-3-default" });
       }
     } else {
-      dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-3-default' });
+      dispatch({ type: "SET_MIA_MESSAGE", payload: "step-3-default" });
     }
   };
 
@@ -151,25 +230,62 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
 
   const handleAddRow = () => {
     if (rows.length < MAX_ROWS) {
-      updateRows([...rows, { sectionCode: '', subSectionCode: '' }]);
+      updateRows([...rows, { sectionCode: "", subSectionCode: "" }]);
     }
   };
 
   const handleRemoveRow = (index: number) => {
     const newRows = rows.filter((_, i) => i !== index);
-    updateRows(newRows.length > 0 ? newRows : [{ sectionCode: '', subSectionCode: '' }]);
+    updateRows(
+      newRows.length > 0 ? newRows : [{ sectionCode: "", subSectionCode: "" }],
+    );
   };
 
   const hasAnySelection = rows.some((r) => r.subSectionCode);
+  const measurementToggle = state.hasMeasurementError;
+  const exemptionsToggle = state.hasExemptions;
+  const multipleClassToggle = state.hasMultipleClassifications;
+
+  const setMeasurementToggle = (v: YesNo) => {
+    dispatch({ type: "UPDATE_FIELD", field: "hasMeasurementError", value: v });
+    if (v === "no") {
+      dispatch({ type: "SET_MEASUREMENT_ERROR", payload: null });
+    }
+  };
+
+  const setExemptionsToggle = (v: YesNo) => {
+    dispatch({ type: "UPDATE_FIELD", field: "hasExemptions", value: v });
+    if (v === "no") {
+      dispatch({ type: "SET_SELECTED_EXEMPTIONS", payload: [] });
+      dispatch({ type: "UPDATE_FIELD", field: "householdSize", value: 1 });
+      dispatch({ type: "UPDATE_FIELD", field: "childrenCount", value: 0 });
+    }
+  };
+
+  const setMultipleClassToggle = (v: YesNo) => {
+    dispatch({
+      type: "UPDATE_FIELD",
+      field: "hasMultipleClassifications",
+      value: v,
+    });
+  };
 
   const handleNext = () => {
     // Filter out zero-area additionalAreas before persisting
     if (hasAreaTypeDiscounts) {
-      const filtered = (state.additionalAreas ?? []).filter((a) => a.areaSqm > 0);
-      dispatch({ type: 'UPDATE_FIELD', field: 'additionalAreas', value: filtered });
+      const filtered = (state.additionalAreas ?? []).filter(
+        (a) => a.areaSqm > 0,
+      );
+      dispatch({
+        type: "UPDATE_FIELD",
+        field: "additionalAreas",
+        value: filtered,
+      });
     }
+
+    // Persist whatever we have so far on the lead before any branching.
     updateLead(state.leadId, state.calculationIndex, {
-      abandonmentStage: 'exemptions',
+      abandonmentStage: "exemptions",
       selectedExemptions: state.selectedExemptions,
       householdSize: state.householdSize,
       childrenCount: state.childrenCount,
@@ -177,19 +293,32 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
       storageArea: state.storageArea || undefined,
       parkingArea: state.parkingArea || undefined,
     });
-    dispatch({ type: 'NEXT_STEP' });
+
+    // Multi-classification properties can't be calculated automatically — send
+    // the user to the contact redirect flow so a human representative can help.
+    if (multipleClassToggle === "yes") {
+      dispatch({
+        type: "SET_CONTACT_REDIRECT",
+        payload: "multiple_classifications",
+      });
+      return;
+    }
+
+    dispatch({ type: "NEXT_STEP" });
   };
 
+  const conditionalSectionSx = { mt: 2 } as const;
+
   const additionalAreaFieldsGridSx = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 150px), 1fr))',
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 150px), 1fr))",
     gap: 2,
-    width: '100%',
+    width: "100%",
     minWidth: 0,
   } as const;
 
   return (
-    <Box sx={{ ...sx, justifyContent: 'space-between' }}>
+    <Box sx={{ ...sx, justifyContent: "space-between" }}>
       {/* ─── שטחים נוספים ─── */}
       {hasAreaTypeDiscounts ? (
         <Box sx={{ mb: 3 }}>
@@ -197,25 +326,31 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
             <Typography sx={wizardSectionTitleSx}>שטחים נוספים</Typography>
           </Box>
           <Box sx={additionalAreaFieldsGridSx}>
-            {(cityData.areaTypeDiscounts as { areaType: string; label: string; discountPercent: number }[]).map(
-              (d, idx) => {
-                const current = state.additionalAreas?.find((a) => a.areaType === d.areaType);
-                return (
-                  <TextField
-                    key={d.areaType}
-                    label={`${d.label} (מ"ר)`}
-                    type="number"
-                    fullWidth
-                    size="small"
-                    value={current?.areaSqm || ''}
-                    onChange={(e) =>
-                      handleAdditionalAreaChange(idx, Number(e.target.value))
-                    }
-                    helperText={`הנחה ${d.discountPercent}%`}
-                  />
-                );
-              },
-            )}
+            {(
+              cityData.areaTypeDiscounts as {
+                areaType: string;
+                label: string;
+                discountPercent: number;
+              }[]
+            ).map((d, idx) => {
+              const current = state.additionalAreas?.find(
+                (a) => a.areaType === d.areaType,
+              );
+              return (
+                <TextField
+                  key={d.areaType}
+                  label={`${d.label} (מ"ר)`}
+                  type="number"
+                  fullWidth
+                  size="small"
+                  value={current?.areaSqm || ""}
+                  onChange={(e) =>
+                    handleAdditionalAreaChange(idx, Number(e.target.value))
+                  }
+                  helperText={`הנחה ${d.discountPercent}%`}
+                />
+              );
+            })}
           </Box>
         </Box>
       ) : (
@@ -229,11 +364,11 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
               type="number"
               fullWidth
               size="small"
-              value={state.coveredBalconyArea || ''}
+              value={state.coveredBalconyArea || ""}
               onChange={(e) =>
                 dispatch({
-                  type: 'UPDATE_FIELD',
-                  field: 'coveredBalconyArea',
+                  type: "UPDATE_FIELD",
+                  field: "coveredBalconyArea",
                   value: Number(e.target.value),
                 })
               }
@@ -243,11 +378,11 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
               type="number"
               fullWidth
               size="small"
-              value={state.storageArea || ''}
+              value={state.storageArea || ""}
               onChange={(e) =>
                 dispatch({
-                  type: 'UPDATE_FIELD',
-                  field: 'storageArea',
+                  type: "UPDATE_FIELD",
+                  field: "storageArea",
                   value: Number(e.target.value),
                 })
               }
@@ -257,11 +392,11 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
               type="number"
               fullWidth
               size="small"
-              value={state.parkingArea || ''}
+              value={state.parkingArea || ""}
               onChange={(e) =>
                 dispatch({
-                  type: 'UPDATE_FIELD',
-                  field: 'parkingArea',
+                  type: "UPDATE_FIELD",
+                  field: "parkingArea",
                   value: Number(e.target.value),
                 })
               }
@@ -272,52 +407,72 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
 
       {/* ─── טעות במדידה ─── */}
       <Box sx={{ mb: 3 }}>
-        <Box sx={wizardSectionHeaderSx}>
-          <Typography sx={wizardSectionTitleSx}>האם יש טעות בשטח הנכס?</Typography>
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
-          <Typography
-            component="span"
-            variant="body2"
-            sx={{ flexShrink: 0, width: '35%' }}
-          >
-            טעות במדידה
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: 1,
+            mb: 1,
+          }}
+        >
+          <Typography sx={wizardSectionTitleSx}>
+            האם יש טעות בשטח הנכס?
           </Typography>
-          <TextField
-            type="number"
-            placeholder='שטח מתוקן (מ"ר)'
-            value={state.measurementError?.claimed || ''}
-            onChange={(e) => handleClaimedAreaChange(Number(e.target.value))}
-            onFocus={() =>
-              dispatch({ type: 'SET_MIA_MESSAGE', payload: 'error-measurement' })
-            }
-            inputProps={{ 'aria-label': 'שטח מתוקן במטרים רבועים' }}
-            size="small"
-            sx={{ flex: 1, minWidth: 0 }}
+          <YesNoRadio
+            value={measurementToggle}
+            onChange={setMeasurementToggle}
+            ariaLabel="האם יש טעות בשטח הנכס"
           />
         </Box>
+        {measurementToggle === "yes" && (
+          <Box sx={conditionalSectionSx}>
+            <TextField
+              type="number"
+              size="small"
+              sx={{ width: 250 }}
+              placeholder="מהו השטח העיקרי הנכון?"
+              value={state.measurementError?.claimed || ""}
+              onChange={(e) => handleClaimedAreaChange(Number(e.target.value))}
+              onFocus={() =>
+                dispatch({
+                  type: "SET_MIA_MESSAGE",
+                  payload: "error-measurement",
+                })
+              }
+              inputProps={{ "aria-label": "שטח מתוקן במטרים רבועים" }}
+            />
+          </Box>
+        )}
       </Box>
 
       {/* ─── טעות בסיווג (עסקי בלבד) ─── */}
       {isBusiness && (
         <Box sx={{ mb: 3 }}>
           <Box sx={wizardSectionHeaderSx}>
-            <Typography sx={wizardSectionTitleSx}>האם יש טעות בסיווג הנכס?</Typography>
+            <Typography sx={wizardSectionTitleSx}>
+              האם יש טעות בסיווג הנכס?
+            </Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
+          <Box
+            sx={{ display: "flex", alignItems: "center", gap: 2, minWidth: 0 }}
+          >
             <Typography
               component="span"
               variant="body2"
-              sx={{ flexShrink: 0, width: '35%' }}
+              sx={{ flexShrink: 0, width: "35%" }}
             >
               טעות בסיווג
             </Typography>
             <TextField
               select
-              value={state.classificationError?.suggested ?? ''}
+              value={state.classificationError?.suggested ?? ""}
               onChange={(e) => handleSuggestedClassChange(e.target.value)}
               onFocus={() =>
-                dispatch({ type: 'SET_MIA_MESSAGE', payload: 'error-classification' })
+                dispatch({
+                  type: "SET_MIA_MESSAGE",
+                  payload: "error-classification",
+                })
               }
               size="small"
               sx={{ flex: 1, minWidth: 0 }}
@@ -325,11 +480,13 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
                 displayEmpty: true,
                 renderValue: (value: unknown) => {
                   const v = value as string;
-                  if (!v) return 'בחר';
-                  return allSubtypes.find((s: ISubType) => s.code === v)?.label ?? v;
+                  if (!v) return "בחר";
+                  return (
+                    allSubtypes.find((s: ISubType) => s.code === v)?.label ?? v
+                  );
                 },
               }}
-              inputProps={{ 'aria-label': 'סיווג מוצע' }}
+              inputProps={{ "aria-label": "סיווג מוצע" }}
             >
               <MenuItem value="">בחר</MenuItem>
               {allSubtypes.map((s: ISubType) => (
@@ -342,52 +499,102 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
         </Box>
       )}
 
-      {/* ─── הנחות ופטורים ─── */}
-      <Box sx={wizardSectionHeaderSx}>
-        <Typography sx={wizardSectionTitleSx}>הנחות ופטורים</Typography>
+      {/* ─── מספר סיווגים (כן/לא) ─── */}
+      <Box sx={{ mb: 3 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: 1,
+          }}
+        >
+          <Box>
+            <Typography sx={wizardSectionTitleSx}>
+              האם יש לנכס מספר סיווגים?
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              לדוגמה תעשייה ומגורים, או עירוב סיווגים אחר.
+            </Typography>
+          </Box>
+          <YesNoRadio
+            value={multipleClassToggle}
+            onChange={setMultipleClassToggle}
+            ariaLabel="האם יש לנכס מספר סיווגים"
+          />
+        </Box>
       </Box>
 
-      <Alert severity="info" sx={{ mb: 3 }}>
-        שים לב: לא ניתן לקבל כפל הנחות. תחול ההנחה הגבוהה ביותר בלבד.
-      </Alert>
+      {/* ─── פטורים והנחות (כן/לא) ─── */}
+      <Box sx={{ mb: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: 1,
+          }}
+        >
+          <Typography sx={wizardSectionTitleSx}>
+            האם יש לך פטור כלשהו (נכה, גמלאי, עולה, חייל, הורה יחיד, הבטחת הכנסה
+            וכו&apos;) ?
+          </Typography>
+          <YesNoRadio
+            value={exemptionsToggle}
+            onChange={setExemptionsToggle}
+            ariaLabel="האם יש לך פטור כלשהו"
+          />
+        </Box>
+      </Box>
 
-      {exemptionSections.length === 0 && (
+      {exemptionsToggle === "yes" && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          שים לב: לא ניתן לקבל כפל הנחות. תחול ההנחה הגבוהה ביותר בלבד.
+        </Alert>
+      )}
+
+      {exemptionsToggle === "yes" && exemptionSections.length === 0 && (
         <Typography color="text.secondary" textAlign="center" py={4}>
           לא נמצאו הנחות זמינות לעיר זו
         </Typography>
       )}
 
-      {exemptionSections.length > 0 && (
+      {exemptionsToggle === "yes" && exemptionSections.length > 0 && (
         <Box>
           {rows.map((row, index) => {
             const filteredSubSections: IExemptionSubSection[] = row.sectionCode
-              ? exemptionSections.find((s) => s.sectionCode === row.sectionCode)?.subSections ?? []
+              ? (exemptionSections.find(
+                  (s) => s.sectionCode === row.sectionCode,
+                )?.subSections ?? [])
               : [];
 
             return (
               <Box
                 key={index}
                 sx={{
-                  display: 'flex',
+                  display: "flex",
                   gap: 1.5,
-                  alignItems: 'flex-start',
+                  alignItems: "flex-start",
                   mb: 2,
                 }}
               >
                 {/* Category dropdown */}
                 <TextField
                   select
-                  label="קטגוריה"
+                  label="סוג הפטור"
                   value={row.sectionCode}
                   onChange={(e) => handleSectionChange(index, e.target.value)}
                   sx={{ flex: 1 }}
                   size="small"
                 >
                   <MenuItem value="" disabled>
-                    בחר קטגוריה
+                    בחר סוג פטור
                   </MenuItem>
                   {exemptionSections.map((section) => (
-                    <MenuItem key={section.sectionLabel + section.sectionCode} value={section.sectionCode}>
+                    <MenuItem
+                      key={section.sectionLabel + section.sectionCode}
+                      value={section.sectionCode}
+                    >
                       {section.sectionLabel}
                     </MenuItem>
                   ))}
@@ -396,15 +603,17 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
                 {/* Subcategory dropdown */}
                 <TextField
                   select
-                  label="הנחה"
+                  label="תת קטגוריה"
                   value={row.subSectionCode}
-                  onChange={(e) => handleSubSectionChange(index, e.target.value)}
+                  onChange={(e) =>
+                    handleSubSectionChange(index, e.target.value)
+                  }
                   disabled={!row.sectionCode}
                   sx={{ flex: 1.5 }}
                   size="small"
                 >
                   <MenuItem value="" disabled>
-                    בחר הנחה
+                    בחר תת קטגוריה
                   </MenuItem>
                   {filteredSubSections.map((sub) => (
                     <MenuItem key={sub.code} value={sub.code}>
@@ -419,7 +628,7 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
                     onClick={() => handleRemoveRow(index)}
                     size="small"
                     sx={{ mt: 0.5 }}
-                    aria-label="הסר הנחה"
+                    aria-label="הסר פטור"
                   >
                     <CloseIcon fontSize="small" />
                   </IconButton>
@@ -434,22 +643,26 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
               startIcon={<AddIcon />}
               onClick={handleAddRow}
               size="small"
-              sx={{ mb: 2, textTransform: 'none' }}
+              sx={{ mb: 2, textTransform: "none" }}
             >
-              הוסף הנחה
+              הוספת פטור
             </Button>
           )}
 
           {/* Global restriction fields */}
           {(needsHouseholdSize || needsChildrenCount) && (
-            <Box sx={{ display: 'flex', gap: 2, mt: 2, mb: 2 }}>
+            <Box sx={{ display: "flex", gap: 2, mt: 2, mb: 2 }}>
               {needsHouseholdSize && (
                 <TextField
                   label="גודל משק בית"
                   type="number"
                   value={state.householdSize}
                   onChange={(e) =>
-                    dispatch({ type: 'UPDATE_FIELD', field: 'householdSize', value: Number(e.target.value) })
+                    dispatch({
+                      type: "UPDATE_FIELD",
+                      field: "householdSize",
+                      value: Number(e.target.value),
+                    })
                   }
                   size="small"
                   sx={{ flex: 1 }}
@@ -462,7 +675,11 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
                   type="number"
                   value={state.childrenCount}
                   onChange={(e) =>
-                    dispatch({ type: 'UPDATE_FIELD', field: 'childrenCount', value: Number(e.target.value) })
+                    dispatch({
+                      type: "UPDATE_FIELD",
+                      field: "childrenCount",
+                      value: Number(e.target.value),
+                    })
                   }
                   size="small"
                   sx={{ flex: 1 }}
@@ -477,7 +694,7 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
       <Box sx={wizardNavRowSx}>
         <Button
           variant="outlined"
-          onClick={() => dispatch({ type: 'PREV_STEP' })}
+          onClick={() => dispatch({ type: "PREV_STEP" })}
           startIcon={<ChevronRightIcon />}
           sx={wizardSecondaryButtonSx}
         >
@@ -489,7 +706,7 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
           sx={wizardPrimaryButtonSx}
           onClick={handleNext}
         >
-          {hasAnySelection ? 'לשלב הבא' : 'דלג'}
+          {hasAnySelection ? "לשלב הבא" : "דלג"}
         </Button>
       </Box>
     </Box>
