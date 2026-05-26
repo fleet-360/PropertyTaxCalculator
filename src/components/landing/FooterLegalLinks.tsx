@@ -26,6 +26,10 @@ export default function FooterLegalLinks() {
         מדיניות פרטיות
       </Box>
       &nbsp;&nbsp;|&nbsp;&nbsp;
+      <Box component={Link} href="/refund-policy" sx={linkSx}>
+        מדיניות החזרים וביטולים
+      </Box>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
       <Box component={Link} href="/terms" sx={linkSx}>
         תנאי שימוש
       </Box>
