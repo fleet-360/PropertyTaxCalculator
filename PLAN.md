@@ -434,5 +434,8 @@ MONGODB_URI=mongodb://localhost:27017/blogsManager
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=admin123
 JWT_SECRET=your-secret-key-here
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_SITE_URL=http://localhost:3005
+# Tranzila (optional — without these, payments run in demo mode locally)
+TRANZILA_TERMINAL=your_terminal_name
+TRANZILA_TERMINAL_PASSWORD=your_terminal_password
 ```

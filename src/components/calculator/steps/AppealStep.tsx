@@ -13,7 +13,7 @@ import Checkbox from "@mui/material/Checkbox";
 import Link from "@mui/material/Link";
 import EmailIcon from "@mui/icons-material/Email";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import DummyPaymentDialog from "@/components/calculator/DummyPaymentDialog";
+import TranzilaPaymentDialog from "@/components/calculator/TranzilaPaymentDialog";
 import CouponPaymentSection from "@/components/calculator/CouponPaymentSection";
 import AppealSignaturePad from "@/components/calculator/AppealSignaturePad";
 import AppealMissingFieldsDialog from "@/components/calculator/AppealMissingFieldsDialog";
@@ -737,12 +737,13 @@ export default function AppealStep({ state, dispatch }: StepProps) {
           </Button>
         </Box>
 
-        <DummyPaymentDialog
+        <TranzilaPaymentDialog
           open={paymentDialogOpen}
           onClose={() => setPaymentDialogOpen(false)}
           onConfirm={handlePaymentConfirm}
           amountNis={appealChargeAmount}
-          title="תשלום השגה (הדגמה)"
+          product="appeal"
+          title="תשלום השגה"
           state={state}
           dispatch={dispatch}
           context="appeal"

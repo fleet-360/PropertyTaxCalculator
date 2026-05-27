@@ -8,7 +8,7 @@ import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import DummyPaymentDialog from "@/components/calculator/DummyPaymentDialog";
+import TranzilaPaymentDialog from "@/components/calculator/TranzilaPaymentDialog";
 import CouponPaymentSection from "@/components/calculator/CouponPaymentSection";
 import ResultsDetailsCard from "@/components/calculator/ResultsDetailsCard";
 import { StepIndicator } from "../WizardLayout";
@@ -264,11 +264,12 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
         </>
       )}
 
-      <DummyPaymentDialog
+      <TranzilaPaymentDialog
         open={paymentDialogOpen}
         onClose={() => setPaymentDialogOpen(false)}
         onConfirm={handlePaymentConfirm}
         amountNis={calculatorChargeAmount}
+        product="calculator"
         state={state}
         dispatch={dispatch}
         context="results_gate"

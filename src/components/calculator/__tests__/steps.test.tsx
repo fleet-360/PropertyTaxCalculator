@@ -169,11 +169,33 @@ describe('ResultsGateStep', () => {
     expect(screen.getByText('חזרה להתחלה')).toBeInTheDocument();
   });
 
-  it('outcome="underpaying" with paymentEnabled opens dummy dialog then dispatches NEXT_STEP', () => {
+  it('outcome="underpaying" with paymentEnabled opens payment dialog then dispatches NEXT_STEP', async () => {
     const state = makeState({
       calculationResult: { outcome: 'underpaying' },
+      leadId: '507f1f77bcf86cd799439011',
     });
     dispatch.mockClear();
+
+    const fetchMock = vi.fn(async (input: RequestInfo, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.url;
+      if (url.includes('/api/payments/create')) {
+        return {
+          ok: true,
+          json: async () => ({
+            orderId: 'test-order',
+            amountNis: 42,
+            mode: 'demo',
+            status: 'pending',
+          }),
+        } as Response;
+      }
+      if (/\/api\/payments\/[^/]+$/.test(url) && init?.method === 'POST') {
+        return { ok: true, json: async () => ({ status: 'paid' }) } as Response;
+      }
+      return { ok: true, json: async () => ({ status: 'pending' }) } as Response;
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
     renderWithTheme(
       <CalculatorFeaturesContext.Provider
         value={{
@@ -188,11 +210,16 @@ describe('ResultsGateStep', () => {
       </CalculatorFeaturesContext.Provider>
     );
     fireEvent.click(screen.getByText('תשלום וצפייה בתוצאות'));
-    const dialog = screen.getByRole('dialog');
+    const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText('תשלום מאובטח')).toBeInTheDocument();
-    expect(within(dialog).getByText(/מסך תשלום לדוגמה/)).toBeInTheDocument();
-    fireEvent.click(screen.getByText('שלם והמשך'));
-    expect(dispatch).toHaveBeenCalledWith({ type: 'NEXT_STEP' });
+    const payBtn = await within(dialog).findByRole('button', {
+      name: /שלם והמשך/,
+    });
+    fireEvent.click(payBtn);
+    await vi.waitFor(() => {
+      expect(dispatch).toHaveBeenCalledWith({ type: 'NEXT_STEP' });
+    });
+    vi.unstubAllGlobals();
   });
 });
 
