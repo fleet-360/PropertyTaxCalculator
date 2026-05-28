@@ -24,8 +24,10 @@ export async function POST(request: NextRequest) {
       fields = Object.fromEntries(
         Object.entries(json).map(([k, v]) => [k, String(v)]),
       );
+      console.log("fields", fields);
     } else {
       const form = await request.formData();
+      console.log('form', form);
       fields = parseTranzilaNotifyFields(form);
     }
 
@@ -35,6 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     const order = await findPaymentOrderByOrderId(orderId);
+    console.log("order", order);
     if (!order) {
       return new NextResponse('UNKNOWN_ORDER', { status: 404 });
     }

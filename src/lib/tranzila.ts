@@ -79,10 +79,10 @@ async function requestHandshakeToken(amountNis: number): Promise<string> {
 export async function buildTranzilaIframeUrl(params: TranzilaIframeParams): Promise<string> {
   const terminal = getTerminal();
   const siteUrl = getSiteUrl();
-  const thtk = await requestHandshakeToken(params.amountNis);
+  // const thtk = await requestHandshakeToken(params.amountNis);
 
   const query = new URLSearchParams({
-    thtk,
+    // thtk,
     sum: params.amountNis.toFixed(2),
     currency: '1',
     cred_type: '1',
