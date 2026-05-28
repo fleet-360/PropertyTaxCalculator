@@ -23,6 +23,7 @@ import type { CouponPaymentSectionContext } from '@/components/calculator/Coupon
 import type { PaymentProduct } from '@/lib/payments';
 
 type PaymentMode = 'tranzila' | 'demo' | 'free';
+type UiPaymentStatus = 'idle' | 'pending' | 'success' | 'failed';
 
 interface CreatePaymentResponse {
   orderId: string;
@@ -60,9 +61,9 @@ export default function TranzilaPaymentDialog({
   const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<CreatePaymentResponse | null>(null);
   const [completingDemo, setCompletingDemo] = useState(false);
+  const [uiStatus, setUiStatus] = useState<UiPaymentStatus>('idle');
   const confirmedRef = useRef(false);
 
-  console.log("state", state);
   const leadId = state.leadId;
   const couponCode = state.appliedCoupon?.code;
 
@@ -82,6 +83,7 @@ export default function TranzilaPaymentDialog({
     setLoading(true);
     setError(null);
     setSession(null);
+    setUiStatus('pending');
     confirmedRef.current = false;
 
     try {
@@ -97,10 +99,12 @@ export default function TranzilaPaymentDialog({
       }
       setSession(data);
       if (data.status === 'paid' || data.mode === 'free') {
+        setUiStatus('success');
         finishPaid();
       }
     } catch {
       setError('שגיאת רשת. נסו שוב.');
+      setUiStatus('idle');
     } finally {
       setLoading(false);
     }
@@ -110,6 +114,7 @@ export default function TranzilaPaymentDialog({
     if (!open) {
       setSession(null);
       setError(null);
+      setUiStatus('idle');
       confirmedRef.current = false;
       return;
     }
@@ -127,7 +132,15 @@ export default function TranzilaPaymentDialog({
         const data = (await res.json()) as { status: string };
         if (data.status === 'paid') {
           clearInterval(interval);
-          finishPaid();
+          setUiStatus('success');
+          // brief feedback before advancing/closing
+          setTimeout(() => finishPaid(), 450);
+          return;
+        }
+        if (data.status === 'failed') {
+          clearInterval(interval);
+          setUiStatus('failed');
+          setError('התשלום נכשל או בוטל. ניתן לנסות שוב.');
         }
       } catch {
         /* ignore transient poll errors */
@@ -147,11 +160,14 @@ export default function TranzilaPaymentDialog({
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? 'תשלום הדגמה נכשל');
+        setUiStatus('failed');
         return;
       }
-      finishPaid();
+      setUiStatus('success');
+      setTimeout(() => finishPaid(), 450);
     } catch {
       setError('שגיאת רשת. נסו שוב.');
+      setUiStatus('idle');
     } finally {
       setCompletingDemo(false);
     }
@@ -224,6 +240,12 @@ export default function TranzilaPaymentDialog({
         {loading && (
           <Box py={8} textAlign="center">
             <CircularProgress aria-label="טוען מסך תשלום" />
+          </Box>
+        )}
+
+        {!loading && uiStatus === 'success' && (
+          <Box p={2}>
+            <Alert severity="success">התשלום בוצע בהצלחה</Alert>
           </Box>
         )}
 

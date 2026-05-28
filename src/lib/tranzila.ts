@@ -115,6 +115,7 @@ export function parseTranzilaNotifyFields(
 
 /** Tranzila success response code (000 / 0000 variants). */
 export function isTranzilaSuccessResponse(fields: TranzilaNotifyFields): boolean {
+  console.log("isTranzilaSuccessResponse - fields", fields);
   const response = (fields.Response ?? fields.response ?? '').trim();
   return response === '000' || response === '0000' || response === '0';
 }

@@ -197,6 +197,7 @@ export async function createPaymentSession(
   }
 
   const lead = await Lead.findById(leadId);
+  console.log("lead", lead);
   if (!lead) {
     return { ok: false, status: 404, error: 'לא נמצאו פרטי ליד' };
   }
