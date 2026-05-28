@@ -12,9 +12,24 @@ export function getSiteUrl(): string {
   return 'http://localhost:3005';
 }
 
+/** Origin from the browser (`window.location.origin`), or null if invalid. */
+export function normalizeReturnBaseUrl(raw: string | undefined): string | null {
+  if (!raw?.trim()) return null;
+  try {
+    const url = new URL(raw.trim());
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+    if (!url.hostname) return null;
+    console.log("url", `${url.protocol}//${url.host}`);
+    return `${url.protocol}//${url.host}`;
+  } catch {
+    return null;
+  }
+}
+
 export interface TranzilaIframeParams {
   orderId: string;
   amountNis: number;
+  returnBaseUrl?: string;
   payerName?: string;
   payerEmail?: string;
   payerPhone?: string;
@@ -78,7 +93,7 @@ async function requestHandshakeToken(amountNis: number): Promise<string> {
 /** Build hosted iframe URL after server-side handshake. */
 export async function buildTranzilaIframeUrl(params: TranzilaIframeParams): Promise<string> {
   const terminal = getTerminal();
-  const siteUrl = getSiteUrl();
+  const siteUrl = normalizeReturnBaseUrl(params.returnBaseUrl) ?? getSiteUrl();
   // const thtk = await requestHandshakeToken(params.amountNis);
 
   const query = new URLSearchParams({

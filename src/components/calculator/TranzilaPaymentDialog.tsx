@@ -90,7 +90,13 @@ export default function TranzilaPaymentDialog({
       const res = await fetch('/api/payments/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leadId, calculationIndex: state.calculationIndex, product, couponCode }),
+        body: JSON.stringify({
+          leadId,
+          calculationIndex: state.calculationIndex,
+          product,
+          couponCode,
+          returnBaseUrl: window.location.origin,
+        }),
       });
       const data = (await res.json()) as CreatePaymentResponse & { error?: string };
       if (!res.ok) {

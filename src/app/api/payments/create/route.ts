@@ -9,11 +9,12 @@ export async function POST(request: NextRequest) {
   try {
     await dbConnect();
     const body = await request.json();
-    const { leadId, calculationIndex, product, couponCode } = body as {
+    const { leadId, calculationIndex, product, couponCode, returnBaseUrl } = body as {
       leadId?: string;
       calculationIndex?: unknown;
       product?: string;
       couponCode?: string;
+      returnBaseUrl?: string;
     };
 
     const calcIdx =
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
       calculationIndex: calcIdx,
       product: product as PaymentProduct,
       couponCode: typeof couponCode === 'string' ? couponCode : undefined,
+      returnBaseUrl: typeof returnBaseUrl === 'string' ? returnBaseUrl : undefined,
     });
 
     if (!result.ok) {

@@ -171,6 +171,8 @@ export type CreatePaymentSessionInput = {
   calculationIndex: number;
   product: PaymentProduct;
   couponCode?: string;
+  /** Browser origin for Tranzila redirect/notify URLs (`window.location.origin`). */
+  returnBaseUrl?: string;
 };
 
 export type CreatePaymentSessionResult =
@@ -194,7 +196,7 @@ const COUPON_ERROR_HE: Record<string, string> = {
 export async function createPaymentSession(
   input: CreatePaymentSessionInput,
 ): Promise<CreatePaymentSessionResult> {
-  const { leadId, calculationIndex, product, couponCode } = input;
+  const { leadId, calculationIndex, product, couponCode, returnBaseUrl } = input;
 
   if (!mongoose.Types.ObjectId.isValid(leadId)) {
     return { ok: false, status: 400, error: 'מזהה ליד לא תקין' };
@@ -292,6 +294,7 @@ export async function createPaymentSession(
     const paymentUrl = await buildTranzilaIframeUrl({
       orderId: order.orderId,
       amountNis,
+      returnBaseUrl,
       payerName: lead.fullName,
       payerEmail: lead.email,
       payerPhone: lead.phone,
