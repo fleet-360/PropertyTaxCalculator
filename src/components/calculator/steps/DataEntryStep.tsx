@@ -94,7 +94,7 @@ function createDataEntrySchema(isBusiness: boolean) {
         .or(z.literal(""))
         .optional(),
       email: z.string().optional(),
-      phone: z.string().optional(),
+      phone: z.string().min(9, "יש להזין מספר טלפון תקין"),
       propertyPurpose: z.string(),
       propertyNumber: z.string(),
       propertyId: z.string(),

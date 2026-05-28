@@ -22,10 +22,10 @@ type StatConfig = {
 };
 
 const stats: StatConfig[] = [
-  { target: 20, suffix: "+", label: "רשויות שותפות" },
-  { target: 5000, suffix: "+", comma: true, label: "משתמשים מאושרים" },
-  { target: 5400, prefix: "₪", comma: true, label: "חיסכון חודשי ממוצע" },
-  { target: 98, suffix: "%", label: "דיוק בחישוב" },
+  { target: 20, suffix: "+", label: "רשויות מקומיות" },
+  { target: 1000000, suffix: "+", comma: true, label: "פוטנציאל משתמשים" },
+  { target: 5400, prefix: "₪", comma: true, label: "פוטנציאל חיסכון שנתי" },
+  { target: 98, suffix: "%", label: "שאיפה לדיוק בחישוב" },
 ];
 
 function formatStatValue(n: number, comma: boolean): string {
