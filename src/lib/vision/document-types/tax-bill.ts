@@ -43,12 +43,58 @@ export type TaxBillData = z.infer<typeof taxBillSchema>;
 
 // ── Hebrew extraction prompt ────────────────────────────────────────
 
+function buildTariffHintsAppendix(hints: Record<string, unknown>): string {
+  const zones = hints.availableZones as { code: string; label: string }[] | undefined;
+  const subtypes = hints.subtypes as {
+    code: string; label: string; category: string;
+    typeCode: string; typeLabel: string; zones: string[];
+  }[] | undefined;
+
+  if ((!zones || zones.length === 0) && (!subtypes || subtypes.length === 0)) return '';
+
+  const lines: string[] = [
+    '═══════════════════════════════════════════════════',
+    'נתוני תעריף העיר — השתמש בהם להתאמת שדות הסיווג:',
+    '═══════════════════════════════════════════════════',
+    '',
+    'הנחיות חשובות:',
+    '• עבור שדה zone: התאם את הטקסט שחולץ מהשובר לקוד האזור הקרוב ביותר מהרשימה למטה. החזר את ה-code (לא את ה-label).',
+    '• עבור שדה subTypeDescription: התאם את תיאור הסיווג מהשובר לתווית (label) הקרובה ביותר מרשימת תתי-הסיווגים למטה.',
+    '• עבור שדה classificationCode: העדף קודים שמופיעים ברשימת תתי-הסיווגים למטה.',
+    '',
+  ];
+
+  if (zones && zones.length > 0) {
+    lines.push('אזורים זמינים בעיר:');
+    for (const z of zones) {
+      lines.push(`• ${z.code} — ${z.label}`);
+    }
+    lines.push('');
+  }
+
+  if (subtypes && subtypes.length > 0) {
+    lines.push('תתי-סיווגים זמינים:');
+    for (const s of subtypes) {
+      const categoryHeb = s.category === 'private' ? 'מגורים' : 'עסקים';
+      lines.push(`• קוד ${s.code} — ${s.label} (${categoryHeb}, סוג: ${s.typeLabel})`);
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n');
+}
+
 async function buildTaxBillPrompt(options?: Record<string, unknown>): Promise<string> {
   const expected =
     typeof options?.expectedCityName === 'string' ? options.expectedCityName.trim() : undefined;
   const appendix = buildTaxBillValidationAppendix(expected);
   const base = await getPrompt('tax_bill_extraction');
-  return `${appendix}\n\n${base}`;
+
+  const tariffHints = options?.tariffHints as Record<string, unknown> | undefined;
+  const tariffAppendix = tariffHints ? buildTariffHintsAppendix(tariffHints) : '';
+
+  const parts = [appendix, tariffAppendix, base].filter(Boolean);
+  return parts.join('\n\n');
 }
 
 // ── Post-processing — normalize extracted values ────────────────────

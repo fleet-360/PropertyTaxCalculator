@@ -623,7 +623,7 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
                 </TextField>
 
                 {/* Remove row button */}
-                {rows.length > 1 && (
+                {rows.length > 0 && (
                   <IconButton
                     onClick={() => handleRemoveRow(index)}
                     size="small"

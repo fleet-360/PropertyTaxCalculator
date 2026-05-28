@@ -404,6 +404,11 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
   const watchedSubType = watch("subType");
   const watchedZone = watch("zone");
   const watchedArea = watch("propertyArea");
+
+  const canMoveToNextStep = useMemo(() => {
+    if (isBusiness) return true;
+    return watchedType && watchedSubType && watchedZone && watchedArea;
+  }, [watchedType, watchedSubType, watchedZone, watchedArea]);
   // const watchedClassCode = watch('classificationCode');
 
   // Refs to track previous values and prevent cascade loops
@@ -1122,7 +1127,7 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
       <Box sx={wizardNavRowSx}>
         <Button
           variant="outlined"
-          onClick={() => dispatch({ type: "PREV_STEP" })}
+          onClick={() => dispatch({ type: "SET_STEP", step: 1 })}
           startIcon={<ChevronRightIcon />}
           sx={wizardSecondaryButtonSx}
         >
@@ -1132,6 +1137,7 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
           variant="contained"
           type="submit"
           endIcon={<ChevronLeftIcon />}
+          disabled={!canMoveToNextStep}
           sx={wizardPrimaryButtonSx}
         >
           לשלב הבא
