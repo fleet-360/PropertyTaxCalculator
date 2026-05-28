@@ -319,6 +319,47 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
 
   return (
     <Box sx={{ ...sx, justifyContent: "space-between" }}>
+      {/* ─── טעות במדידה ─── */}
+      <Box sx={{ mb: 3 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: 1,
+            mb: 1,
+          }}
+        >
+          <Typography sx={wizardSectionTitleSx}>
+            האם יש טעות בשטח הנכס?
+          </Typography>
+          <YesNoRadio
+            value={measurementToggle}
+            onChange={setMeasurementToggle}
+            ariaLabel="האם יש טעות בשטח הנכס"
+          />
+        </Box>
+        {measurementToggle === "yes" && (
+          <Box sx={conditionalSectionSx}>
+            <TextField
+              type="number"
+              size="small"
+              sx={{ width: 250 }}
+              placeholder="מהו השטח העיקרי הנכון?"
+              value={state.measurementError?.claimed || ""}
+              onChange={(e) => handleClaimedAreaChange(Number(e.target.value))}
+              onFocus={() =>
+                dispatch({
+                  type: "SET_MIA_MESSAGE",
+                  payload: "error-measurement",
+                })
+              }
+              inputProps={{ "aria-label": "שטח מתוקן במטרים רבועים" }}
+            />
+          </Box>
+        )}
+      </Box>
+
       {/* ─── שטחים נוספים ─── */}
       {hasAreaTypeDiscounts ? (
         <Box sx={{ mb: 3 }}>
@@ -404,47 +445,6 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
           </Box>
         </Box>
       )}
-
-      {/* ─── טעות במדידה ─── */}
-      <Box sx={{ mb: 3 }}>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-            gap: 1,
-            mb: 1,
-          }}
-        >
-          <Typography sx={wizardSectionTitleSx}>
-            האם יש טעות בשטח הנכס?
-          </Typography>
-          <YesNoRadio
-            value={measurementToggle}
-            onChange={setMeasurementToggle}
-            ariaLabel="האם יש טעות בשטח הנכס"
-          />
-        </Box>
-        {measurementToggle === "yes" && (
-          <Box sx={conditionalSectionSx}>
-            <TextField
-              type="number"
-              size="small"
-              sx={{ width: 250 }}
-              placeholder="מהו השטח העיקרי הנכון?"
-              value={state.measurementError?.claimed || ""}
-              onChange={(e) => handleClaimedAreaChange(Number(e.target.value))}
-              onFocus={() =>
-                dispatch({
-                  type: "SET_MIA_MESSAGE",
-                  payload: "error-measurement",
-                })
-              }
-              inputProps={{ "aria-label": "שטח מתוקן במטרים רבועים" }}
-            />
-          </Box>
-        )}
-      </Box>
 
       {/* ─── טעות בסיווג (עסקי בלבד) ─── */}
       {isBusiness && (

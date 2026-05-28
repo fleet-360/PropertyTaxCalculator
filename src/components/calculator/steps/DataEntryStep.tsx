@@ -1054,32 +1054,34 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
             )}
           />
         </Box>
-        <Box sx={{ ...fullRowSx, minWidth: 0 }}>
-          <Controller
-            name="address"
-            control={control}
-            render={({ field }) => (
-              <TextField {...field} label="כתובת" fullWidth size="small" />
-            )}
-          />
-        </Box>
-        <Box sx={{ minWidth: 0 }}>
-          <Controller
-            name="block"
-            control={control}
-            render={({ field }) => (
-              <TextField {...field} label="גוש" fullWidth size="small" />
-            )}
-          />
-        </Box>
-        <Box sx={{ minWidth: 0 }}>
-          <Controller
-            name="parcel"
-            control={control}
-            render={({ field }) => (
-              <TextField {...field} label="חלקה" fullWidth size="small" />
-            )}
-          />
+        <Box sx={{ minWidth: 0 }}></Box>
+        <Box sx={{ minWidth: 0 }}></Box>
+        <Controller
+          name="address"
+          control={control}
+          render={({ field }) => (
+            <TextField {...field} label="כתובת" size="small" />
+          )}
+        />
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Controller
+              name="block"
+              control={control}
+              render={({ field }) => (
+                <TextField {...field} label="גוש" size="small" />
+              )}
+            />
+          </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Controller
+              name="parcel"
+              control={control}
+              render={({ field }) => (
+                <TextField {...field} label="חלקה" size="small" />
+              )}
+            />
+          </Box>
         </Box>
 
         {/* 4. תשלום */}

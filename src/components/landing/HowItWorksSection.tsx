@@ -116,9 +116,9 @@ function StepCard({ step, index }: { step: Step; index: number }) {
           fontFamily:
             'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif',
           fontSize: { xs: "15px", md: "17px" },
-          fontWeight: 600,
-          lineHeight: 1.45,
-          color: "#0367B7",
+          fontWeight: 400,
+          lineHeight: "100%",
+          color: "#2D2D2D",
         }}
       >
         {step.title}
