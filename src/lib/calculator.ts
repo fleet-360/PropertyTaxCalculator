@@ -185,6 +185,95 @@ export function findByPropertyCode(
   return null;
 }
 
+/**
+ * Fuzzy-match a subtype description (extracted from a tax bill) against subtype
+ * labels in the tariff tree. Optionally narrows by zone code.
+ *
+ * Matching strategy (in order of priority):
+ * 1. Exact label match (case-insensitive, trimmed)
+ * 2. Label contains the description or description contains the label
+ * 3. Best token-overlap score (Jaccard-like) — must exceed 40% overlap
+ *
+ * When `zoneCode` is provided the result is pinned to that zone (if it exists
+ * on the matched subtype); otherwise the first zone is returned.
+ */
+export function findBySubtypeAndZone(
+  tariff: ICityTariff,
+  subtypeDescription: string,
+  zoneCode?: string,
+): { typeCode: string; subtypeCode: string; zoneCode: string } | null {
+  if (!subtypeDescription) return null;
+
+  const needle = subtypeDescription.trim();
+  const needleLower = needle.toLowerCase();
+  const needleTokens = new Set(needleLower.split(/\s+/).filter(Boolean));
+
+  type Candidate = { typeCode: string; subtypeCode: string; label: string; zones: { zone: string }[] };
+  const candidates: Candidate[] = [];
+
+  for (const pType of tariff.types) {
+    for (const sub of pType.subtypes) {
+      candidates.push({
+        typeCode: pType.code,
+        subtypeCode: sub.code,
+        label: sub.label,
+        zones: sub.zones,
+      });
+    }
+  }
+
+  const resolveZone = (c: Candidate): string => {
+    if (zoneCode) {
+      const found = c.zones.find((z) => z.zone === zoneCode);
+      if (found) return found.zone;
+    }
+    return c.zones[0]?.zone ?? '';
+  };
+
+  // 1. Exact match
+  for (const c of candidates) {
+    if (c.label.trim().toLowerCase() === needleLower) {
+      return { typeCode: c.typeCode, subtypeCode: c.subtypeCode, zoneCode: resolveZone(c) };
+    }
+  }
+
+  // 2. Containment match
+  for (const c of candidates) {
+    const labelLower = c.label.trim().toLowerCase();
+    if (labelLower.includes(needleLower) || needleLower.includes(labelLower)) {
+      return { typeCode: c.typeCode, subtypeCode: c.subtypeCode, zoneCode: resolveZone(c) };
+    }
+  }
+
+  // 3. Token overlap (Jaccard-like)
+  let bestScore = 0;
+  let bestCandidate: Candidate | null = null;
+
+  for (const c of candidates) {
+    const labelTokens = new Set(c.label.trim().toLowerCase().split(/\s+/).filter(Boolean));
+    let overlap = 0;
+    for (const t of needleTokens) {
+      if (labelTokens.has(t)) overlap++;
+    }
+    const unionSize = new Set([...needleTokens, ...labelTokens]).size;
+    const score = unionSize > 0 ? overlap / unionSize : 0;
+    if (score > bestScore) {
+      bestScore = score;
+      bestCandidate = c;
+    }
+  }
+
+  if (bestCandidate && bestScore > 0.4) {
+    return {
+      typeCode: bestCandidate.typeCode,
+      subtypeCode: bestCandidate.subtypeCode,
+      zoneCode: resolveZone(bestCandidate),
+    };
+  }
+
+  return null;
+}
+
 // ── Exemption resolution ───────────────────────────────────────────────
 
 interface ResolvedExemption {
@@ -312,8 +401,9 @@ export function calculatePropertyTax(
     throw new Error('סכום התשלום חייב להיות גדול מ-0');
   }
 
+  const totalAdditionalAreas = input.additionalAreas?.reduce((sum, area) => sum + area.areaSqm, 0) ?? 0;
   // Use corrected area if provided (measurement error)
-  const mainArea = input.correctedAreaSqm ?? input.propertyAreaSqm;
+  const mainArea = (input.correctedAreaSqm ?? input.propertyAreaSqm)-totalAdditionalAreas;
 
   const hasAreaTypeDiscounts = tariff.areaTypeDiscounts && tariff.areaTypeDiscounts.length > 0;
   const additionalAreas = input.additionalAreas ?? [];

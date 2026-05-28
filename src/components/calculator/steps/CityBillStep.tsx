@@ -88,10 +88,11 @@ export default function CityBillStep({ state, dispatch }: StepProps) {
       void startExtraction({
         file: pendingFile,
         expectedCityName: selectedCity?.cityName ?? state.cityData?.cityName,
+        cityData: state.cityData,
       });
     }
     dispatch({ type: 'NEXT_STEP' });
-  }, [pendingFile, startExtraction, selectedCity?.cityName, state.cityData?.cityName, dispatch]);
+  }, [pendingFile, startExtraction, selectedCity?.cityName, state.cityData, dispatch]);
 
   const canProceed = Boolean(selectedCity) && !state.isLoading;
 

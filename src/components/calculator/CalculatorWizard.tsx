@@ -24,7 +24,7 @@ import {
 } from '@/lib/types/system-config';
 import { priceAfterCoupon } from '@/lib/priceAfterCoupon';
 import { isVercelBlobPublicUrl } from '@/lib/ordinancePdf';
-import { findByPropertyCode } from '@/lib/calculator';
+import { findByPropertyCode, findBySubtypeAndZone } from '@/lib/calculator';
 import type { AppliedWizardCoupon } from './wizardTypes';
 import { SxProps } from '@mui/material';
 import { Theme } from '@emotion/react';
@@ -289,6 +289,9 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
         }
       }
 
+      // Resolve classification fields: try classificationCode first, then
+      // fall back to fuzzy-matching subTypeDescription + zone.
+      let resolved = false;
       if (fieldsToApply.classificationCode && state.cityData) {
         const match = findByPropertyCode(
           state.cityData,
@@ -298,6 +301,24 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
           fieldsToApply.propertyPurpose = match.typeCode;
           fieldsToApply.subType = match.subtypeCode;
           fieldsToApply.zone = match.zoneCode;
+          resolved = true;
+        }
+      }
+
+      if (!resolved && state.cityData) {
+        const extractedSubType = (data.subTypeDescription as { value?: unknown } | undefined)?.value;
+        const extractedZone = (data.zone as { value?: unknown } | undefined)?.value;
+        if (typeof extractedSubType === 'string' && extractedSubType) {
+          const fallback = findBySubtypeAndZone(
+            state.cityData,
+            extractedSubType,
+            typeof extractedZone === 'string' ? extractedZone : undefined,
+          );
+          if (fallback) {
+            fieldsToApply.propertyPurpose = fallback.typeCode;
+            fieldsToApply.subType = fallback.subtypeCode;
+            fieldsToApply.zone = fallback.zoneCode;
+          }
         }
       }
 
@@ -518,7 +539,7 @@ const CalculatorWizard = forwardRef<CalculatorWizardHandle, CalculatorWizardProp
   const extractionTokenRef = useRef(0);
 
   const startExtraction = useCallback<BillExtractionContextValue['startExtraction']>(
-    async ({ file, expectedCityName }) => {
+    async ({ file, expectedCityName, cityData }) => {
       const token = ++extractionTokenRef.current;
       dispatch({ type: 'START_EXTRACTION' });
 
@@ -527,8 +548,37 @@ const CalculatorWizard = forwardRef<CalculatorWizardHandle, CalculatorWizardProp
         formData.append('file', file);
         formData.append('documentType', 'tax_bill');
         const trimmed = expectedCityName?.trim();
-        if (trimmed) {
-          formData.append('promptOptions', JSON.stringify({ expectedCityName: trimmed }));
+
+        const promptOpts: Record<string, unknown> = {};
+        if (trimmed) promptOpts.expectedCityName = trimmed;
+
+        if (cityData) {
+          const cd = cityData as {
+            availableZones?: { code: string; label: string }[];
+            types?: {
+              category: string;
+              code: string;
+              label: string;
+              subtypes: { code: string; label: string; zones: { zone: string }[] }[];
+            }[];
+          };
+          promptOpts.tariffHints = {
+            availableZones: cd.availableZones ?? [],
+            subtypes: cd.types?.flatMap((t) =>
+              t.subtypes.map((s) => ({
+                code: s.code,
+                label: s.label,
+                category: t.category,
+                typeCode: t.code,
+                typeLabel: t.label,
+                zones: s.zones.map((z) => z.zone),
+              })),
+            ) ?? [],
+          };
+        }
+
+        if (Object.keys(promptOpts).length > 0) {
+          formData.append('promptOptions', JSON.stringify(promptOpts));
         }
 
         const response = await fetch('/api/vision/extract', {

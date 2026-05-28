@@ -16,6 +16,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import type { WizardState, WizardAction } from "./CalculatorWizard";
 import type { ExtractionResult } from "@/lib/vision/types";
 import type { TaxBillData } from "@/lib/vision/document-types/tax-bill";
+import { findByPropertyCode, findBySubtypeAndZone } from "@/lib/calculator";
 
 // ── Field labels (Hebrew) ──────────────────────────────────────────
 
@@ -95,6 +96,8 @@ interface TaxBillUploadProps {
   onFileReady?: (file: File | null) => void;
   /** When set, the vision model validates the bill matches this municipality name */
   expectedCityName?: string;
+  /** City tariff data — used to build tariff hints for better field matching in immediate mode */
+  cityData?: Record<string, unknown> | null;
 }
 
 export default function TaxBillUpload({
@@ -103,6 +106,7 @@ export default function TaxBillUpload({
   deferExtraction,
   onFileReady,
   expectedCityName,
+  cityData,
 }: TaxBillUploadProps) {
   const [status, setStatus] = useState<
     "idle" | "uploading" | "ready" | "success" | "error"
@@ -138,10 +142,45 @@ export default function TaxBillUpload({
         }
       }
 
+      // Resolve classification fields: try classificationCode first, then
+      // fall back to fuzzy-matching subTypeDescription + zone.
+      if (cityData) {
+        let resolved = false;
+        if (fieldsToApply.classificationCode) {
+          const match = findByPropertyCode(
+            cityData as unknown as Parameters<typeof findByPropertyCode>[0],
+            fieldsToApply.classificationCode as string,
+          );
+          if (match) {
+            (fieldsToApply as Record<string, unknown>).propertyPurpose = match.typeCode;
+            (fieldsToApply as Record<string, unknown>).subType = match.subtypeCode;
+            (fieldsToApply as Record<string, unknown>).zone = match.zoneCode;
+            resolved = true;
+          }
+        }
+
+        if (!resolved) {
+          const extractedSubType = result.data.subTypeDescription?.value;
+          const extractedZone = result.data.zone?.value;
+          if (typeof extractedSubType === 'string' && extractedSubType) {
+            const fallback = findBySubtypeAndZone(
+              cityData as unknown as Parameters<typeof findBySubtypeAndZone>[0],
+              extractedSubType,
+              typeof extractedZone === 'string' ? extractedZone : undefined,
+            );
+            if (fallback) {
+              (fieldsToApply as Record<string, unknown>).propertyPurpose = fallback.typeCode;
+              (fieldsToApply as Record<string, unknown>).subType = fallback.subtypeCode;
+              (fieldsToApply as Record<string, unknown>).zone = fallback.zoneCode;
+            }
+          }
+        }
+      }
+
       dispatch({ type: "UPDATE_FIELDS_BULK", payload: fieldsToApply });
       onExtracted?.();
     },
-    [dispatch, onExtracted],
+    [dispatch, onExtracted, cityData],
   );
 
   const handleFileSelect = useCallback(
@@ -172,12 +211,38 @@ export default function TaxBillUpload({
         const formData = new FormData();
         formData.append("file", file);
         formData.append("documentType", "tax_bill");
+
+        const promptOpts: Record<string, unknown> = {};
         const trimmedCity = expectedCityName?.trim();
-        if (trimmedCity) {
-          formData.append(
-            "promptOptions",
-            JSON.stringify({ expectedCityName: trimmedCity }),
-          );
+        if (trimmedCity) promptOpts.expectedCityName = trimmedCity;
+
+        if (cityData) {
+          const cd = cityData as {
+            availableZones?: { code: string; label: string }[];
+            types?: {
+              category: string;
+              code: string;
+              label: string;
+              subtypes: { code: string; label: string; zones: { zone: string }[] }[];
+            }[];
+          };
+          promptOpts.tariffHints = {
+            availableZones: cd.availableZones ?? [],
+            subtypes: cd.types?.flatMap((t) =>
+              t.subtypes.map((s) => ({
+                code: s.code,
+                label: s.label,
+                category: t.category,
+                typeCode: t.code,
+                typeLabel: t.label,
+                zones: s.zones.map((z) => z.zone),
+              })),
+            ) ?? [],
+          };
+        }
+
+        if (Object.keys(promptOpts).length > 0) {
+          formData.append("promptOptions", JSON.stringify(promptOpts));
         }
 
         const response = await fetch("/api/vision/extract", {
@@ -210,7 +275,7 @@ export default function TaxBillUpload({
         );
       }
     },
-    [applyFields, deferExtraction, onFileReady, expectedCityName],
+    [applyFields, deferExtraction, onFileReady, expectedCityName, cityData],
   );
 
   const handleInputChange = useCallback(

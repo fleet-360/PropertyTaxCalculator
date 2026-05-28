@@ -17,7 +17,6 @@ export default function DocumentUploadStep({ state, dispatch }: StepProps) {
 
   // Auto-resolve classification fields from propertyCode after extraction
   useEffect(() => {
-   
     if (!extracted || !state.cityData || !state.classificationCode) return;
 
     const match = findByPropertyCode(state.cityData, state.classificationCode);
@@ -48,6 +47,7 @@ export default function DocumentUploadStep({ state, dispatch }: StepProps) {
         dispatch={dispatch}
         onExtracted={handleExtracted}
         expectedCityName={state.cityData?.cityName}
+        cityData={state.cityData}
       />
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>

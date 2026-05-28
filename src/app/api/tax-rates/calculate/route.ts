@@ -125,6 +125,7 @@ export async function POST(request: NextRequest) {
       matchToleranceIsPercent
     );
 
+    console.log('[Calculated result]:', JSON.stringify(result, null, 2));
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
     console.error('Error calculating tax:', error);
