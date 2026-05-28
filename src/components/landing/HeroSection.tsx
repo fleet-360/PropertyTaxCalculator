@@ -81,7 +81,7 @@ export default function HeroSection() {
             <Typography
               component="h1"
               sx={{
-                fontFamily: 'var(--font-heebo), "Heebo", "Inter", sans-serif',
+                fontFamily: 'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif',
                 fontWeight: 800,
                 fontSize: { xs: "42px", sm: "54px", md: "62px", lg: "76px" },
                 lineHeight: 1.55,

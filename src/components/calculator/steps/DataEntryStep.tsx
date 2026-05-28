@@ -772,7 +772,16 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
             name="phone"
             control={control}
             render={({ field }) => (
-              <TextField {...field} label="טלפון *" fullWidth size="small" />
+              <TextField
+                {...field}
+                label="טלפון *"
+                fullWidth
+                size="small"
+                inputMode="tel"
+                autoComplete="tel"
+                error={!!errors.phone}
+                helperText={errors.phone?.message}
+              />
             )}
           />
         </Box>

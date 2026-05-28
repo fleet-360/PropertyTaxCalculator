@@ -52,9 +52,9 @@ export default function FaqSection() {
         <Typography
           component="h2"
           sx={(theme) => ({
-            fontFamily: 'var(--font-heebo), "Heebo", sans-serif',
-            fontWeight: 800,
-            fontSize: { xs: "26px", md: "36px" },
+            fontFamily: 'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif',
+            fontWeight: 700,
+            fontSize: "24px",
             color: theme.palette.brand.navyDeep,
             textAlign: "center",
             mb: { xs: 4, md: 6 },

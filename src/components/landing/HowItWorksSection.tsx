@@ -2,71 +2,56 @@
 import { Box, Container, Typography } from "@mui/material";
 import { keyframes } from "@mui/system";
 import Image from "next/image";
-import type { Theme } from "@mui/material/styles";
-
-type ColorKey = "blue" | "orange" | "green" | "indigo" | "red";
 
 type Step = {
-  number: string;
   title: string;
-  /** Public-relative path to the icon SVG (rendered inside the bubble). */
-  iconSrc: string;
-  /** Intrinsic icon width — height is derived from the SVG aspect ratio. */
-  iconWidth: number;
-  iconHeight: number;
-  colorKey: ColorKey;
+  /** Public-relative path to the full step illustration (parallelogram + icon + number). */
+  svgSrc: string;
+  /** Intrinsic SVG width (used to preserve aspect ratio). */
+  svgWidth: number;
+  svgHeight: number;
   delay: string;
 };
 
 const steps: Step[] = [
   {
-    number: "01",
     title: "אתם בוחרים סוג נכס ועיר",
-    iconSrc: "/images/how%20it%20works/checkmark.svg",
-    iconWidth: 45,
-    iconHeight: 44,
-    colorKey: "blue",
+    svgSrc: "/images/steps/step1.svg",
+    svgWidth: 187,
+    svgHeight: 139,
     delay: "0s",
   },
   {
-    number: "02",
     title: "מעלים את שובר הארנונה",
-    iconSrc: "/images/how%20it%20works/camera.svg",
-    iconWidth: 45,
-    iconHeight: 44,
-    colorKey: "orange",
+    svgSrc: "/images/steps/step2.svg",
+    svgWidth: 179,
+    svgHeight: 140,
     delay: "0.2s",
   },
   {
-    number: "03",
     title: "מסמנים פטורים והנחות שנציע עבורכם",
-    iconSrc: "/images/how%20it%20works/dollar.svg",
-    iconWidth: 49,
-    iconHeight: 31,
-    colorKey: "green",
+    svgSrc: "/images/steps/step3.svg",
+    svgWidth: 180,
+    svgHeight: 139,
     delay: "0.4s",
   },
   {
-    number: "04",
     title: "מחשבון הארנונה עושה חישוב",
-    iconSrc: "/images/how%20it%20works/calculator.svg",
-    iconWidth: 49,
-    iconHeight: 31,
-    colorKey: "indigo",
+    svgSrc: "/images/steps/step4.svg",
+    svgWidth: 173,
+    svgHeight: 141,
     delay: "0.6s",
   },
   {
-    number: "05",
     title: "מקבלים את התוצאה ומגישים השגה לעירייה לקבלת חיסכון",
-    iconSrc: "/images/how%20it%20works/target.svg",
-    iconWidth: 45,
-    iconHeight: 44,
-    colorKey: "red",
+    svgSrc: "/images/steps/step5.svg",
+    svgWidth: 177,
+    svgHeight: 142,
     delay: "0.8s",
   },
 ];
 
-// Float animation used for the numbers and the icon bubbles
+// Float animation used for the step illustrations
 const float = keyframes`
   0%   { transform: translateY(0px); }
   50%  { transform: translateY(-14px); }
@@ -82,9 +67,10 @@ const arrowPulse = keyframes`
 function StepCard({ step, index }: { step: Step; index: number }) {
   // Cards at odd index (2nd, 4th) drop down to create the zigzag pattern
   const isDropped = index % 2 === 1;
-  // Render the icon at ~58px height max while preserving aspect ratio
-  const ICON_MAX = { xs: 48, md: 60 };
-  const aspect = step.iconWidth / step.iconHeight;
+  // Display sizes — derive height from intrinsic aspect to keep each SVG accurate
+  const aspect = step.svgWidth / step.svgHeight;
+  const widthXs = 160;
+  const widthMd = 190;
 
   return (
     <Box
@@ -99,155 +85,41 @@ function StepCard({ step, index }: { step: Step; index: number }) {
         mt: { xs: 0, md: isDropped ? "124px" : 0 },
       }}
     >
-      {/* Large translucent step number — tilted to look like it's written on the diamond's side */}
-      <Box
-        sx={{
-          display: "block",
-          textAlign: "right",
-          mb: "-22px",
-          mr: { xs: "8px", md: "6px" },
-          animation: `${float} 3s ease-in-out infinite`,
-          animationDelay: step.delay,
-        }}
-      >
-        <Typography
-          component="span"
-          sx={() => ({
-            display: "inline-block",
-            fontFamily: '"Inter", var(--font-heebo), sans-serif',
-            fontSize: { xs: "40px", md: "52px" },
-            fontWeight: 700,
-            lineHeight: 0.9,
-            letterSpacing: "-2px",
-            color: "#0367B7",
-            transform: "rotate(-30deg) skewX(-30deg)",
-            transformOrigin: "right bottom",
-          })}
-        >
-          {step.number}
-        </Typography>
-      </Box>
-
-      {/* Icon parallelogram + shadow ellipse (the "imgBox") */}
+      {/* Floating step illustration: parallelogram + icon + number, all in one SVG */}
       <Box
         sx={{
           position: "relative",
           display: "inline-block",
-          mb: { xs: "32px", md: "50px" },
-          zIndex: 5,
+          animation: `${float} 3s ease-in-out infinite`,
+          animationDelay: step.delay,
+          mb: { xs: "20px", md: "32px" },
+          width: { xs: widthXs, md: widthMd },
+          height: { xs: widthXs / aspect, md: widthMd / aspect },
         }}
       >
-        {/* Outer wrapper handles the floating animation so the inner skew is preserved */}
-        <Box
-          sx={{
-            position: "relative",
-            display: "inline-block",
-            animation: `${float} 3s ease-in-out infinite`,
-            animationDelay: step.delay,
-          }}
-        >
-          {/* Dark blue base layer — peeks out beneath the main shape to create a 3D lifted effect */}
-          <Box
-            aria-hidden
-            sx={(theme) => ({
-              position: "absolute",
-              top: { xs: "8px", md: "10px" },
-              left: 0,
-              width: { xs: 128, md: 152 },
-              height: { xs: 128, md: 132 },
-              borderRadius: "22px",
-              backgroundColor: theme.palette.brand.blueDark,
-              transform: "rotate(-40deg) skewX(-10deg)",
-              boxShadow: `0 10px 22px ${theme.palette.brand.blueDark}33`,
-              zIndex: 4,
-              pointerEvents: "none",
-            })}
-          />
-          <Box
-            className="step-bubble"
-            sx={(theme) => {
-              return {
-                position: "relative",
-                width: { xs: 128, md: 152 },
-                height: { xs: 128, md: 132 },
-                borderRadius: "22px",
-                backgroundColor: theme.palette.background.paper,
-                backgroundImage: `linear-gradient(135deg, #0367B714 0%, #0367B706 60%, ${theme.palette.background.paper} 100%)`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                zIndex: 5,
-                transform: "rotate(-40deg) skewX(-10deg)",
-                boxShadow: `0 14px 32px #0367B726, inset 0 1px 0 #0367B710`,
-                transition:
-                  "transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease",
-                "&:hover": {
-                  transform: "rotate(-40deg) skewX(-10deg) scale(1.06)",
-                  boxShadow: `0 18px 40px #0367B740, inset 0 1px 0 #0367B720`,
-                },
-              };
-            }}
-          >
-            {/* Counter-transform so the icon stays upright inside the tilted shape */}
-            <Box
-              sx={{
-                position: "relative",
-                transform: "skewX(10deg) rotate(40deg)",
-                width: {
-                  xs: aspect >= 1 ? ICON_MAX.xs : ICON_MAX.xs * aspect,
-                  md: aspect >= 1 ? ICON_MAX.md : ICON_MAX.md * aspect,
-                },
-                height: {
-                  xs: aspect >= 1 ? ICON_MAX.xs / aspect : ICON_MAX.xs,
-                  md: aspect >= 1 ? ICON_MAX.md / aspect : ICON_MAX.md,
-                },
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Image
-                src={step.iconSrc}
-                alt=""
-                fill
-                sizes="60px"
-                style={{ objectFit: "contain" }}
-                aria-hidden
-              />
-            </Box>
-          </Box>
-        </Box>
-
-        {/* Soft ground shadow beneath the lifted parallelogram */}
-        <Box
+        <Image
+          src={step.svgSrc}
+          alt=""
+          fill
+          sizes="(max-width: 900px) 160px, 190px"
+          style={{ objectFit: "contain" }}
           aria-hidden
-          sx={(theme) => ({
-            position: "absolute",
-            bottom: { xs: "-20px", md: "-26px" },
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: { xs: 130, md: 160 },
-            height: { xs: 14, md: 18 },
-            borderRadius: "50%",
-            background: `radial-gradient(ellipse at center, ${theme.palette.brand.blueDark}33 0%, transparent 70%)`,
-            filter: "blur(5px)",
-            zIndex: 1,
-            pointerEvents: "none",
-          })}
+          priority={index < 2}
         />
       </Box>
 
       {/* Title — color matches the bubble */}
       <Typography
-        sx={(theme) => ({
+        sx={{
           mt: { xs: 1, md: "16px" },
           px: 1,
-          fontFamily: 'var(--font-heebo), "Noto Sans Hebrew", sans-serif',
+          fontFamily:
+            'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif',
           fontSize: { xs: "15px", md: "17px" },
           fontWeight: 600,
           lineHeight: 1.45,
           color: "#0367B7",
-        })}
+        }}
       >
         {step.title}
       </Typography>
@@ -361,9 +233,10 @@ export default function HowItWorksSection() {
         <Typography
           component="h2"
           sx={(theme) => ({
-            fontFamily: 'var(--font-heebo), "Heebo", sans-serif',
-            fontWeight: 800,
-            fontSize: { xs: "26px", md: "38px" },
+            fontFamily:
+              'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif',
+            fontWeight: 700,
+            fontSize: "24px",
             color: theme.palette.brand.navyDeep,
             textAlign: "center",
             mb: { xs: 5, md: 8 },
@@ -405,7 +278,7 @@ export default function HowItWorksSection() {
             {steps.map((step, i) => (
               <Box
                 component="li"
-                key={step.number}
+                key={step.svgSrc}
                 sx={{
                   display: "flex",
                   justifyContent: "center",
