@@ -145,6 +145,26 @@ function getLatestCalculation(lead: LeadListItem): ICalculationEntry | undefined
   return lead.calculations[lead.calculations.length - 1];
 }
 
+type CalcPaymentStatus = 'none' | 'calculator_paid' | 'appeal_paid';
+
+function getCalculationPaymentStatus(calc: ICalculationEntry): CalcPaymentStatus {
+  const raw = (calc as any)?.paymentStatus as unknown;
+  return raw === 'calculator_paid' || raw === 'appeal_paid' ? raw : 'none';
+}
+
+function getLeadPaymentSummary(lead: LeadListItem): {
+  latestStatus: CalcPaymentStatus;
+  paidCalculationsCount: number;
+  appealPaidCount: number;
+} {
+  const statuses = (lead.calculations || []).map(getCalculationPaymentStatus);
+  const paidCalculationsCount = statuses.filter((s) => s !== 'none').length;
+  const appealPaidCount = statuses.filter((s) => s === 'appeal_paid').length;
+  const latest = getLatestCalculation(lead);
+  const latestStatus = latest ? getCalculationPaymentStatus(latest) : 'none';
+  return { latestStatus, paidCalculationsCount, appealPaidCount };
+}
+
 
 
 // ── Calculation card (shown in expanded row) ─────────────────────────
@@ -169,6 +189,7 @@ function DetailRow({ label, children }: { label: string; children: ReactNode }) 
 
 function CalculationCard({ calc, index }: { calc: ICalculationEntry; index: number }) {
   const hasResults = Boolean(calc.calculationResult);
+  const paymentStatus = getCalculationPaymentStatus(calc);
   const showPrivateExemptions =
     calc.propertyType === 'private' &&
     (calc.selectedExemptions?.length ||
@@ -194,6 +215,14 @@ function CalculationCard({ calc, index }: { calc: ICalculationEntry; index: numb
         <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
           חישוב #{index + 1}
         </Typography>
+        {paymentStatus !== 'none' && (
+          <Chip
+            label={paymentLabelMap[paymentStatus]}
+            size="small"
+            color="info"
+            variant="outlined"
+          />
+        )}
         {calc.calculationStatus && (
           <Chip
             label={calcStatusLabelMap[calc.calculationStatus] || calc.calculationStatus}
@@ -317,6 +346,7 @@ function ExpandableRow({
   const [consentsLoading, setConsentsLoading] = useState(false);
   const consentsFetchedRef = useRef(false);
   const latestCalc = getLatestCalculation(lead);
+  const paymentSummary = useMemo(() => getLeadPaymentSummary(lead), [lead]);
 
   const fetchConsents = useCallback(async () => {
     if (consentsFetchedRef.current) return;
@@ -407,7 +437,25 @@ function ExpandableRow({
         </TableCell>
         <TableCell align="center">
           {lead.calculations.length > 0 ? (
-            <Chip label={String(lead.calculations.length)} size="small" variant="outlined" />
+            <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap">
+              <Chip label={String(lead.calculations.length)} size="small" variant="outlined" />
+              {paymentSummary.paidCalculationsCount > 0 && (
+                <Chip
+                  label={`שולם: ${paymentSummary.paidCalculationsCount}/${lead.calculations.length}`}
+                  size="small"
+                  color="info"
+                  variant="outlined"
+                />
+              )}
+              {paymentSummary.appealPaidCount > 0 && (
+                <Chip
+                  label={`השגות: ${paymentSummary.appealPaidCount}`}
+                  size="small"
+                  color="info"
+                  variant="outlined"
+                />
+              )}
+            </Stack>
           ) : (
             <Typography variant="body2" color="text.disabled">
               —
@@ -462,9 +510,9 @@ function ExpandableRow({
                       ת.ז: {lead.idNumber}
                     </Typography>
                   )}
-                  {lead.paymentStatus !== 'none' && (
+                  {paymentSummary.latestStatus !== 'none' && (
                     <Chip
-                      label={paymentLabelMap[lead.paymentStatus]}
+                      label={`חישוב אחרון: ${paymentLabelMap[paymentSummary.latestStatus]}`}
                       size="small"
                       color="info"
                       variant="outlined"

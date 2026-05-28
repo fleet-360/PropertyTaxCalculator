@@ -4,6 +4,8 @@ import type { PaymentOrderStatus, PaymentProduct } from '@/lib/payments';
 export interface IPaymentOrder extends Document {
   orderId: string;
   leadId: mongoose.Types.ObjectId;
+  /** Which calculation (index in lead.calculations[]) this payment is for */
+  calculationIndex: number;
   product: PaymentProduct;
   amountNis: number;
   status: PaymentOrderStatus;
@@ -21,6 +23,7 @@ const PaymentOrderSchema = new Schema<IPaymentOrder>(
   {
     orderId: { type: String, required: true, unique: true, index: true },
     leadId: { type: Schema.Types.ObjectId, ref: 'Lead', required: true, index: true },
+    calculationIndex: { type: Number, required: true, min: 0, index: true },
     product: { type: String, enum: ['calculator', 'appeal'], required: true },
     amountNis: { type: Number, required: true, min: 0 },
     status: {

@@ -9,13 +9,22 @@ export async function POST(request: NextRequest) {
   try {
     await dbConnect();
     const body = await request.json();
-    const { leadId, product, couponCode } = body as {
+    const { leadId, calculationIndex, product, couponCode } = body as {
       leadId?: string;
+      calculationIndex?: unknown;
       product?: string;
       couponCode?: string;
     };
 
-    if (!leadId || !product || !PRODUCTS.includes(product as PaymentProduct)) {
+    const calcIdx =
+      typeof calculationIndex === 'number' ? calculationIndex : Number(calculationIndex);
+
+    if (
+      !leadId ||
+      !Number.isInteger(calcIdx) ||
+      !product ||
+      !PRODUCTS.includes(product as PaymentProduct)
+    ) {
       return NextResponse.json(
         { error: 'נתוני בקשה לא תקינים' },
         { status: 400 },
@@ -24,6 +33,7 @@ export async function POST(request: NextRequest) {
 
     const result = await createPaymentSession({
       leadId,
+      calculationIndex: calcIdx,
       product: product as PaymentProduct,
       couponCode: typeof couponCode === 'string' ? couponCode : undefined,
     });

@@ -90,6 +90,10 @@ export interface ICalculationEntry {
   // Error reports
   errorReport?: IErrorReport;
 
+  // Payment (per calculation)
+  paymentStatus?: 'none' | 'calculator_paid' | 'appeal_paid';
+  paymentTransactions?: IPaymentTransaction[];
+
   // Timestamp
   createdAt: Date | string;
 }

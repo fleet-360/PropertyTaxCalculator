@@ -25,6 +25,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       status: order.status,
       amountNis: order.amountNis,
       product: order.product,
+      calculationIndex: order.calculationIndex,
       demoMode: order.demoMode,
     });
   } catch (error) {

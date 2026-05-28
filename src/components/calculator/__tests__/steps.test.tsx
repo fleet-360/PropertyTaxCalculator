@@ -173,6 +173,7 @@ describe('ResultsGateStep', () => {
     const state = makeState({
       calculationResult: { outcome: 'underpaying' },
       leadId: '507f1f77bcf86cd799439011',
+      calculationIndex: 0,
     });
     dispatch.mockClear();
 

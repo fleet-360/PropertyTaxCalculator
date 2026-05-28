@@ -224,6 +224,14 @@ const CalculationEntrySchema = new Schema<ICalculationEntry>(
     // Error reports
     errorReport: { type: ErrorReportSchema },
 
+    // Payment (per calculation)
+    paymentStatus: {
+      type: String,
+      enum: ['none', 'calculator_paid', 'appeal_paid'],
+      default: 'none',
+    },
+    paymentTransactions: { type: [PaymentTransactionSchema], default: undefined },
+
     // Timestamp
     createdAt: { type: Date, default: Date.now },
   },

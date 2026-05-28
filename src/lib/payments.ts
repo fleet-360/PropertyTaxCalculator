@@ -123,21 +123,24 @@ export async function fulfillPaymentOrder(
   const lead = await Lead.findById(order.leadId);
   if (!lead) return;
 
+  const calc = lead.calculations?.[order.calculationIndex];
+  if (!calc) return;
+
   const newStatus = paymentStatusForProduct(order.product);
-  const current = lead.paymentStatus ?? 'none';
-  const rank: Record<string, number> = {
+  const current = (calc.paymentStatus ?? 'none') as 'none' | 'calculator_paid' | 'appeal_paid';
+  const rank: Record<'none' | 'calculator_paid' | 'appeal_paid', number> = {
     none: 0,
     calculator_paid: 1,
     appeal_paid: 2,
   };
   if (rank[newStatus] > rank[current]) {
-    lead.paymentStatus = newStatus;
+    calc.paymentStatus = newStatus;
   }
 
-  if (!lead.paymentTransactions) {
-    lead.paymentTransactions = [];
+  if (!calc.paymentTransactions) {
+    calc.paymentTransactions = [];
   }
-  lead.paymentTransactions.push({
+  calc.paymentTransactions.push({
     amount: order.amountNis,
     type: order.product,
     transactionId: tranzilaTransactionId ?? order.orderId,
@@ -165,6 +168,7 @@ export async function findPaymentOrderByOrderId(
 
 export type CreatePaymentSessionInput = {
   leadId: string;
+  calculationIndex: number;
   product: PaymentProduct;
   couponCode?: string;
 };
@@ -190,23 +194,32 @@ const COUPON_ERROR_HE: Record<string, string> = {
 export async function createPaymentSession(
   input: CreatePaymentSessionInput,
 ): Promise<CreatePaymentSessionResult> {
-  const { leadId, product, couponCode } = input;
+  const { leadId, calculationIndex, product, couponCode } = input;
 
   if (!mongoose.Types.ObjectId.isValid(leadId)) {
     return { ok: false, status: 400, error: 'מזהה ליד לא תקין' };
   }
 
   const lead = await Lead.findById(leadId);
-  console.log("lead", lead);
   if (!lead) {
     return { ok: false, status: 404, error: 'לא נמצאו פרטי ליד' };
   }
 
-  if (product === 'calculator' && lead.paymentStatus === 'calculator_paid') {
-    return { ok: false, status: 409, error: 'התשלום עבור תוצאות המחשבון כבר בוצע' };
+  if (!Number.isInteger(calculationIndex) || calculationIndex < 0) {
+    return { ok: false, status: 400, error: 'מזהה חישוב לא תקין' };
   }
-  if (product === 'appeal' && lead.paymentStatus === 'appeal_paid') {
-    return { ok: false, status: 409, error: 'התשלום עבור ההשגה כבר בוצע' };
+
+  const calc = lead.calculations?.[calculationIndex];
+  if (!calc) {
+    return { ok: false, status: 404, error: 'חישוב לא נמצא עבור הליד' };
+  }
+
+  // Already-paid checks are per lead + calculationIndex (not global lead.paymentStatus)
+  if (product === 'calculator' && calc.paymentStatus === 'calculator_paid') {
+    return { ok: false, status: 409, error: 'התשלום עבור חישוב זה כבר בוצע' };
+  }
+  if (product === 'appeal' && calc.paymentStatus === 'appeal_paid') {
+    return { ok: false, status: 409, error: 'התשלום עבור השגה בחישוב זה כבר בוצע' };
   }
 
   const chargeResult = await resolveChargeAmount(product, couponCode);
@@ -219,26 +232,46 @@ export async function createPaymentSession(
   }
 
   const { amountNis, coupon } = chargeResult.charge;
-  const orderId = randomUUID();
   const demoMode = !isTranzilaConfigured();
 
-  const order = await PaymentOrder.create({
-    orderId,
-    leadId: lead._id,
-    product,
-    amountNis,
-    status: 'pending',
-    couponCode: coupon?.code,
-    payerEmail: lead.email,
-    payerName: lead.fullName,
-    demoMode,
-  });
+  // Enforce only one pending order per leadId+calculationIndex+product by reusing it.
+  let order =
+    (await PaymentOrder.findOne({
+      leadId: lead._id,
+      calculationIndex,
+      product,
+      status: 'pending',
+    })) ?? null;
+
+  if (order) {
+    // Keep a single pending order but allow price/coupon updates before payment completes.
+    order.amountNis = amountNis;
+    order.couponCode = coupon?.code;
+    order.payerEmail = lead.email;
+    order.payerName = lead.fullName;
+    order.demoMode = demoMode;
+    await order.save();
+  } else {
+    const orderId = randomUUID();
+    order = await PaymentOrder.create({
+      orderId,
+      leadId: lead._id,
+      calculationIndex,
+      product,
+      amountNis,
+      status: 'pending',
+      couponCode: coupon?.code,
+      payerEmail: lead.email,
+      payerName: lead.fullName,
+      demoMode,
+    });
+  }
 
   if (amountNis <= 0) {
     await fulfillPaymentOrder(order);
     return {
       ok: true,
-      orderId,
+      orderId: order.orderId,
       amountNis: 0,
       mode: 'free',
       status: 'paid',
@@ -248,7 +281,7 @@ export async function createPaymentSession(
   if (demoMode) {
     return {
       ok: true,
-      orderId,
+      orderId: order.orderId,
       amountNis,
       mode: 'demo',
       status: 'pending',
@@ -257,7 +290,7 @@ export async function createPaymentSession(
 
   try {
     const paymentUrl = await buildTranzilaIframeUrl({
-      orderId,
+      orderId: order.orderId,
       amountNis,
       payerName: lead.fullName,
       payerEmail: lead.email,
@@ -265,14 +298,14 @@ export async function createPaymentSession(
     });
     return {
       ok: true,
-      orderId,
+      orderId: order.orderId,
       amountNis,
       mode: 'tranzila',
       paymentUrl,
       status: 'pending',
     };
   } catch (err) {
-    await PaymentOrder.deleteOne({ _id: order._id });
+    // Keep the pending order record for debugging/retry; just surface a gateway error.
     console.error('Tranzila iframe URL error:', err);
     return {
       ok: false,
