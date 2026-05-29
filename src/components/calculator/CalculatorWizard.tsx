@@ -360,6 +360,22 @@ export function wizardReducer(
         }
       }
 
+      if (state.propertyType === "business") {
+        const resolvedType = (fieldsToApply.propertyPurpose as string) || state.propertyPurpose;
+        const resolvedSubtype = (fieldsToApply.subType as string) || state.subType;
+        const resolvedZone = (fieldsToApply.zone as string) || state.zone;
+        const resolvedArea = (fieldsToApply.propertyArea as number) || state.propertyArea;
+
+        if (resolvedType || resolvedSubtype || resolvedZone || resolvedArea) {
+          fieldsToApply.designations = [{
+            type: resolvedType || "",
+            subtype: resolvedSubtype || "",
+            zone: resolvedZone || "",
+            area: resolvedArea || 0,
+          }];
+        }
+      }
+
       return {
         ...state,
         ...fieldsToApply,
