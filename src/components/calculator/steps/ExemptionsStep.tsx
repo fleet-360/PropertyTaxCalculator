@@ -242,6 +242,9 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
   };
 
   const hasAnySelection = rows.some((r) => r.subSectionCode);
+  const hasMissingSubSection = rows.some(
+    (r) => Boolean(r.sectionCode) && !r.subSectionCode,
+  );
   const measurementToggle = state.hasMeasurementError;
   const exemptionsToggle = state.hasExemptions;
   const multipleClassToggle = state.hasMultipleClassifications;
@@ -271,6 +274,10 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
   };
 
   const handleNext = () => {
+    if (hasMissingSubSection) {
+      return;
+    }
+
     // Filter out zero-area additionalAreas before persisting
     if (hasAreaTypeDiscounts) {
       const filtered = (state.additionalAreas ?? []).filter(
@@ -608,6 +615,13 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
                   onChange={(e) =>
                     handleSubSectionChange(index, e.target.value)
                   }
+                  required={Boolean(row.sectionCode)}
+                  error={Boolean(row.sectionCode) && !row.subSectionCode}
+                  helperText={
+                    Boolean(row.sectionCode) && !row.subSectionCode
+                      ? "יש לבחור תת קטגוריה"
+                      : undefined
+                  }
                   disabled={!row.sectionCode}
                   sx={{ flex: 1.5 }}
                   size="small"
@@ -705,6 +719,7 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
           endIcon={<ChevronLeftIcon />}
           sx={wizardPrimaryButtonSx}
           onClick={handleNext}
+          disabled={hasMissingSubSection}
         >
           {hasAnySelection ? "לשלב הבא" : "דלג"}
         </Button>

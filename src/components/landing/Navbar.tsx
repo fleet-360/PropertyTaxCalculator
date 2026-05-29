@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type MouseEvent } from "react";
 import {
   AppBar,
   Toolbar,
@@ -91,6 +91,10 @@ export default function Navbar({
   const [navHidden, setNavHidden] = useState(false);
   const lastScrollY = useRef(0);
   const scrollTicking = useRef(false);
+  const forceCalculatorReload = (event?: MouseEvent<HTMLElement>) => {
+    event?.preventDefault();
+    window.location.href = "/calculator";
+  };
 
   useEffect(() => {
     lastScrollY.current = window.scrollY;
@@ -190,6 +194,11 @@ export default function Navbar({
                     key={item.label}
                     component={item.href.startsWith("/") ? Link : "a"}
                     href={item.href}
+                    onClick={
+                      item.href === "/calculator"
+                        ? forceCalculatorReload
+                        : undefined
+                    }
                     sx={(theme) => ({
                       color: theme.palette.brand.navyDeep,
                       fontFamily: NAVBAR_FONT_FAMILY,
@@ -217,6 +226,7 @@ export default function Navbar({
                 <Button
                   component={Link}
                   href={ctaHref}
+                  onClick={forceCalculatorReload}
                   variant="contained"
                   endIcon={<ChevronLeftIcon />}
                   sx={(theme) => ({
@@ -290,7 +300,12 @@ export default function Navbar({
                 <ListItemButton
                   component={item.href.startsWith("/") ? Link : "a"}
                   href={item.href}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={(event) => {
+                    setMobileOpen(false);
+                    if (item.href === "/calculator") {
+                      forceCalculatorReload(event);
+                    }
+                  }}
                 >
                   <ListItemText
                     primary={item.label}
@@ -305,7 +320,10 @@ export default function Navbar({
                 href={ctaHref}
                 variant="contained"
                 fullWidth
-                onClick={() => setMobileOpen(false)}
+                onClick={(event) => {
+                  setMobileOpen(false);
+                  forceCalculatorReload(event);
+                }}
                 sx={(theme) => ({
                   bgcolor: theme.palette.brand.blue,
                   borderRadius: "999px",
