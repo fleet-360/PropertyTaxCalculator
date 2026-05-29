@@ -113,69 +113,76 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
       </Typography>
     ) : null;
 
-  const overpayingLayout = outcome === "overpaying" && showPaymentBlock && (
+  const overpayingLayout = outcome === "overpaying" && (
     <Box
       sx={{
         display: "grid",
-        gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
+        gridTemplateColumns: {
+          xs: "1fr",
+          lg: showPaymentBlock ? "1fr 1fr" : "1fr",
+        },
         gap: { xs: 3, md: 4 },
         alignItems: "stretch",
       }}
     >
-      <Stack spacing={3}>
-        <Box sx={wizardResultsCardSx}>
-          <Typography
-            sx={{
-              fontWeight: 700,
-              fontSize: "24px",
-              lineHeight: "32px",
-              mb: 2,
-            }}
-          >
-            סיכום תשלום — לצפייה בתוצאות המחשבון המפורטות
-          </Typography>
-          <Box
-            sx={{
-              borderTop: "1px solid",
-              borderColor: "divider",
-              pt: 3,
-              mb: 3,
-            }}
-          >
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="flex-end"
+      {showPaymentBlock && (
+        <Stack spacing={3}>
+          <Box sx={wizardResultsCardSx}>
+            <Typography
+              sx={{
+                fontWeight: 700,
+                fontSize: "24px",
+                lineHeight: "32px",
+                mb: 2,
+              }}
             >
-              <Box>
-                <Typography sx={{ fontWeight: 500, fontSize: "32px" }}>
-                  ₪{calculatorChargeAmount.toLocaleString("he-IL")}
+              סיכום תשלום — לצפייה בתוצאות המחשבון המפורטות
+            </Typography>
+            <Box
+              sx={{
+                borderTop: "1px solid",
+                borderColor: "divider",
+                pt: 3,
+                mb: 3,
+              }}
+            >
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="flex-end"
+              >
+                <Box>
+                  <Typography sx={{ fontWeight: 500, fontSize: "32px" }}>
+                    ₪{calculatorChargeAmount.toLocaleString("he-IL")}
+                  </Typography>
+                  <Typography
+                    sx={{ fontSize: "14px", fontWeight: 500, mt: 0.5 }}
+                  >
+                    עלות של קפה ומאפה :)
+                  </Typography>
+                </Box>
+                <Typography sx={{ fontWeight: 500, fontSize: "24px" }}>
+                  סך הכל לתשלום
                 </Typography>
-                <Typography sx={{ fontSize: "14px", fontWeight: 500, mt: 0.5 }}>
-                  עלות של קפה ומאפה :)
-                </Typography>
-              </Box>
-              <Typography sx={{ fontWeight: 500, fontSize: "24px" }}>
-                סך הכל לתשלום
-              </Typography>
-            </Stack>
+              </Stack>
+            </Box>
+            <CouponPaymentSection
+              state={state}
+              dispatch={dispatch}
+              context="results_gate"
+            />
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={handlePrimaryClick}
+              endIcon={<ChevronLeftIcon />}
+              sx={{ ...wizardPrimaryButtonSx, mt: 2, py: 1.25 }}
+            >
+              לתשלום וצפייה בתוצאות
+            </Button>
           </Box>
-          <CouponPaymentSection
-            state={state}
-            dispatch={dispatch}
-            context="results_gate"
-          />
-          <Button
-            variant="contained"
-            fullWidth
-            onClick={handlePrimaryClick}
-            endIcon={<ChevronLeftIcon />}
-            sx={{ ...wizardPrimaryButtonSx, mt: 2, py: 1.25 }}
-          >
-            לתשלום וצפייה בתוצאות
-          </Button>
-        </Box>
-      </Stack>
+        </Stack>
+      )}
       <ResultsDetailsCard
         reported={reported}
         calculated={calculated}
@@ -187,6 +194,18 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
         totalFeesBimonthly={totalFeesBimonthly}
         blurred
       />
+      {!showPaymentBlock && (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+          <Button
+            variant="contained"
+            onClick={goToDetailedResults}
+            endIcon={<ChevronLeftIcon />}
+            sx={wizardPrimaryButtonSx}
+          >
+            צפה בתוצאות מפורטות
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 
@@ -251,18 +270,7 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
         </>
       )}
 
-      {outcome === "overpaying" && (
-        <>
-          {overpayingLayout ?? (
-            <>
-              <Alert severity="success" sx={{ mb: 3, fontSize: "1rem" }}>
-                על פי המחשבון אתה זכאי להנחה!
-              </Alert>
-              {simpleActions}
-            </>
-          )}
-        </>
-      )}
+      {overpayingLayout}
 
       <TranzilaPaymentDialog
         open={paymentDialogOpen}
