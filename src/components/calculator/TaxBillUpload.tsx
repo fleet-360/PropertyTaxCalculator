@@ -33,9 +33,9 @@ const FIELD_LABELS: Record<keyof TaxBillData, string> = {
   classificationCode: "קוד סיווג",
   zone: "אזור",
   propertyArea: 'שטח הנכס (מ"ר)',
-  coveredBalconyArea: 'מרפסת מקורה (מ"ר)',
-  storageArea: 'מחסן (מ"ר)',
-  parkingArea: 'חניה (מ"ר)',
+  // coveredBalconyArea: 'מרפסת מקורה (מ"ר)',
+  // storageArea: 'מחסן (מ"ר)',
+  // parkingArea: 'חניה (מ"ר)',
   bimonthlyPayment: "תשלום (₪)",
   annualPayment: "תשלום שנתי (₪)",
   paymentPeriod: "תקופת תשלום",
@@ -152,8 +152,10 @@ export default function TaxBillUpload({
             fieldsToApply.classificationCode as string,
           );
           if (match) {
-            (fieldsToApply as Record<string, unknown>).propertyPurpose = match.typeCode;
-            (fieldsToApply as Record<string, unknown>).subType = match.subtypeCode;
+            (fieldsToApply as Record<string, unknown>).propertyPurpose =
+              match.typeCode;
+            (fieldsToApply as Record<string, unknown>).subType =
+              match.subtypeCode;
             (fieldsToApply as Record<string, unknown>).zone = match.zoneCode;
             resolved = true;
           }
@@ -162,16 +164,19 @@ export default function TaxBillUpload({
         if (!resolved) {
           const extractedSubType = result.data.subTypeDescription?.value;
           const extractedZone = result.data.zone?.value;
-          if (typeof extractedSubType === 'string' && extractedSubType) {
+          if (typeof extractedSubType === "string" && extractedSubType) {
             const fallback = findBySubtypeAndZone(
               cityData as unknown as Parameters<typeof findBySubtypeAndZone>[0],
               extractedSubType,
-              typeof extractedZone === 'string' ? extractedZone : undefined,
+              typeof extractedZone === "string" ? extractedZone : undefined,
             );
             if (fallback) {
-              (fieldsToApply as Record<string, unknown>).propertyPurpose = fallback.typeCode;
-              (fieldsToApply as Record<string, unknown>).subType = fallback.subtypeCode;
-              (fieldsToApply as Record<string, unknown>).zone = fallback.zoneCode;
+              (fieldsToApply as Record<string, unknown>).propertyPurpose =
+                fallback.typeCode;
+              (fieldsToApply as Record<string, unknown>).subType =
+                fallback.subtypeCode;
+              (fieldsToApply as Record<string, unknown>).zone =
+                fallback.zoneCode;
             }
           }
         }
@@ -223,21 +228,26 @@ export default function TaxBillUpload({
               category: string;
               code: string;
               label: string;
-              subtypes: { code: string; label: string; zones: { zone: string }[] }[];
+              subtypes: {
+                code: string;
+                label: string;
+                zones: { zone: string }[];
+              }[];
             }[];
           };
           promptOpts.tariffHints = {
             availableZones: cd.availableZones ?? [],
-            subtypes: cd.types?.flatMap((t) =>
-              t.subtypes.map((s) => ({
-                code: s.code,
-                label: s.label,
-                category: t.category,
-                typeCode: t.code,
-                typeLabel: t.label,
-                zones: s.zones.map((z) => z.zone),
-              })),
-            ) ?? [],
+            subtypes:
+              cd.types?.flatMap((t) =>
+                t.subtypes.map((s) => ({
+                  code: s.code,
+                  label: s.label,
+                  category: t.category,
+                  typeCode: t.code,
+                  typeLabel: t.label,
+                  zones: s.zones.map((z) => z.zone),
+                })),
+              ) ?? [],
           };
         }
 
