@@ -417,6 +417,11 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
   const watchedSubType = watch("subType");
   const watchedZone = watch("zone");
   const watchedArea = watch("propertyArea");
+
+  const canMoveToNextStep = useMemo(() => {
+    if (isBusiness) return true;
+    return watchedType && watchedSubType && watchedZone && watchedArea;
+  }, [watchedType, watchedSubType, watchedZone, watchedArea]);
   // const watchedClassCode = watch('classificationCode');
 
   // Refs to track previous values and prevent cascade loops
@@ -1071,32 +1076,34 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
             )}
           />
         </Box>
-        <Box sx={{ ...fullRowSx, minWidth: 0 }}>
-          <Controller
-            name="address"
-            control={control}
-            render={({ field }) => (
-              <TextField {...field} label="כתובת" fullWidth size="small" />
-            )}
-          />
-        </Box>
-        <Box sx={{ minWidth: 0 }}>
-          <Controller
-            name="block"
-            control={control}
-            render={({ field }) => (
-              <TextField {...field} label="גוש" fullWidth size="small" />
-            )}
-          />
-        </Box>
-        <Box sx={{ minWidth: 0 }}>
-          <Controller
-            name="parcel"
-            control={control}
-            render={({ field }) => (
-              <TextField {...field} label="חלקה" fullWidth size="small" />
-            )}
-          />
+        <Box sx={{ minWidth: 0 }}></Box>
+        <Box sx={{ minWidth: 0 }}></Box>
+        <Controller
+          name="address"
+          control={control}
+          render={({ field }) => (
+            <TextField {...field} label="כתובת" size="small" />
+          )}
+        />
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Controller
+              name="block"
+              control={control}
+              render={({ field }) => (
+                <TextField {...field} label="גוש" size="small" />
+              )}
+            />
+          </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Controller
+              name="parcel"
+              control={control}
+              render={({ field }) => (
+                <TextField {...field} label="חלקה" size="small" />
+              )}
+            />
+          </Box>
         </Box>
 
         {/* 4. תשלום */}
@@ -1153,7 +1160,7 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
       <Box sx={wizardNavRowSx}>
         <Button
           variant="outlined"
-          onClick={() => dispatch({ type: "PREV_STEP" })}
+          onClick={() => dispatch({ type: "SET_STEP", step: 1 })}
           startIcon={<ChevronRightIcon />}
           sx={wizardSecondaryButtonSx}
         >
@@ -1163,6 +1170,7 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
           variant="contained"
           type="submit"
           endIcon={<ChevronLeftIcon />}
+          disabled={!canMoveToNextStep}
           sx={wizardPrimaryButtonSx}
         >
           לשלב הבא

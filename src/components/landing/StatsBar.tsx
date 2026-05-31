@@ -22,10 +22,10 @@ type StatConfig = {
 };
 
 const stats: StatConfig[] = [
-  { target: 20, suffix: "+", label: "רשויות שותפות" },
-  { target: 5000, suffix: "+", comma: true, label: "משתמשים מאושרים" },
-  { target: 5400, prefix: "₪", comma: true, label: "חיסכון חודשי ממוצע" },
-  { target: 98, suffix: "%", label: "דיוק בחישוב" },
+  { target: 20, suffix: "+", label: "רשויות מקומיות" },
+  { target: 1000000, suffix: "+", comma: true, label: "פוטנציאל משתמשים" },
+  { target: 5400, prefix: "₪", comma: true, label: "פוטנציאל חיסכון שנתי" },
+  { target: 98, suffix: "%", label: "שאיפה לדיוק בחישוב" },
 ];
 
 function formatStatValue(n: number, comma: boolean): string {
@@ -67,9 +67,11 @@ function RollingStat({ stat, index }: { stat: StatConfig; index: number }) {
       ref={ref}
       sx={{
         flex: 1,
-        textAlign: "center",
         px: { xs: 1, md: 3 },
         py: { xs: 1.5, md: 0 },
+        borderWidth: "0px 0px 0px 0.5px",
+        borderStyle: "solid",
+        borderColor: "#FFFFFF",
       }}
     >
       <Typography
@@ -246,33 +248,32 @@ export default function StatsBar() {
                 <RollingStat key={stat.label} stat={stat} index={i} />
               ))}
             </Box>
-
-            <Box sx={{ display: "flex", justifyContent: "center" }}>
-              <Button
-                component={Link}
-                href="/calculator"
-                variant="contained"
-                endIcon={<ChevronLeftIcon />}
-                sx={(theme) => ({
-                  bgcolor: theme.palette.brand.blue,
-                  color: "#fff",
-                  borderRadius: "999px",
-                  px: { xs: 3.5, md: 5 },
-                  py: { xs: 1.5, md: 1.75 },
-                  fontSize: { xs: "15px", md: "17px" },
-                  fontWeight: 700,
-                  boxShadow: "0px 12px 28px rgba(26,86,224,0.4)",
-                  "& .MuiButton-endIcon": { ml: 0.75, mr: -0.5 },
-                  "&:hover": {
-                    bgcolor: theme.palette.brand.blueDark,
-                    boxShadow: "0px 14px 32px rgba(26,86,224,0.55)",
-                  },
-                })}
-              >
-                אני רוצה להתחיל בחישוב
-              </Button>
-            </Box>
           </Box>
+        </Box>
+        <Box sx={{ display: "flex", justifyContent: "center", pt: 15 }}>
+          <Button
+            component={Link}
+            href="/calculator"
+            variant="contained"
+            endIcon={<ChevronLeftIcon />}
+            sx={(theme) => ({
+              bgcolor: theme.palette.brand.blue,
+              color: "#fff",
+              borderRadius: "999px",
+              px: { xs: 3.5, md: 5 },
+              py: { xs: 1.5, md: 1.75 },
+              fontSize: { xs: "15px", md: "17px" },
+              fontWeight: 500,
+              boxShadow: "0px 12px 28px rgba(26,86,224,0.4)",
+              "& .MuiButton-endIcon": { ml: 0.75, mr: -0.5 },
+              "&:hover": {
+                bgcolor: theme.palette.brand.blueDark,
+                boxShadow: "0px 14px 32px rgba(26,86,224,0.55)",
+              },
+            })}
+          >
+            אני רוצה להתחיל בחישוב
+          </Button>
         </Box>
       </Container>
     </Box>

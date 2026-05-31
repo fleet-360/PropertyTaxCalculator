@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
-import { Heebo, Inter, Varela_Round } from 'next/font/google';
+import { Inter, Assistant, Noto_Sans_Hebrew } from 'next/font/google';
 import ThemeRegistry from '@/theme/ThemeRegistry';
 import AccessibilityWidget from '@/components/common/AccessibilityWidget';
 import '@/styles/globals.css';
 
-const heebo = Heebo({
-  subsets: ['latin', 'hebrew'],
+const notoSansHebrew = Noto_Sans_Hebrew({
+  subsets: ['hebrew', 'latin'],
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
-  variable: '--font-heebo',
+  variable: '--font-noto-sans-hebrew',
 });
 
 const inter = Inter({
@@ -16,11 +17,11 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
-const varelaRound = Varela_Round({
+const assistant = Assistant({
   subsets: ['latin', 'hebrew'],
-  weight: '400',
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
-  variable: '--font-varela-round',
+  variable: '--font-assistant',
 });
 export const metadata: Metadata = {
   title: 'מחשבון ארנונה - בדוק אם אתה משלם יותר מדי',
@@ -33,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="he" dir="rtl" className={`${heebo.variable} ${inter.variable} ${varelaRound.variable}`}>
+    <html lang="he" dir="rtl" className={`${notoSansHebrew.variable} ${inter.variable} ${assistant.variable}`}>
       <body suppressHydrationWarning>
         <a href="#main-content" className="skip-to-content">
           דלג לתוכן הראשי

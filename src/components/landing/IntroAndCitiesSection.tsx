@@ -50,7 +50,7 @@ function CityCell({ name }: { name: string }) {
         px: 1,
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
+        alignItems: "flex-start",
         justifyContent: "center",
         gap: 0.25,
         minHeight: { xs: 64, md: 72 },
@@ -63,9 +63,9 @@ function CityCell({ name }: { name: string }) {
     >
       <Typography
         sx={{
-          fontSize: { xs: "10px", md: "11px" },
-          fontWeight: 500,
-          color: (theme) => theme.palette.brand.textMuted,
+          fontSize: { xs: "12px", md: "14px" },
+          fontWeight: 400,
+          color: "#1E3C95",
           lineHeight: 1,
         }}
       >
@@ -73,10 +73,9 @@ function CityCell({ name }: { name: string }) {
       </Typography>
       <Typography
         sx={{
-          fontSize: { xs: "13px", md: "15px" },
-          fontWeight: 700,
+          fontSize: { xs: "16px", md: "20px" },
+          fontWeight: 400,
           color: (theme) => theme.palette.brand.navyDeep,
-          textAlign: "center",
           lineHeight: 1.2,
         }}
       >
@@ -197,7 +196,7 @@ export default function IntroAndCitiesSection() {
         <Box
           sx={{
             textAlign: "center",
-            maxWidth: 920,
+            maxWidth: 1200,
             mx: "auto",
             mb: { xs: 4, md: 5 },
           }}
@@ -217,9 +216,10 @@ export default function IntroAndCitiesSection() {
           <Typography
             sx={(theme) => ({
               fontSize: { xs: "26px", md: "32px" },
-              lineHeight: 1.7,
               color: theme.palette.brand.navyDeep,
-              fontWeight: 500,
+              fontWeight: 400,
+              lineHeight: "32px",
+              width: "100%",
             })}
           >
             אנחנו מחשבים את הארנונה בבית או בעסק ובודקים האם אתה זכאי להנחה
@@ -227,18 +227,21 @@ export default function IntroAndCitiesSection() {
 
           <Typography
             sx={(theme) => ({
-              fontSize: { xs: "16px", md: "20px" },
-              lineHeight: 1.7,
+              fontSize: { xs: "26px", md: "32px" },
               color: theme.palette.brand.navyDeep,
-              fontWeight: 500,
+              fontWeight: 400,
+              width: "100%",
+              lineHeight: "32px",
             })}
           >
             בתשלום הארנונה תוך שימוש בפטורים, הנחות או איתור טעויות בחישוב.
           </Typography>
           <Box
             sx={(theme) => ({
-              color: theme.palette.brand.blue,
-              fontWeight: 800,
+              color: theme.palette.brand.blueDark,
+              fontWeight: 700,
+              fontSize: { xs: "26px", md: "32px" },
+              lineHeight: "32px",
             })}
           >
             והכל בצורה פשוטה, מהירה ומדויקת

@@ -5,6 +5,7 @@ import { createContext, useContext } from 'react';
 export interface StartExtractionOptions {
   file: File;
   expectedCityName?: string;
+  cityData?: Record<string, unknown> | null;
 }
 
 export interface BillExtractionContextValue {

@@ -32,7 +32,7 @@ export default function PageHero({ title, subtitle }: PageHeroProps) {
         <Typography
           component="h1"
           sx={{
-            fontFamily: 'var(--font-heebo), "Heebo", "Inter", sans-serif',
+            fontFamily: 'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif',
             fontWeight: 700,
             fontSize: { xs: '28px', sm: '34px', md: '40px' },
             letterSpacing: '-0.5px',

@@ -46,9 +46,9 @@ export default function TestimonialsSection() {
               component="h2"
               sx={(theme) => ({
                 position: "relative",
-                fontFamily: 'var(--font-heebo), "Heebo", sans-serif',
-                fontWeight: 800,
-                fontSize: { xs: "26px", md: "36px" },
+                fontFamily: 'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif',
+                fontWeight: 700,
+                fontSize: "24px",
                 color: theme.palette.brand.navyDeep,
                 letterSpacing: "-0.3px",
               })}

@@ -115,29 +115,29 @@ const theme = createTheme({
   },
   typography: {
     fontFamily:
-      'var(--font-heebo), "Heebo", "Inter", "Roboto", "Arial", sans-serif',
+      'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", "Inter", "Roboto", "Arial", sans-serif',
     h1: {
       fontFamily:
-        'var(--font-varela-round), "Varela Round", "Heebo", sans-serif',
-      fontWeight: 400,
+        'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif',
+      fontWeight: 700,
       fontSize: "2.5rem",
     },
     h2: {
       fontFamily:
-        'var(--font-varela-round), "Varela Round", "Heebo", sans-serif',
-      fontWeight: 400,
+        'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif',
+      fontWeight: 700,
       fontSize: "2rem",
     },
     h3: {
       fontFamily:
-        'var(--font-varela-round), "Varela Round", "Heebo", sans-serif',
-      fontWeight: 400,
+        'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif',
+      fontWeight: 600,
       fontSize: "1.75rem",
     },
     h4: {
       fontFamily:
-        'var(--font-varela-round), "Varela Round", "Heebo", sans-serif',
-      fontWeight: 400,
+        'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif',
+      fontWeight: 600,
       fontSize: "1.5rem",
     },
     h5: { fontWeight: 500, fontSize: "1.25rem" },
@@ -151,7 +151,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           fontFamily:
-            'var(--font-heebo), "Heebo", "Inter", "Roboto", "Arial", sans-serif',
+            'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", "Inter", "Roboto", "Arial", sans-serif',
         },
       },
     },

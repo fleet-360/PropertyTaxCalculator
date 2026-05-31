@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type MouseEvent } from "react";
 import {
   AppBar,
   Toolbar,
@@ -30,6 +30,8 @@ const FLOAT_TOP = { xs: 12, sm: 16 };
 const FLOAT_INSET = { xs: 1.5, sm: 2, md: 3 };
 const SCROLL_DIRECTION_DELTA = 6;
 const SCROLL_TOP_THRESHOLD = 32;
+const NAVBAR_FONT_FAMILY =
+  'var(--font-assistant), "Assistant", sans-serif';
 
 const navItemsLanding = [
   { label: "דף הבית", href: "#hero" },
@@ -89,6 +91,10 @@ export default function Navbar({
   const [navHidden, setNavHidden] = useState(false);
   const lastScrollY = useRef(0);
   const scrollTicking = useRef(false);
+  const forceCalculatorReload = (event?: MouseEvent<HTMLElement>) => {
+    event?.preventDefault();
+    window.location.href = "/calculator";
+  };
 
   useEffect(() => {
     lastScrollY.current = window.scrollY;
@@ -154,6 +160,7 @@ export default function Navbar({
             justifyContent: "center",
             borderRadius: "20px",
             overflow: "hidden",
+            fontFamily: NAVBAR_FONT_FAMILY,
             boxShadow:
               "0px 8px 32px rgba(11,26,71,0.08), 0px 2px 8px rgba(11,26,71,0.04)",
             transition: (theme) =>
@@ -187,8 +194,14 @@ export default function Navbar({
                     key={item.label}
                     component={item.href.startsWith("/") ? Link : "a"}
                     href={item.href}
+                    onClick={
+                      item.href === "/calculator"
+                        ? forceCalculatorReload
+                        : undefined
+                    }
                     sx={(theme) => ({
                       color: theme.palette.brand.navyDeep,
+                      fontFamily: NAVBAR_FONT_FAMILY,
                       fontSize: "16px",
                       fontWeight: 500,
                       textDecoration: "none",
@@ -213,6 +226,7 @@ export default function Navbar({
                 <Button
                   component={Link}
                   href={ctaHref}
+                  onClick={forceCalculatorReload}
                   variant="contained"
                   endIcon={<ChevronLeftIcon />}
                   sx={(theme) => ({
@@ -221,6 +235,7 @@ export default function Navbar({
                     borderRadius: "999px",
                     px: 2.75,
                     py: 1.1,
+                    fontFamily: NAVBAR_FONT_FAMILY,
                     fontSize: "15px",
                     fontWeight: 700,
                     boxShadow: "0px 8px 20px rgba(26,86,224,0.25)",
@@ -264,6 +279,7 @@ export default function Navbar({
         anchor="top"
         onClose={() => setMobileOpen(false)}
         aria-label="תפריט ניווט"
+        PaperProps={{ sx: { fontFamily: NAVBAR_FONT_FAMILY } }}
       >
         <Box sx={{ width: 280, pt: 2, m: "auto" }}>
           <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
@@ -284,9 +300,17 @@ export default function Navbar({
                 <ListItemButton
                   component={item.href.startsWith("/") ? Link : "a"}
                   href={item.href}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={(event) => {
+                    setMobileOpen(false);
+                    if (item.href === "/calculator") {
+                      forceCalculatorReload(event);
+                    }
+                  }}
                 >
-                  <ListItemText primary={item.label} />
+                  <ListItemText
+                    primary={item.label}
+                    primaryTypographyProps={{ sx: { fontFamily: NAVBAR_FONT_FAMILY } }}
+                  />
                 </ListItemButton>
               </ListItem>
             ))}
@@ -296,11 +320,15 @@ export default function Navbar({
                 href={ctaHref}
                 variant="contained"
                 fullWidth
-                onClick={() => setMobileOpen(false)}
+                onClick={(event) => {
+                  setMobileOpen(false);
+                  forceCalculatorReload(event);
+                }}
                 sx={(theme) => ({
                   bgcolor: theme.palette.brand.blue,
                   borderRadius: "999px",
                   py: 1.2,
+                  fontFamily: NAVBAR_FONT_FAMILY,
                   fontWeight: 700,
                   "&:hover": { bgcolor: theme.palette.brand.blueDark },
                 })}
