@@ -84,18 +84,23 @@ const designationRowSchema = z.object({
   area: z.coerce.number().min(0),
 });
 
+const requiredString = z.string().min(1, "שדה חובה");
+
 function createDataEntrySchema(isBusiness: boolean) {
   return z
     .object({
-      fullName: z.string().min(1, "שדה חובה"),
+      fullName: requiredString,
       idNumber: z
         .string()
         .regex(/^\d+$/, "יש להזין ספרות בלבד")
         .or(z.literal(""))
         .optional(),
       email: z.string().optional(),
-      phone: z.string().optional(),
-      propertyPurpose: z.string(),
+      phone: requiredString.regex(
+        /^05\d{1}-?\d{7}$/,
+        "מספר טלפון לא תקין (לדוגמה: 050-1234567)",
+      ),
+      propertyPurpose: isBusiness ? z.string() : requiredString,
       propertyNumber: z.string(),
       propertyId: z.string(),
       propertyArea: isBusiness
@@ -105,8 +110,8 @@ function createDataEntrySchema(isBusiness: boolean) {
       block: z.string(),
       parcel: z.string(),
       classificationCode: z.string(),
-      zone: z.string(),
-      subType: z.string(),
+      zone: isBusiness ? z.string() : requiredString,
+      subType: isBusiness ? z.string() : requiredString,
       reportedPayment: z.coerce.number().positive("סכום חייב להיות גדול מ-0"),
       paymentPeriod: z.string().default("bimonthly"),
       designations: z.array(designationRowSchema).default([]),
@@ -193,12 +198,14 @@ function DesignationRow({
     return type?.subtypes.find((s) => s.code === rowSubtype)?.zones ?? [];
   }, [types, rowType, rowSubtype]);
 
+  const validateOpts = { shouldValidate: true } as const;
+
   // Clear downstream when type changes
   useEffect(() => {
     if (prevRowType.current === rowType) return;
     prevRowType.current = rowType;
-    setValue(`designations.${idx}.subtype` as const, "");
-    setValue(`designations.${idx}.zone` as const, "");
+    setValue(`designations.${idx}.subtype` as const, "", validateOpts);
+    setValue(`designations.${idx}.zone` as const, "", validateOpts);
   }, [rowType, idx, setValue]);
 
   // Clear or default zone when subtype changes
@@ -209,9 +216,13 @@ function DesignationRow({
     const zones =
       typeObj?.subtypes.find((s) => s.code === rowSubtype)?.zones ?? [];
     if (rowSubtype && rowType && zones.length === 0) {
-      setValue(`designations.${idx}.zone` as const, ALL_ZONES_TARIFF_CODE);
+      setValue(
+        `designations.${idx}.zone` as const,
+        ALL_ZONES_TARIFF_CODE,
+        validateOpts,
+      );
     } else {
-      setValue(`designations.${idx}.zone` as const, "");
+      setValue(`designations.${idx}.zone` as const, "", validateOpts);
     }
   }, [rowSubtype, rowType, idx, setValue, types]);
 
@@ -370,12 +381,14 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
     formState: { errors, isSubmitted, isSubmitSuccessful },
   } = useForm<FormData>({
     resolver: zodResolver(schema) as any,
+    mode: "onSubmit",
+    reValidateMode: "onChange",
     defaultValues: {
       fullName: state.fullName,
       idNumber: state.idNumber,
       email: state.email,
       phone: state.phone,
-      propertyPurpose: isBusiness ? state.propertyPurpose : types[0]?.code,
+      propertyPurpose: state.propertyPurpose || "",
       propertyNumber: state.propertyNumber,
       propertyId: state.propertyId,
       propertyArea: state.propertyArea || ("" as any),
@@ -482,6 +495,8 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
     watchedArea,
   ]);
 
+  const validateOpts = { shouldValidate: true } as const;
+
   // ── Forward cascade: type changes → clear downstream ───────────
   useEffect(() => {
     if (prevTypeRef.current === watchedType) return;
@@ -489,9 +504,9 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
     prevSubTypeRef.current = "";
     prevZoneRef.current = "";
     // prevClassCodeRef.current = '';
-    setValue("subType", "");
-    setValue("zone", "");
-    setValue("classificationCode", "");
+    setValue("subType", "", validateOpts);
+    setValue("zone", "", validateOpts);
+    setValue("classificationCode", "", validateOpts);
   }, [watchedType, setValue]);
 
   // ── Forward cascade: subType changes → clear zone & code (default zone all if no rows) ───────
@@ -504,11 +519,11 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
       ?.subtypes.find((s) => s.code === watchedSubType);
     const zones = selectedSubtype?.zones ?? [];
     if (watchedSubType && watchedType && zones.length === 0) {
-      setValue("zone", ALL_ZONES_TARIFF_CODE);
+      setValue("zone", ALL_ZONES_TARIFF_CODE, validateOpts);
     } else {
-      setValue("zone", "");
+      setValue("zone", "", validateOpts);
     }
-    setValue("classificationCode", "");
+    setValue("classificationCode", "", validateOpts);
   }, [watchedSubType, watchedType, setValue, types]);
 
   // ── Auto-save lead when name + phone are filled ──
@@ -767,7 +782,14 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
             name="phone"
             control={control}
             render={({ field }) => (
-              <TextField {...field} label="טלפון *" fullWidth size="small" />
+              <TextField
+                {...field}
+                label="טלפון *"
+                fullWidth
+                size="small"
+                error={!!errors.phone}
+                helperText={errors.phone?.message}
+              />
             )}
           />
         </Box>
@@ -870,6 +892,9 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
                     select
                     fullWidth
                     size="small"
+                    required
+                    error={!!errors.propertyPurpose}
+                    helperText={errors.propertyPurpose?.message}
                   >
                     <MenuItem value="">בחר</MenuItem>
                     {types.map((t: IPropertyType) => (
@@ -893,6 +918,9 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
                     fullWidth
                     size="small"
                     disabled={!watchedType && !isBusiness}
+                    required
+                    error={!!errors?.subType}
+                    helperText={errors?.subType?.message}
                   >
                     <MenuItem value="">בחר</MenuItem>
                     {filteredSubtypes.map((s: ISubType) => (
@@ -916,6 +944,9 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
                     fullWidth
                     size="small"
                     disabled={!watchedSubType}
+                    required
+                    error={!!errors?.zone}
+                    helperText={errors?.zone?.message}
                   >
                     <MenuItem value="">בחר</MenuItem>
 
