@@ -141,8 +141,17 @@ export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
                     : undefined,
               }),
             })
-              .then((r) => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+              .then(async (r) => {
+                if (!r.ok) {
+                  const body = await r.json().catch(() => ({}));
+                  const detail =
+                    typeof body?.error === "string"
+                      ? body.error
+                      : typeof body?.message === "string"
+                        ? body.message
+                        : `HTTP ${r.status}`;
+                  throw new Error(detail);
+                }
                 return r.json();
               })
               .then((data) => {
@@ -156,9 +165,18 @@ export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
                 });
                 dispatch({ type: "NEXT_STEP" });
               })
-              .catch(() => {
+              .catch((err: unknown) => {
                 dispatch({ type: "SET_LOADING", payload: false });
-                dispatch({ type: "SET_CONTACT_REDIRECT", payload: "error" });
+                dispatch({
+                  type: "SET_CONTACT_REDIRECT",
+                  payload: "error",
+                  errorMessage:
+                    err instanceof Error
+                      ? err.message
+                      : typeof err === "string"
+                        ? err
+                        : undefined,
+                });
               });
           }}
         >

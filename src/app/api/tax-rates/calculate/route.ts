@@ -80,7 +80,8 @@ export async function POST(request: NextRequest) {
         householdSize,
         childrenCount,
         matchToleranceValue,
-        matchToleranceIsPercent
+        matchToleranceIsPercent,
+        correctedAreaSqm
       );
 
       return NextResponse.json(result, { status: 200 });

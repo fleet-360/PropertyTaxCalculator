@@ -128,6 +128,8 @@ export interface WizardState {
     | "other_city"
     | "error"
     | null;
+  // Optional error detail shown when contactRedirectReason === "error"
+  contactRedirectErrorMessage: string | null;
   /** Draft input for coupon (shown alongside payment on results gate / appeal) */
   couponCodeDraft: string;
   /** Applied coupon — reused for calculator payment and appeal payment */
@@ -184,6 +186,7 @@ export const initialState: WizardState = {
   extractionError: null,
   appealPhase: "idle",
   contactRedirectReason: null,
+  contactRedirectErrorMessage: null,
   couponCodeDraft: "",
   appliedCoupon: null,
   additionalAreas: [],
@@ -239,6 +242,7 @@ export type WizardAction =
   | {
       type: "SET_CONTACT_REDIRECT";
       payload: WizardState["contactRedirectReason"];
+      errorMessage?: string;
     }
   | { type: "SET_LEAD_ID"; payload: string }
   | { type: "SET_CALCULATION_INDEX"; payload: number }
@@ -396,7 +400,12 @@ export function wizardReducer(
     case "RESET_CALCULATOR":
       return { ...initialState };
     case "SET_CONTACT_REDIRECT":
-      return { ...state, contactRedirectReason: action.payload };
+      return {
+        ...state,
+        contactRedirectReason: action.payload,
+        contactRedirectErrorMessage:
+          action.payload === "error" ? (action.errorMessage ?? null) : null,
+      };
     case "SET_LEAD_ID":
       return { ...state, leadId: action.payload };
     case "SET_CALCULATION_INDEX":

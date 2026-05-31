@@ -599,7 +599,8 @@ export function calculateBusinessPropertyTax(
   householdSize?: number,
   childrenCount?: number,
   matchToleranceValue: number = DEFAULT_MATCH_TOLERANCE_VALUE,
-  matchToleranceIsPercent: boolean = DEFAULT_MATCH_TOLERANCE_IS_PERCENT
+  matchToleranceIsPercent: boolean = DEFAULT_MATCH_TOLERANCE_IS_PERCENT,
+  correctedAreaSqm?: number
 ): TaxCalculationResult {
   // Validation
   if (designations.length === 0) {
@@ -612,12 +613,21 @@ export function calculateBusinessPropertyTax(
     throw new Error('סכום התשלום חייב להיות גדול מ-0');
   }
 
+  // Override the (single) designation's area when a measurement-error correction is supplied —
+  // mirrors the `correctedAreaSqm ?? propertyAreaSqm` behavior in `calculatePropertyTax`.
+  const effectiveDesignations =
+    correctedAreaSqm != null
+      ? designations.map((d, i) =>
+          i === 0 ? { ...d, areaSqm: correctedAreaSqm } : d
+        )
+      : designations;
+
   let totalAnnual = 0;
   let totalArea = 0;
   let lastRate = 0;
   let lastPropertyCode: string | undefined;
 
-  for (const d of designations) {
+  for (const d of effectiveDesignations) {
     const { rate, propertyCode, annualTotal } = findRate(tariff, d.typeCode, d.subtypeCode, d.zone, d.areaSqm);
     totalAnnual += annualTotal;
     totalArea += d.areaSqm;
