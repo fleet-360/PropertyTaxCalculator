@@ -110,8 +110,8 @@ function createDataEntrySchema(isBusiness: boolean) {
       block: z.string(),
       parcel: z.string(),
       classificationCode: z.string(),
-      zone: z.string().min(1, "שדה חובה"),
-      subType: z.string().min(1, "שדה חובה"),
+      zone: isBusiness ? z.string() : z.string().min(1, "שדה חובה"),
+      subType: isBusiness ? z.string() : z.string().min(1, "שדה חובה"),
       reportedPayment: z.coerce.number().positive("סכום חייב להיות גדול מ-0"),
       paymentPeriod: z.string().default("bimonthly"),
       designations: z.array(designationRowSchema).default([]),
@@ -119,37 +119,36 @@ function createDataEntrySchema(isBusiness: boolean) {
     })
     .superRefine((data, ctx) => {
       if (!isBusiness) return;
-      const rows = data.designations;
-      if (rows.length !== 1) return;
-      const r = rows[0];
-      if (!r.type?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "שדה חובה",
-          path: ["designations", 0, "type"],
-        });
-      }
-      if (!r.subtype?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "שדה חובה",
-          path: ["designations", 0, "subtype"],
-        });
-      }
-      if (!r.zone?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "שדה חובה",
-          path: ["designations", 0, "zone"],
-        });
-      }
-      if (!(r.area > 0)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "שטח חייב להיות גדול מ-0",
-          path: ["designations", 0, "area"],
-        });
-      }
+      data.designations.forEach((r, idx) => {
+        if (!r.type?.trim()) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "שדה חובה",
+            path: ["designations", idx, "type"],
+          });
+        }
+        if (!r.subtype?.trim()) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "שדה חובה",
+            path: ["designations", idx, "subtype"],
+          });
+        }
+        if (!r.zone?.trim()) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "שדה חובה",
+            path: ["designations", idx, "zone"],
+          });
+        }
+        if (!(r.area > 0)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "שטח חייב להיות גדול מ-0",
+            path: ["designations", idx, "area"],
+          });
+        }
+      });
     });
 }
 
@@ -735,6 +734,8 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
 
   const showValidationAlert =
     isSubmitted && !isSubmitSuccessful && Object.keys(errors).length > 0;
+
+  console.log("errors", errors);
 
   const fieldsGridSx = {
     display: "grid",
