@@ -8,6 +8,7 @@
 body {
   margin: 0;
   padding: 0;
+  font-family: var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

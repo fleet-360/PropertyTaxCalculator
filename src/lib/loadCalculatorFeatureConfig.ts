@@ -5,7 +5,7 @@ import SystemConfig from '@/lib/models/SystemConfig';
 import type { CalculatorFeatureConfig, ISystemConfigData } from '@/lib/types/system-config';
 import { toCalculatorFeatureConfig } from '@/lib/types/system-config';
 
-/** Cached cross-request fetch of SystemConfig (revalidates every 5 minutes). */
+/** Cached cross-request fetch of SystemConfig (revalidates immediatly). */
 const getCachedConfig = cache(
   async () => {
     await dbConnect();

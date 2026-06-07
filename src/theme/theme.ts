@@ -115,7 +115,7 @@ const theme = createTheme({
   },
   typography: {
     fontFamily:
-      'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", "Inter", "Roboto", "Arial", sans-serif',
+      'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif',
     h1: {
       fontFamily:
         'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif',
@@ -151,7 +151,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           fontFamily:
-            'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", "Inter", "Roboto", "Arial", sans-serif',
+            'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif',
         },
       },
     },

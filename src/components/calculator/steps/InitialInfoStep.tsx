@@ -61,8 +61,8 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
             display: "flex",
             flexDirection: "row",
             justifyContent: "center",
-            gap: { xs: 2, md: "55px" },
-            flexWrap: "wrap",
+            gap: { xs: 1.5, md: "55px" },
+            flexWrap: { xs: "nowrap", md: "wrap" },
           }}
         >
           {PROPERTY_OPTIONS.map(({ value, label, image }) => {
@@ -83,7 +83,23 @@ export default function InitialInfoStep({ state, dispatch }: StepProps) {
                 }}
                 sx={wizardPropertyCardSx(isSelected)}
               >
-                <Image src={image} alt="" width={216} height={192} priority />
+                <Box
+                  sx={{
+                    position: "relative",
+                    width: "100%",
+                    flex: 1,
+                    minHeight: { xs: 120, md: 192 },
+                  }}
+                >
+                  <Image
+                    src={image}
+                    alt=""
+                    fill
+                    sizes="(max-width: 768px) 45vw, 216px"
+                    style={{ objectFit: "cover" }}
+                    priority
+                  />
+                </Box>
               </Box>
             );
           })}

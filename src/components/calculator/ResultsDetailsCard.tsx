@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -32,6 +33,8 @@ export interface ResultsDetailsCardProps {
   blurred?: boolean;
   /** Optional DOM id applied to the printable wrapper (used by the print hook). */
   printableId?: string;
+  /** Optional actions rendered under the headline price inside the card. */
+  actions?: ReactNode;
 }
 
 /**
@@ -50,6 +53,7 @@ export default function ResultsDetailsCard({
   totalFeesBimonthly,
   blurred = false,
   printableId,
+  actions,
 }: ResultsDetailsCardProps) {
   const rows = [
     {
@@ -130,6 +134,41 @@ export default function ResultsDetailsCard({
           >
             ₪{Math.max(0, annualSavings).toLocaleString("he-IL")}
           </Typography>
+          {actions && (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                flexWrap: { xs: "wrap", md: "nowrap" },
+                gap: { xs: 1, md: 1 },
+                mt: 2.5,
+                width: "100%",
+                "& .MuiButton-root": {
+                  borderRadius: "20px",
+                  fontSize: { xs: "12px", sm: "13px", md: "14px" },
+                  px: { xs: 1, md: 1.5 },
+                  whiteSpace: { xs: "normal", md: "nowrap" },
+                  minWidth: 0,
+                  "& .MuiButton-startIcon": {
+                    mr: { xs: 0.35, md: 0.5 },
+                    ml: { xs: -0.25, md: -0.25 },
+                    "& > svg": { fontSize: { xs: "14px", md: "14px" } },
+                  },
+                },
+                "& .MuiButton-root:first-of-type": {
+                  flex: { xs: "1 1 100%", md: 1 },
+                  width: { xs: "100%", md: "auto" },
+                  fontSize: { xs: "13px", md: "14px" },
+                  px: { xs: 1.25, md: 1.5 },
+                },
+                "& .MuiButton-root:not(:first-of-type)": {
+                  flex: { xs: "1 1 calc(50% - 8px)", md: 1 },
+                },
+              }}
+            >
+              {actions}
+            </Box>
+          )}
         </Box>
       </Stack>
 
@@ -160,18 +199,15 @@ export default function ResultsDetailsCard({
                     }}
                   >
                     {row.highlight ? (
-                      <Chip
-                        label={row.value}
+                      <Box
+                        component="span"
                         sx={(theme) => ({
-                          bgcolor: theme.palette.brand.successGreen,
-                          color: "#fff",
+                          color: theme.palette.brand.successGreen,
                           fontWeight: 600,
-                          fontSize: "16px",
-                          height: 32,
-                          borderRadius: "16px",
-                          px: 0.5,
                         })}
-                      />
+                      >
+                        {row.value}
+                      </Box>
                     ) : (
                       row.value
                     )}

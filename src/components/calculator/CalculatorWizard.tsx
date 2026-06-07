@@ -6,6 +6,7 @@ import {
   useMemo,
   useReducer,
   useRef,
+  useState,
   useImperativeHandle,
   forwardRef,
   Dispatch,
@@ -432,6 +433,8 @@ const CalculatorWizard = forwardRef<
   const features = mergeFeatures(props.features);
   const { onMiaMessage, onOrdinanceUrl } = props;
   const [state, dispatch] = useReducer(wizardReducer, initialState);
+  /** Bumped on reset so step components remount even when currentStep stays 0. */
+  const [wizardSessionKey, setWizardSessionKey] = useState(0);
 
   // Bumped every time a new extraction is kicked off — older in-flight requests
   // compare against this and silently drop their results.
@@ -538,8 +541,15 @@ const CalculatorWizard = forwardRef<
     [startExtraction, resetExtraction],
   );
 
+  const handleResetCalculator = useCallback(() => {
+    extractionTokenRef.current += 1;
+    dispatch({ type: "RESET_CALCULATOR" });
+    setWizardSessionKey((k) => k + 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
   useImperativeHandle(ref, () => ({
-    resetCalculator: () => dispatch({ type: "RESET_CALCULATOR" }),
+    resetCalculator: handleResetCalculator,
   }));
   const ordinanceUrl = state.cityData?.ordinanceUrl as string | undefined;
 
@@ -631,14 +641,14 @@ const CalculatorWizard = forwardRef<
           hideInfoCard={stepMeta.hideInfoCard}
           layoutVariant={stepMeta.layoutVariant}
           hideStepChrome={stepMeta.hideStepChrome}
-          onResetCalculator={() => dispatch({ type: "RESET_CALCULATOR" })}
+          onResetCalculator={handleResetCalculator}
           ordinanceDocumentUrl={ordinanceUrl}
           ordinancePreviewSrc={ordinancePreviewSrc}
           ordinanceTitle={ordinanceTitle}
         >
           {StepComponent && (
             <StepComponent
-              key={state.currentStep}
+              key={`${state.currentStep}-${wizardSessionKey}`}
               state={state}
               dispatch={dispatch}
             />

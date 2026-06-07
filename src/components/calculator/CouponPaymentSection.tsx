@@ -11,6 +11,7 @@ import type { Dispatch } from 'react';
 import { useCalculatorFeatures } from '@/components/calculator/CalculatorFeaturesContext';
 import type { WizardAction, WizardState } from './CalculatorWizard';
 import type { AppliedWizardCoupon } from './wizardTypes';
+import { wizardPrimaryButtonSx } from './wizardStyles';
 
 function mapValidateReason(reason: string): string {
   const map: Record<string, string> = {
@@ -167,7 +168,10 @@ export default function CouponPaymentSection({
           variant="contained"
           onClick={applyCoupon}
           disabled={validating}
-          sx={{ flexShrink: 0, alignSelf: { xs: 'stretch', sm: 'auto' } }}
+          sx={[
+            wizardPrimaryButtonSx as never,
+            { flexShrink: 0, alignSelf: { xs: 'stretch', sm: 'auto' } },
+          ]}
         >
           {validating ? 'בודק…' : 'החל קופון'}
         </Button>

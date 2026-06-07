@@ -67,11 +67,12 @@ function RollingStat({ stat, index }: { stat: StatConfig; index: number }) {
       ref={ref}
       sx={{
         flex: 1,
-        px: { xs: 1, md: 3 },
+        px: { xs: 0.5, md: 3 },
         py: { xs: 1.5, md: 0 },
-        borderWidth: "0px 0px 0px 0.5px",
+        borderWidth: { xs: 0, sm: "0px 0px 0px 0.5px" },
         borderStyle: "solid",
         borderColor: "#FFFFFF",
+        textAlign: { xs: "center", sm: "inherit" },
       }}
     >
       <Typography
@@ -223,15 +224,15 @@ export default function StatsBar() {
           >
             <Box
               sx={{
-                display: "flex",
-                flexDirection: { xs: "column", sm: "row" },
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(4, 1fr)" },
                 alignItems: "center",
                 justifyContent: "space-between",
                 mb: { xs: 4, md: 5 },
-                gap: { xs: 0, sm: 1 },
+                gap: { xs: 2, sm: 1 },
                 "& > *": {
                   position: "relative",
-                  // dividers between stats
+                  // dividers between stats (desktop row only)
                   "&:not(:last-of-type)::after": {
                     content: { sm: '""' },
                     position: "absolute",

@@ -76,6 +76,31 @@ export const wizardPrimaryButtonSx: SxProps<Theme> = (theme) => ({
   },
 });
 
+/** Pulsing text-shadow highlight for "הנחה משמעותית" in results steps. */
+export const significantDiscountHighlightSx: SxProps<Theme> = (theme) => ({
+  color: theme.palette.brand.successGreen,
+  display: "inline-block",
+  animation: "significantDiscountGlow 2.8s ease-in-out infinite",
+  "@keyframes significantDiscountGlow": {
+    "0%, 100%": {
+      textShadow: `0 0 2px ${theme.palette.brand.successGreen}33`,
+      opacity: 0.82,
+    },
+    "50%": {
+      textShadow: `0 0 14px ${theme.palette.brand.successGreen}88, 0 0 22px ${theme.palette.brand.successGreen}44`,
+      opacity: 1,
+    },
+  },
+  "html.a11y-no-animations &": {
+    animation: "none",
+    opacity: 1,
+  },
+  "@media (prefers-reduced-motion: reduce)": {
+    animation: "none",
+    opacity: 1,
+  },
+});
+
 export const wizardSecondaryButtonSx: SxProps<Theme> = (theme) => ({
   bgcolor: theme.palette.background.paper,
   color: theme.palette.brand.textMutedBtn,
@@ -107,16 +132,18 @@ export const wizardPropertyCardSx =
       : theme.palette.brand.borderCard,
     borderRadius: "10px",
     // py: '32px',
-    px: { xs: 3, md: "48px" },
+    p: 0,
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: "stretch",
+    justifyContent: "stretch",
     gap: 0,
-    width: { xs: "100%", sm: 216 },
-    maxWidth: 216,
-    minHeight: 192,
-    flex: "0 0 auto",
+    flex: { xs: 1, sm: "0 0 auto" },
+    width: { xs: "auto", sm: 216 },
+    minWidth: 0,
+    maxWidth: { xs: "none", sm: 216 },
+    minHeight: { xs: 120, md: 192 },
+    overflow: "hidden",
     transition: "border-color 0.2s ease, box-shadow 0.2s ease",
     boxShadow: isSelected ? `0 0 0 1px ${theme.palette.brand.blue}` : "none",
     "&:hover": {

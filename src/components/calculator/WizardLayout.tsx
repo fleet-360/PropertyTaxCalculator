@@ -96,6 +96,71 @@ export function StepIndicator({ displayStep, total }: StepIndicatorProps) {
   );
 }
 
+export interface WizardSidebarActionsProps {
+  onReset?: () => void;
+  ordinanceDocumentUrl?: string;
+  ordinancePreviewSrc?: string;
+  ordinanceTitle?: string;
+}
+
+/** Ordinance preview + reset — shared by desktop sidebar and mobile action bar. */
+export function WizardSidebarActions({
+  onReset,
+  ordinanceDocumentUrl,
+  ordinancePreviewSrc,
+  ordinanceTitle = "צו הארנונה",
+}: WizardSidebarActionsProps) {
+  const hasOrdinance = Boolean(ordinanceDocumentUrl?.trim());
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 1,
+        justifyContent: "center",
+        position: "relative",
+        zIndex: 2,
+      }}
+    >
+      {hasOrdinance ? (
+        <DocumentPreviewPopover
+          documentUrl={ordinanceDocumentUrl!}
+          previewSrc={ordinancePreviewSrc}
+          title={ordinanceTitle}
+          triggerLabel="צפיה בצו הארנונה"
+          triggerAriaLabel="צפיה בצו הארנונה"
+          triggerVariant="outlined"
+          triggerStartIcon={<DescriptionOutlinedIcon sx={{ fontSize: 16 }} />}
+          triggerSx={wizardSidebarActionButtonSx}
+        />
+      ) : (
+        <Button
+          variant="outlined"
+          disabled
+          startIcon={<DescriptionOutlinedIcon sx={{ fontSize: 16 }} />}
+          sx={wizardSidebarActionButtonSx}
+        >
+          צפיה בצו הארנונה
+        </Button>
+      )}
+      {onReset && (
+        <Button
+          type="button"
+          variant="outlined"
+          onClick={onReset}
+          aria-label="איפוס מחשבון והתחלה מחדש"
+          startIcon={<RestartAltIcon sx={{ fontSize: 16 }} />}
+          sx={wizardSidebarActionButtonSx}
+        >
+          איפוס מחשבון
+        </Button>
+      )}
+    </Box>
+  );
+}
+
 export interface WizardInfoCardProps {
   message?: ReactNode;
   showIllustration?: boolean;
@@ -246,6 +311,7 @@ export function WizardInfoCard({
               justifyContent: "center",
               minHeight: 200,
               my: 1,
+              pointerEvents: "none",
             }}
           >
             <Box

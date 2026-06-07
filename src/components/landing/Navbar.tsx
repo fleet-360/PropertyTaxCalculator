@@ -31,7 +31,7 @@ const FLOAT_INSET = { xs: 1.5, sm: 2, md: 3 };
 const SCROLL_DIRECTION_DELTA = 6;
 const SCROLL_TOP_THRESHOLD = 32;
 const NAVBAR_FONT_FAMILY =
-  'var(--font-assistant), "Assistant", sans-serif';
+  'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif';
 
 const navItemsLanding = [
   { label: "דף הבית", href: "#hero" },

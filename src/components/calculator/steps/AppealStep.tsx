@@ -658,19 +658,30 @@ export default function AppealStep({ state, dispatch }: StepProps) {
             })}
           >
             <Stack
-              direction="row"
+              direction={{ xs: "column", md: "row" }}
               justifyContent="space-between"
-              alignItems="center"
+              alignItems={{ xs: "stretch", md: "center" }}
+              spacing={{ xs: 1, md: 0 }}
             >
               <Typography
-                sx={{ fontWeight: 500, fontSize: { xs: "24px", md: "32px" } }}
-              >
-                ₪{appealChargeAmount.toLocaleString("he-IL")}
-              </Typography>
-              <Typography
-                sx={{ fontWeight: 500, fontSize: { xs: "18px", md: "24px" } }}
+                sx={{
+                  fontWeight: 500,
+                  fontSize: { xs: "18px", md: "24px" },
+                  order: { xs: 0, md: 1 },
+                  textAlign: { xs: "center", md: "inherit" },
+                }}
               >
                 סך הכל לתשלום
+              </Typography>
+              <Typography
+                sx={{
+                  fontWeight: 500,
+                  fontSize: { xs: "24px", md: "32px" },
+                  order: { xs: 1, md: 0 },
+                  textAlign: { xs: "center", md: "inherit" },
+                }}
+              >
+                ₪{appealChargeAmount.toLocaleString("he-IL")}
               </Typography>
             </Stack>
           </Box>

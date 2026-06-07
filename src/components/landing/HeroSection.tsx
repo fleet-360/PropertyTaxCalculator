@@ -4,7 +4,16 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import Link from "next/link";
 import Image from "next/image";
 import heroMockup from "@/assets/hero-imac-mockup.png";
+import heroMockupCut from "@/assets/hero-imac-mockup-cut.png";
 import heroBg from "@/assets/heroBackgroundcolor.jpg";
+
+const heroImageStyle = {
+  width: "100%",
+  height: "auto",
+  objectFit: "contain" as const,
+  display: "block",
+  marginInline: "auto",
+};
 
 const BENEFITS = [
   "דיוק בחישוב",
@@ -21,7 +30,7 @@ export default function HeroSection() {
       sx={(theme) => ({
         position: "relative",
         minHeight: { xs: "auto", md: "78vh" },
-        pt: { xs: "120px", md: "120px" },
+        pt: { xs: "100px", md: "120px" },
         pb: { xs: "30px", md: "20px" },
         // overflow: "hidden",
         // Solid navy fallback (in case the image is still loading or fails).
@@ -66,7 +75,8 @@ export default function HeroSection() {
             display: "grid",
             gridTemplateColumns: { xs: "1fr", md: "1.05fr 1fr" },
             alignItems: "center",
-            gap: { xs: 4, md: 1, lg: 1 },
+            justifyItems: { xs: "center", md: "stretch" },
+            gap: { xs: 2, md: 1, lg: 1 },
             width: "100%",
           }}
         >
@@ -75,7 +85,8 @@ export default function HeroSection() {
             sx={{
               color: "#fff",
               textAlign: { xs: "center", md: "left" },
-              alignSelf: { xs: "center", md: "flex-start" },
+              alignSelf: { xs: "flex-start", md: "flex-start" },
+              mt: { xs: -1, md: 0 },
             }}
           >
             <Typography
@@ -175,22 +186,45 @@ export default function HeroSection() {
               order: { xs: -1, md: 1 },
               position: "relative",
               width: "100%",
-              mt: { xs: 6, md: 8 },
+              mt: { xs: 2, md: 8 },
               zIndex: 3,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              justifySelf: { xs: "center", md: "stretch" },
+              mx: { xs: "auto", md: 0 },
             }}
           >
-            <Image
-              src={heroMockup}
-              alt=""
-              priority
-              unoptimized
-              sizes="(max-width: 768px) 100vw, 55vw"
-              style={{
-                width: "105%",
-                height: "auto",
-                objectFit: "contain",
+            <Box
+              sx={{
+                width: { xs: "min(100%, 420px)", md: "105%" },
+                maxWidth: { xs: 420, md: "none" },
+                mx: { xs: "auto", md: 0 },
+                display: "flex",
+                justifyContent: "center",
               }}
-            />
+            >
+              <Box sx={{ display: { xs: "block", md: "none" }, width: "100%" }}>
+                <Image
+                  src={heroMockupCut}
+                  alt=""
+                  priority
+                  unoptimized
+                  sizes="100vw"
+                  style={heroImageStyle}
+                />
+              </Box>
+              <Box sx={{ display: { xs: "none", md: "block" }, width: "100%" }}>
+                <Image
+                  src={heroMockup}
+                  alt=""
+                  priority
+                  unoptimized
+                  sizes="55vw"
+                  style={heroImageStyle}
+                />
+              </Box>
+            </Box>
           </Box>
         </Box>
       </Container>

@@ -23,6 +23,7 @@ import {
   wizardPrimaryButtonSx,
   wizardResultsCardSx,
   wizardSecondaryButtonSx,
+  significantDiscountHighlightSx,
 } from "../wizardStyles";
 
 export default function ResultsDisplayStep({ state, dispatch, sx }: StepProps) {
@@ -72,6 +73,44 @@ export default function ResultsDisplayStep({ state, dispatch, sx }: StepProps) {
     }
   };
 
+  const resultsActionButtons = (
+    <>
+      <Button
+        variant="contained"
+        startIcon={<GavelIcon />}
+        disabled={!appealSavingsNonNegative}
+        onClick={() => dispatch({ type: "NEXT_STEP" })}
+        sx={[
+          wizardPrimaryButtonSx as never,
+          (theme) => ({
+            bgcolor: theme.palette.brand.successGreen,
+            "&:hover": {
+              bgcolor: theme.palette.success.dark,
+            },
+          }),
+        ]}
+      >
+        להגשת השגה עכשיו
+      </Button>
+      <Button
+        variant="outlined"
+        startIcon={<PrintIcon />}
+        onClick={() => print({ id: "results-printable" })}
+        sx={wizardSecondaryButtonSx}
+      >
+        הדפס תוצאות
+      </Button>
+      <Button
+        variant="outlined"
+        startIcon={<EmailIcon />}
+        onClick={() => setEmailDialogOpen(true)}
+        sx={wizardSecondaryButtonSx}
+      >
+        שלח למייל
+      </Button>
+    </>
+  );
+
   const resultsHeadline =
     outcome === "overpaying" ? (
       <Typography
@@ -84,10 +123,7 @@ export default function ResultsDisplayStep({ state, dispatch, sx }: StepProps) {
         })}
       >
         לפי התחשיב שלנו מגיעה לך{" "}
-        <Box
-          component="span"
-          sx={(theme) => ({ color: theme.palette.brand.successGreen })}
-        >
+        <Box component="span" sx={significantDiscountHighlightSx}>
           הנחה משמעותית
         </Box>{" "}
         בתשלום הארנונה!
@@ -238,41 +274,6 @@ export default function ResultsDisplayStep({ state, dispatch, sx }: StepProps) {
                   : "החישוב תואם את הנתונים שדיווחתם. אם יש שינוי בנכס — עדכנו את הרשות."}
             </Typography>
           </Box>
-
-          <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              justifyContent: "flex-start",
-              flexWrap: "wrap",
-            }}
-          >
-            <Button
-              variant="outlined"
-              startIcon={<PrintIcon />}
-              onClick={() => print({ id: "results-printable" })}
-              sx={wizardSecondaryButtonSx}
-            >
-              הדפס תוצאות
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<EmailIcon />}
-              onClick={() => setEmailDialogOpen(true)}
-              sx={wizardSecondaryButtonSx}
-            >
-              שלח למייל
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<GavelIcon />}
-              disabled={!appealSavingsNonNegative}
-              onClick={() => dispatch({ type: "NEXT_STEP" })}
-              color="success"
-            >
-              להגשת השגה עכשיו{" "}
-            </Button>
-          </Box>
         </Stack>
         <ResultsDetailsCard
           reported={reported}
@@ -284,6 +285,7 @@ export default function ResultsDisplayStep({ state, dispatch, sx }: StepProps) {
           appliedFees={appliedFees}
           totalFeesBimonthly={totalFeesBimonthly}
           printableId="results-printable"
+          actions={resultsActionButtons}
         />
       </Box>
 

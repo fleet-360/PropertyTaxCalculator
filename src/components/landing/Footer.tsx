@@ -1,11 +1,20 @@
 'use client';
 
+import type { MouseEvent } from 'react';
 import { Box, Button, Container, Stack, Typography } from '@mui/material';
 import Link from 'next/link';
 import Image from 'next/image';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { BLOG_PATHS } from '@/lib/blog/routes';
 import FooterLegalLinks from '@/components/landing/FooterLegalLinks';
+
+const CALCULATOR_PATH = '/calculator';
+
+/** Full reload so mid-wizard state is cleared (same-route <Link> would keep client state). */
+function forceCalculatorReload(event?: MouseEvent<HTMLElement>) {
+  event?.preventDefault();
+  window.location.href = CALCULATOR_PATH;
+}
 
 const navItems = [
   { label: 'דף הבית', href: '/' },
@@ -85,6 +94,9 @@ export default function Footer() {
                   key={item.label}
                   component={Link}
                   href={item.href}
+                  onClick={
+                    item.href === CALCULATOR_PATH ? forceCalculatorReload : undefined
+                  }
                   sx={navLinkSx}
                 >
                   {item.label}
@@ -105,7 +117,8 @@ export default function Footer() {
           {/* CTA */}
           <Button
             component={Link}
-            href="/calculator"
+            href={CALCULATOR_PATH}
+            onClick={forceCalculatorReload}
             variant="contained"
             endIcon={<ChevronLeftIcon />}
             sx={(theme) => ({
@@ -158,6 +171,39 @@ export default function Footer() {
             </Typography>
           </Box>
         </Container>
+      </Box>
+
+      {/* CorrectUI credit band */}
+      <Box
+        sx={{
+          bgcolor: '#fff',
+          py: { xs: 2, md: 2.5 },
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <Box
+          component="a"
+          href="https://correctui.co.il/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="CorrectUI — Think. Design. Code"
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            textDecoration: 'none',
+            lineHeight: 0,
+          }}
+        >
+          <Image
+            src="/images/correct-ui-logo.png"
+            alt="CorrectUI"
+            width={180}
+            height={32}
+            style={{ height: 'auto', width: 'min(180px, 55vw)' }}
+          />
+        </Box>
       </Box>
     </Box>
   );

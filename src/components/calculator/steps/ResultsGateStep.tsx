@@ -20,6 +20,7 @@ import {
   wizardPrimaryButtonSx,
   wizardResultsCardSx,
   wizardSecondaryButtonSx,
+  significantDiscountHighlightSx,
 } from "../wizardStyles";
 
 export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
@@ -103,10 +104,7 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
         })}
       >
         לפי התחשיב שלנו מגיעה לך{" "}
-        <Box
-          component="span"
-          sx={(theme) => ({ color: theme.palette.brand.successGreen })}
-        >
+        <Box component="span" sx={significantDiscountHighlightSx}>
           הנחה משמעותית
         </Box>{" "}
         בתשלום הארנונה!
@@ -147,11 +145,22 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
               }}
             >
               <Stack
-                direction="row"
+                direction={{ xs: "column", md: "row" }}
                 justifyContent="space-between"
-                alignItems="flex-end"
+                alignItems={{ xs: "stretch", md: "flex-end" }}
+                spacing={{ xs: 1, md: 0 }}
               >
-                <Box>
+                <Typography
+                  sx={{
+                    fontWeight: 500,
+                    fontSize: { xs: "18px", md: "24px" },
+                    order: { xs: 0, md: 1 },
+                    textAlign: { xs: "center", md: "inherit" },
+                  }}
+                >
+                  סך הכל לתשלום
+                </Typography>
+                <Box sx={{ order: { xs: 1, md: 0 } }}>
                   <Typography sx={{ fontWeight: 500, fontSize: "32px" }}>
                     ₪{calculatorChargeAmount.toLocaleString("he-IL")}
                   </Typography>
@@ -161,9 +170,6 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
                     עלות של קפה ומאפה :)
                   </Typography>
                 </Box>
-                <Typography sx={{ fontWeight: 500, fontSize: "24px" }}>
-                  סך הכל לתשלום
-                </Typography>
               </Stack>
             </Box>
             <CouponPaymentSection
@@ -176,7 +182,7 @@ export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
               fullWidth
               onClick={handlePrimaryClick}
               endIcon={<ChevronLeftIcon />}
-              sx={{ ...wizardPrimaryButtonSx, mt: 2, py: 1.25 }}
+              sx={[ wizardPrimaryButtonSx as never, {mt: 2, py: 1.25} ]}
             >
               לתשלום וצפייה בתוצאות
             </Button>

@@ -30,7 +30,8 @@ export default function TestimonialsSection() {
                 position: "absolute",
                 top: { xs: -40, md: -50 },
                 left: { xs: -80, md: -100 },
-                fontFamily: '"Georgia", "Times New Roman", serif',
+                fontFamily:
+                  'var(--font-noto-sans-hebrew), "Noto Sans Hebrew", sans-serif',
                 fontWeight: 700,
                 fontSize: { xs: "164px", md: "196px" },
                 lineHeight: 1,
