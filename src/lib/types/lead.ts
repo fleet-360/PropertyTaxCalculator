@@ -42,6 +42,15 @@ export type CalculationStatus =
   | 'underpaying'
   | 'appeal_filed';
 
+// ── Contact redirect reason (when abandonmentStage === 'contact_redirect') ─
+export type ContactRedirectReason =
+  | 'area'
+  | 'designations'
+  | 'multiple_classifications'
+  | 'city'
+  | 'other_city'
+  | 'error';
+
 // ── Abandonment stage (per calculation — wizard step where user stopped) ─
 export type AbandonmentStage =
   | 'initial_info'
@@ -59,6 +68,7 @@ export type AbandonmentStage =
 export interface ICalculationEntry {
   // Abandonment tracking
   abandonmentStage: AbandonmentStage;
+  contactRedirectReason?: ContactRedirectReason;
 
   // Property details (snapshot at time of calculation)
   propertyType?: 'private' | 'business';

@@ -2,13 +2,18 @@ import mongoose from 'mongoose';
 import dbConnect from '@/lib/mongodb';
 import CityTariff from '@/lib/models/CityTariff';
 import Lead from '@/lib/models/Lead';
+import PaymentOrder from '@/lib/models/PaymentOrder';
 import Coupon from '@/lib/models/Coupon';
 import Post from '@/lib/models/Post';
 import SystemConfig from '@/lib/models/SystemConfig';
 import Settings from '@/lib/models/Settings';
 import AiPrompt from '@/lib/models/AiPrompt';
 import { requireAdminSession } from '@/lib/admin/requireAdminSession';
-import type { CitySummary, LeadListItem } from '@/lib/types/admin';
+import type {
+  CitySummary,
+  LeadCalculationPaymentOrderView,
+  LeadListItem,
+} from '@/lib/types/admin';
 import type { ICouponData } from '@/lib/types/coupon';
 import type { IAiPromptData } from '@/lib/types/ai-prompt';
 import type { PostListItem, PostSortField, SortDirection } from '@/lib/types/post';
@@ -157,6 +162,30 @@ export async function loadPostLeanForEditor(id: string): Promise<Record<string, 
 
 // ── Leads (unified customers + contacts) ─────────────────────────────
 
+function paymentOrdersKey(leadId: string, calculationIndex: number): string {
+  return `${leadId}:${calculationIndex}`;
+}
+
+function mapPaymentOrderRow(order: {
+  product: 'calculator' | 'appeal';
+  status: 'pending' | 'paid' | 'failed';
+  amountNis: number;
+  couponCode?: string;
+  tranzilaTransactionId?: string;
+  orderId: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}): LeadCalculationPaymentOrderView {
+  return {
+    product: order.product,
+    status: order.status,
+    amountNis: order.amountNis,
+    couponCode: order.couponCode || undefined,
+    transactionId: order.tranzilaTransactionId || order.orderId,
+    date: toIso(order.status === 'paid' ? order.updatedAt ?? order.createdAt : order.createdAt),
+  };
+}
+
 export type LeadsAdminListResult = {
   leads: LeadListItem[];
   total: number;
@@ -208,30 +237,58 @@ export async function loadLeadsAdminList(opts: {
     Lead.countDocuments(filter),
   ]);
 
+  const leadIds = leads.map((l) => l._id);
+  const paymentOrdersByCalc = new Map<string, LeadCalculationPaymentOrderView[]>();
+
+  if (leadIds.length > 0) {
+    const orders = await PaymentOrder.find({ leadId: { $in: leadIds } })
+      .sort({ createdAt: 1 })
+      .lean();
+
+    for (const order of orders) {
+      const key = paymentOrdersKey(String(order.leadId), order.calculationIndex);
+      const row = mapPaymentOrderRow(order);
+      const existing = paymentOrdersByCalc.get(key) ?? [];
+      existing.push(row);
+      paymentOrdersByCalc.set(key, existing);
+    }
+  }
+
   const totalPages = Math.ceil(total / limit);
 
-  const mapped: LeadListItem[] = leads.map((l) => ({
-    _id: String(l._id),
-    fullName: l.fullName,
-    phone: l.phone,
-    email: l.email,
-    idNumber: l.idNumber,
-    source: l.source,
-    status: l.status,
-    message: l.message,
-    paymentStatus: l.paymentStatus,
-    calculations: (l.calculations || []).map((c) => {
-      // Deep-serialize to plain object — strips Mongoose ObjectId buffers
-      const plain = JSON.parse(JSON.stringify(c));
-      delete plain._id;
-      return {
-        ...plain,
-        createdAt: c.createdAt ? toIso(c.createdAt) : new Date().toISOString(),
-      };
-    }),
-    createdAt: toIso(l.createdAt),
-    updatedAt: toIso(l.updatedAt),
-  }));
+  const mapped: LeadListItem[] = leads.map((l) => {
+    const leadId = String(l._id);
+    return {
+      _id: leadId,
+      fullName: l.fullName,
+      phone: l.phone,
+      email: l.email,
+      idNumber: l.idNumber,
+      source: l.source,
+      status: l.status,
+      message: l.message,
+      paymentStatus: l.paymentStatus,
+      appealDocument: l.appealDocument
+        ? {
+            url: l.appealDocument.url,
+            generatedAt: toIso(l.appealDocument.generatedAt),
+            sentAt: l.appealDocument.sentAt ? toIso(l.appealDocument.sentAt) : undefined,
+          }
+        : undefined,
+      calculations: (l.calculations || []).map((c, calcIndex) => {
+        // Deep-serialize to plain object — strips Mongoose ObjectId buffers
+        const plain = JSON.parse(JSON.stringify(c));
+        delete plain._id;
+        return {
+          ...plain,
+          createdAt: c.createdAt ? toIso(c.createdAt) : new Date().toISOString(),
+          paymentOrders: paymentOrdersByCalc.get(paymentOrdersKey(leadId, calcIndex)) ?? [],
+        };
+      }),
+      createdAt: toIso(l.createdAt),
+      updatedAt: toIso(l.updatedAt),
+    };
+  });
 
   return { leads: mapped, total, page, totalPages };
 }

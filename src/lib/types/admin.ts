@@ -6,7 +6,6 @@
  */
 
 import type { ReactNode } from 'react';
-import type { ICalculationResult } from './customer';
 import type {
   LeadSource,
   LeadStatus,
@@ -33,6 +32,26 @@ export interface CitySummary {
 // ── Lead list item (admin list view) ─────────────────────────────────
 export type PaymentStatus = 'none' | 'calculator_paid' | 'appeal_paid';
 
+/** Payment order row joined from `paymentorders` for admin display (per calculation). */
+export interface LeadCalculationPaymentOrderView {
+  product: 'calculator' | 'appeal';
+  status: 'pending' | 'paid' | 'failed';
+  amountNis: number;
+  couponCode?: string;
+  transactionId?: string;
+  date?: string;
+}
+
+export interface LeadCalculationListItem extends ICalculationEntry {
+  paymentOrders: LeadCalculationPaymentOrderView[];
+}
+
+export interface LeadAppealDocumentView {
+  url: string;
+  generatedAt: string;
+  sentAt?: string;
+}
+
 export interface LeadListItem {
   _id: string;
 
@@ -50,8 +69,11 @@ export interface LeadListItem {
   // Payment
   paymentStatus: PaymentStatus;
 
+  // Appeal (lead-level; shown on relevant calculation cards)
+  appealDocument?: LeadAppealDocumentView;
+
   // Calculations history
-  calculations: ICalculationEntry[];
+  calculations: LeadCalculationListItem[];
 
   // Timestamps
   createdAt: string;

@@ -10,7 +10,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
-import { WizardAction, WizardState } from "../CalculatorWizard";
+import type { WizardAction, WizardState } from "../wizardTypes";
 import { Dispatch } from "react";
 import { useLeadUpdate } from "@/hooks/useLeadUpdate";
 import ContactForm, {
@@ -74,6 +74,7 @@ export default function ContactRedirectStep({
   useEffect(() => {
     updateLead(state.leadId, state.calculationIndex, {
       abandonmentStage: "contact_redirect",
+      contactRedirectReason: reason,
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -99,6 +100,7 @@ export default function ContactRedirectStep({
             calculationIndex: state.calculationIndex,
             calculationUpdate: {
               abandonmentStage: "contact_redirect",
+              contactRedirectReason: reason,
             },
           }),
         });
@@ -120,6 +122,7 @@ export default function ContactRedirectStep({
             source: "calculator",
             calculation: {
               abandonmentStage: "contact_redirect",
+              contactRedirectReason: reason,
               propertyType: state.propertyType,
               citySlug: state.citySlug,
             },
@@ -147,6 +150,7 @@ export default function ContactRedirectStep({
       state.calculationIndex,
       state.propertyType,
       state.citySlug,
+      reason,
     ],
   );
 

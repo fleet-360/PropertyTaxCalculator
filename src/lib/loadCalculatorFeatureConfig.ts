@@ -6,14 +6,13 @@ import type { CalculatorFeatureConfig, ISystemConfigData } from '@/lib/types/sys
 import { toCalculatorFeatureConfig } from '@/lib/types/system-config';
 
 /** Cached cross-request fetch of SystemConfig (revalidates every 5 minutes). */
-const getCachedConfig = unstable_cache(
+const getCachedConfig = cache(
   async () => {
     await dbConnect();
     const config = await SystemConfig.getConfig();
-    return JSON.parse(JSON.stringify(config)) as Partial<ISystemConfigData>;
+    const plain = JSON.parse(JSON.stringify(config)) as Partial<ISystemConfigData>;
+    return toCalculatorFeatureConfig(plain);
   },
-  ['system-config'],
-  { revalidate: 300, tags: ['system-config'] },
 );
 
 /** Loads SystemConfig from DB and returns plain calculator-facing flags + prices (server-only). */

@@ -16,6 +16,7 @@ import type {
   LeadStatus,
   CalculationStatus,
   AbandonmentStage,
+  ContactRedirectReason,
   ICalculationEntry,
 } from '@/lib/types/lead';
 
@@ -38,6 +39,7 @@ export type {
   LeadStatus,
   CalculationStatus,
   AbandonmentStage,
+  ContactRedirectReason,
   ICalculationEntry,
 } from '@/lib/types/lead';
 
@@ -182,6 +184,17 @@ const CalculationEntrySchema = new Schema<ICalculationEntry>(
         'completed',
       ],
       default: 'data_entry',
+    },
+    contactRedirectReason: {
+      type: String,
+      enum: [
+        'area',
+        'designations',
+        'multiple_classifications',
+        'city',
+        'other_city',
+        'error',
+      ],
     },
 
     // Property details
