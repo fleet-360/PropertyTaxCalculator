@@ -127,6 +127,8 @@ export interface UploadToBlobInput {
    * The city slug prefix on orders is preserved on the filename segment.
    */
   addRandomSuffix?: boolean;
+  /** When set, used as the full blob pathname instead of `buildBlobPathname`. */
+  pathnameOverride?: string;
 }
 
 export async function uploadToBlob(input: UploadToBlobInput): Promise<PutBlobResult> {
@@ -135,11 +137,9 @@ export async function uploadToBlob(input: UploadToBlobInput): Promise<PutBlobRes
     throw new Error('BLOB_READ_WRITE_TOKEN is not configured');
   }
 
-  const pathname = buildBlobPathname(
-    input.folder,
-    input.originalFilename,
-    input.citySlug,
-  );
+  const pathname =
+    input.pathnameOverride?.trim() ||
+    buildBlobPathname(input.folder, input.originalFilename, input.citySlug);
 
   const addRandomSuffix = input.addRandomSuffix ?? true;
 

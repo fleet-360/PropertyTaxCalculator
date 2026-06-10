@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 import {
+  type IAppealLetterSampleStored,
   type IContactEmails,
   DEFAULT_MATCH_TOLERANCE_IS_PERCENT,
   DEFAULT_MATCH_TOLERANCE_VALUE,
@@ -17,6 +18,7 @@ export interface ISystemConfig extends Document {
   matchToleranceValue: number;
   matchToleranceIsPercent: boolean;
   contactEmails?: IContactEmails;
+  appealLetterSamples?: IAppealLetterSampleStored[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,6 +36,19 @@ const ContactEmailsSchema = new Schema<IContactEmails>(
     calculator: { type: String, trim: true },
   },
   { _id: false }
+);
+
+// ── Appeal letter sample slot schema ─────────────────────────────────
+const AppealLetterSampleSchema = new Schema<IAppealLetterSampleStored>(
+  {
+    slot: { type: Number, required: true, min: 1, max: 3 },
+    pathname: { type: String, required: true, trim: true },
+    blobUrl: { type: String, required: true, trim: true },
+    originalFilename: { type: String, required: true, trim: true },
+    mimeType: { type: String, default: 'application/pdf', trim: true },
+    updatedAt: { type: Date, default: Date.now },
+  },
+  { _id: false },
 );
 
 // ── System config schema ─────────────────────────────────────────────
@@ -66,6 +81,10 @@ const SystemConfigSchema = new Schema<ISystemConfig>(
     },
     contactEmails: {
       type: ContactEmailsSchema,
+    },
+    appealLetterSamples: {
+      type: [AppealLetterSampleSchema],
+      default: [],
     },
   },
   {

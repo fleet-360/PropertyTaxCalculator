@@ -1,7 +1,15 @@
 import AiPromptsPageClient from '@/components/admin/AiPromptsPageClient';
-import { loadAiPromptsAdmin } from '@/lib/admin/loaders';
+import { loadAiPromptsAdmin, loadAppealSamplesAdmin } from '@/lib/admin/loaders';
 
 export default async function AiPromptsPage() {
-  const initialPrompts = await loadAiPromptsAdmin();
-  return <AiPromptsPageClient initialPrompts={initialPrompts} />;
+  const [initialPrompts, initialAppealSamples] = await Promise.all([
+    loadAiPromptsAdmin(),
+    loadAppealSamplesAdmin(),
+  ]);
+  return (
+    <AiPromptsPageClient
+      initialPrompts={initialPrompts}
+      initialAppealSamples={initialAppealSamples}
+    />
+  );
 }

@@ -119,6 +119,19 @@ async function tryDeleteFile(fileManager: GoogleAIFileManager, fileName: string)
   }
 }
 
+/** Remove a cached Gemini Files API copy so the next resolve re-uploads from Blob. */
+export async function invalidateGeminiFileByDisplayName(
+  displayName: string,
+  fileManager: GoogleAIFileManager = getGeminiFileManager(),
+): Promise<void> {
+  const trimmed = displayName.trim();
+  if (!trimmed) return;
+  const existing = await findFileByDisplayName(fileManager, trimmed);
+  if (existing?.name) {
+    await tryDeleteFile(fileManager, existing.name);
+  }
+}
+
 /**
  * Resolve one Blob-backed document to a Gemini `fileUri` (reuse Files API copy if possible).
  */

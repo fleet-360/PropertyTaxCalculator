@@ -25,6 +25,14 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import EditIcon from '@mui/icons-material/Edit';
 import type { IAiPromptData } from '@/lib/types/ai-prompt';
+import {
+  createAppealSampleDrafts,
+  savedAppealSampleFileNames,
+  type IAppealLetterSampleSlotView,
+  type IAppealSampleDraftSlot,
+} from '@/lib/types/appeal-letter-sample';
+import AppealLetterSamplesPanel from '@/components/admin/AppealLetterSamplesPanel';
+import { applyAppealSampleDrafts } from '@/lib/appeal/applyAppealSampleDrafts';
 
 const CATEGORY_LABELS: Record<string, string> = {
   tax_bill: 'שובר ארנונה',
@@ -32,23 +40,34 @@ const CATEGORY_LABELS: Record<string, string> = {
   appeal: 'מכתב השגה',
 };
 
+const APPEAL_LETTER_PROMPT_KEY = 'appeal_letter_json';
+
 export default function AiPromptsPageClient({
   initialPrompts,
+  initialAppealSamples,
 }: {
   initialPrompts: IAiPromptData[];
+  initialAppealSamples: IAppealLetterSampleSlotView[];
 }) {
   const router = useRouter();
   const [prompts, setPrompts] = React.useState(initialPrompts);
+  const [appealSamples, setAppealSamples] = React.useState(initialAppealSamples);
 
   React.useEffect(() => {
     setPrompts(initialPrompts);
   }, [initialPrompts]);
+
+  React.useEffect(() => {
+    setAppealSamples(initialAppealSamples);
+  }, [initialAppealSamples]);
 
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [editingPrompt, setEditingPrompt] = React.useState<IAiPromptData | null>(null);
   const [editContent, setEditContent] = React.useState('');
   const [editLabel, setEditLabel] = React.useState('');
   const [editDescription, setEditDescription] = React.useState('');
+  const [editDraftSamples, setEditDraftSamples] = React.useState<IAppealSampleDraftSlot[]>([]);
+  const [sampleDraftError, setSampleDraftError] = React.useState<string | null>(null);
   const [formLoading, setFormLoading] = React.useState(false);
   const [snackbar, setSnackbar] = React.useState<{
     open: boolean;
@@ -56,12 +75,32 @@ export default function AiPromptsPageClient({
     severity: 'success' | 'error';
   }>({ open: false, message: '', severity: 'success' });
 
+  const isAppealPromptEdit =
+    editingPrompt?.category === 'appeal' || editingPrompt?.key === APPEAL_LETTER_PROMPT_KEY;
+
+  const appealSampleNames = React.useMemo(
+    () => savedAppealSampleFileNames(appealSamples),
+    [appealSamples],
+  );
+
   const handleOpenEdit = (prompt: IAiPromptData) => {
     setEditingPrompt(prompt);
     setEditContent(prompt.content);
     setEditLabel(prompt.label);
     setEditDescription(prompt.description);
+    setSampleDraftError(null);
+    if (prompt.category === 'appeal' || prompt.key === APPEAL_LETTER_PROMPT_KEY) {
+      setEditDraftSamples(createAppealSampleDrafts(appealSamples));
+    } else {
+      setEditDraftSamples([]);
+    }
     setEditDialogOpen(true);
+  };
+
+  const handleCloseEdit = () => {
+    if (formLoading) return;
+    setEditDialogOpen(false);
+    setSampleDraftError(null);
   };
 
   const handleSave = async () => {
@@ -69,6 +108,8 @@ export default function AiPromptsPageClient({
 
     try {
       setFormLoading(true);
+      setSampleDraftError(null);
+
       const res = await fetch(`/api/ai-prompts/${editingPrompt.key}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -84,13 +125,22 @@ export default function AiPromptsPageClient({
         throw new Error((errData as { error?: string } | null)?.error || 'שמירה נכשלה');
       }
 
+      if (isAppealPromptEdit) {
+        const updatedSlots = await applyAppealSampleDrafts(editDraftSamples);
+        setAppealSamples(updatedSlots);
+      }
+
       setSnackbar({ open: true, message: 'הפרומפט עודכן בהצלחה', severity: 'success' });
       setEditDialogOpen(false);
       router.refresh();
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'שגיאה בשמירה';
+      if (isAppealPromptEdit) {
+        setSampleDraftError(message);
+      }
       setSnackbar({
         open: true,
-        message: err instanceof Error ? err.message : 'שגיאה בשמירת הפרומפט',
+        message,
         severity: 'error',
       });
     } finally {
@@ -117,7 +167,6 @@ export default function AiPromptsPageClient({
     }
   };
 
-  // Group prompts by category
   const grouped = React.useMemo(() => {
     const map = new Map<string, IAiPromptData[]>();
     for (const p of prompts) {
@@ -156,6 +205,7 @@ export default function AiPromptsPageClient({
                   <TableRow>
                     <TableCell>שם</TableCell>
                     <TableCell>מפתח</TableCell>
+                    {category === 'appeal' && <TableCell>דוגמאות PDF</TableCell>}
                     <TableCell>משתנים</TableCell>
                     <TableCell>עודכן</TableCell>
                     <TableCell>פעיל</TableCell>
@@ -182,6 +232,29 @@ export default function AiPromptsPageClient({
                           {prompt.key}
                         </Typography>
                       </TableCell>
+                      {category === 'appeal' && (
+                        <TableCell>
+                          {prompt.key === APPEAL_LETTER_PROMPT_KEY ? (
+                            appealSampleNames.length > 0 ? (
+                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+                                {appealSampleNames.map((name, i) => (
+                                  <Typography key={`${i}-${name}`} variant="body2" noWrap title={name}>
+                                    {name}
+                                  </Typography>
+                                ))}
+                              </Box>
+                            ) : (
+                              <Typography variant="caption" color="text.secondary">
+                                —
+                              </Typography>
+                            )
+                          ) : (
+                            <Typography variant="caption" color="text.secondary">
+                              —
+                            </Typography>
+                          )}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                           {prompt.templateVariables.length === 0 ? (
@@ -235,10 +308,9 @@ export default function AiPromptsPageClient({
         </Box>
       ))}
 
-      {/* Edit Dialog */}
       <Dialog
         open={editDialogOpen}
-        onClose={() => setEditDialogOpen(false)}
+        onClose={handleCloseEdit}
         maxWidth="lg"
         fullWidth
       >
@@ -249,13 +321,14 @@ export default function AiPromptsPageClient({
             {editingPrompt ? CATEGORY_LABELS[editingPrompt.category] || editingPrompt.category : ''}
           </Typography>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent dividers>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <TextField
               label="שם תצוגה"
               fullWidth
               value={editLabel}
               onChange={(e) => setEditLabel(e.target.value)}
+              disabled={formLoading}
             />
             <TextField
               label="תיאור"
@@ -264,7 +337,17 @@ export default function AiPromptsPageClient({
               minRows={2}
               value={editDescription}
               onChange={(e) => setEditDescription(e.target.value)}
+              disabled={formLoading}
             />
+            {isAppealPromptEdit && (
+              <AppealLetterSamplesPanel
+                draftSlots={editDraftSamples}
+                onDraftChange={setEditDraftSamples}
+                disabled={formLoading}
+                error={sampleDraftError}
+                onError={setSampleDraftError}
+              />
+            )}
             {editingPrompt && editingPrompt.templateVariables.length > 0 && (
               <Box>
                 <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5 }}>
@@ -288,10 +371,11 @@ export default function AiPromptsPageClient({
               label="תוכן הפרומפט"
               fullWidth
               multiline
-              minRows={20}
-              maxRows={40}
+              minRows={16}
+              maxRows={32}
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
+              disabled={formLoading}
               slotProps={{
                 htmlInput: {
                   style: {
@@ -306,12 +390,12 @@ export default function AiPromptsPageClient({
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)} disabled={formLoading}>
+          <Button onClick={handleCloseEdit} disabled={formLoading}>
             ביטול
           </Button>
           <Button
             variant="contained"
-            onClick={handleSave}
+            onClick={() => void handleSave()}
             disabled={formLoading || !editContent.trim()}
           >
             {formLoading ? 'שומר...' : 'שמור'}

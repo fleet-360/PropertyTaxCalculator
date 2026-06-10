@@ -16,12 +16,17 @@ import type {
 } from '@/lib/types/admin';
 import type { ICouponData } from '@/lib/types/coupon';
 import type { IAiPromptData } from '@/lib/types/ai-prompt';
+import type { IAppealLetterSampleSlotView } from '@/lib/types/appeal-letter-sample';
 import type { PostListItem, PostSortField, SortDirection } from '@/lib/types/post';
 import {
   DEFAULT_MATCH_TOLERANCE_IS_PERCENT,
   DEFAULT_MATCH_TOLERANCE_VALUE,
   type ISystemConfigData,
 } from '@/lib/types/system-config';
+import {
+  buildAppealSampleSlotViews,
+  getStoredAppealLetterSamples,
+} from '@/lib/appeal/appealLetterSamplesConfig';
 import type { ISettingsData } from '@/lib/types/settings';
 
 function toIso(d: unknown): string {
@@ -402,4 +407,10 @@ export async function loadAiPromptsAdmin(): Promise<IAiPromptData[]> {
     lastModifiedBy: p.lastModifiedBy,
     updatedAt: toIso(p.updatedAt),
   }));
+}
+
+export async function loadAppealSamplesAdmin(): Promise<IAppealLetterSampleSlotView[]> {
+  await requireAdminSession();
+  const samples = await getStoredAppealLetterSamples();
+  return buildAppealSampleSlotViews(samples);
 }

@@ -6,11 +6,7 @@ import { getAppealLetterGenerativeModel } from '@/lib/vision/gemini-client';
 import { getPrompt } from '@/lib/prompts/getPrompt';
 import type { AppealUserContext } from './buildAppealUserContext';
 import { listPropertyTaxOrderBlobSources } from './listPropertyTaxOrderBlobSources';
-import {
-  APPEAL_EXAMPLE_PDF_MIME_TYPE,
-  getAppealLetterBlobSources,
-  getDirectAppealLetterExampleUris,
-} from './letter-example-uris';
+import { getAppealLetterBlobSources } from './letter-example-uris';
 import {
   assertVariantMatch,
   parseAppealLetterGeminiPayload,
@@ -19,8 +15,6 @@ import {
 } from './appealLetterPayload';
 import type { AppealLetterVariant } from './appealLetterVariant';
 import type { AppealSubject } from './resolveAppealSubject';
-import { pickAppealBlobExamplesForGemini } from './pickAppealBlobExample';
-import { pickGeneralAppealBlobExamples } from './pickAppealBlobExample';
 import { pickPropertyTaxOrderBlobForCity } from './pickPropertyTaxOrderBlob';
 
 const APPEAL_JSON_GENERATION_CONFIG_BASE = {
@@ -177,11 +171,9 @@ export async function generateAppealLetterGeminiPayload(
   variant: AppealLetterVariant,
 ): Promise<AppealLetterGeminiPayload> {
   const model = getAppealLetterGenerativeModel();
-  const directUris = getDirectAppealLetterExampleUris();
   const blobSources = await getAppealLetterBlobSources();
-  const pickedBlobs = pickAppealBlobExamplesForGemini(blobSources, context);
   const resolvedBlobRefs =
-    pickedBlobs.length > 0 ? await ensureGeminiFileRefs(pickedBlobs) : [];
+    blobSources.length > 0 ? await ensureGeminiFileRefs(blobSources) : [];
 
   const orderSources = await listPropertyTaxOrderBlobSources();
   const pickedOrder = pickPropertyTaxOrderBlobForCity(orderSources, {
@@ -190,8 +182,9 @@ export async function generateAppealLetterGeminiPayload(
   });
   const resolvedOrderRefs = pickedOrder ? await ensureGeminiFileRefs([pickedOrder]) : [];
 
-  const pickedPath =
-    pickedBlobs[0]?.displayName?.replace(/^blob-sample:/, '') ?? null;
+  const pickedPaths = blobSources.map((b) =>
+    b.displayName.replace(/^blob-sample:/, ''),
+  );
   const pickedOrderPath = pickedOrder?.displayName?.replace(/^blob-order:/, '') ?? null;
   console.log(
     '[appeals/gemini-json] Example PDF + structured output:',
@@ -199,9 +192,9 @@ export async function generateAppealLetterGeminiPayload(
       {
         leadId: context.leadId ?? null,
         variant,
-        pickedBlobPath: pickedPath,
+        pickedBlobPaths: pickedPaths,
         pickedOrderPath,
-        totalPdfFileParts: directUris.length + resolvedBlobRefs.length + resolvedOrderRefs.length,
+        totalPdfFileParts: resolvedBlobRefs.length + resolvedOrderRefs.length,
       },
       null,
       2,
@@ -212,12 +205,6 @@ export async function generateAppealLetterGeminiPayload(
   const instruction = await buildJsonInstruction(variant, userJson);
 
   const parts: Part[] = [
-    ...directUris.map((fileUri) => ({
-      fileData: {
-        mimeType: APPEAL_EXAMPLE_PDF_MIME_TYPE,
-        fileUri,
-      },
-    })),
     ...resolvedBlobRefs.map(({ fileUri, mimeType }) => ({
       fileData: {
         mimeType,
@@ -291,13 +278,9 @@ export async function generateAppealLetterBySubject(
   subject: AppealSubject,
 ): Promise<AppealLetterGeminiPayload> {
   const model = getAppealLetterGenerativeModel();
-  const directUris = getDirectAppealLetterExampleUris();
   const blobSources = await getAppealLetterBlobSources();
-
-  // Use general examples instead of variant-specific ones
-  const pickedBlobs = pickGeneralAppealBlobExamples(blobSources);
   const resolvedBlobRefs =
-    pickedBlobs.length > 0 ? await ensureGeminiFileRefs(pickedBlobs) : [];
+    blobSources.length > 0 ? await ensureGeminiFileRefs(blobSources) : [];
 
   // Municipal ordinance — still sent as before
   const orderSources = await listPropertyTaxOrderBlobSources();
@@ -307,7 +290,9 @@ export async function generateAppealLetterBySubject(
   });
   const resolvedOrderRefs = pickedOrder ? await ensureGeminiFileRefs([pickedOrder]) : [];
 
-  const pickedPaths = pickedBlobs.map((b) => b.displayName?.replace(/^blob-sample:/, '') ?? '?');
+  const pickedPaths = blobSources.map((b) =>
+    b.displayName.replace(/^blob-sample:/, ''),
+  );
   const pickedOrderPath = pickedOrder?.displayName?.replace(/^blob-order:/, '') ?? null;
   console.log(
     '[appeals/gemini-json] Subject-based generation:',
@@ -318,7 +303,7 @@ export async function generateAppealLetterBySubject(
         exemptionDescription: subject.exemptionDescription,
         pickedBlobPaths: pickedPaths,
         pickedOrderPath,
-        totalPdfFileParts: directUris.length + resolvedBlobRefs.length + resolvedOrderRefs.length,
+        totalPdfFileParts: resolvedBlobRefs.length + resolvedOrderRefs.length,
       },
       null,
       2,
@@ -329,9 +314,6 @@ export async function generateAppealLetterBySubject(
   const instruction = await buildJsonInstructionBySubject(subject, userJson);
 
   const parts: Part[] = [
-    ...directUris.map((fileUri) => ({
-      fileData: { mimeType: APPEAL_EXAMPLE_PDF_MIME_TYPE, fileUri },
-    })),
     ...resolvedBlobRefs.map(({ fileUri, mimeType }) => ({
       fileData: { mimeType, fileUri },
     })),

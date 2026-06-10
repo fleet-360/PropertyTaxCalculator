@@ -6,6 +6,8 @@
  * import from here.
  */
 
+import type { AppealSampleSlot, IAppealLetterSampleFile } from '@/lib/types/appeal-letter-sample';
+
 // ── Contact emails sub-document interface ───────────────────────────
 export interface IContactEmails {
   service: string;
@@ -24,6 +26,18 @@ export interface ISystemConfigData {
   matchToleranceValue: number;
   matchToleranceIsPercent: boolean;
   contactEmails?: IContactEmails;
+  /** Up to 3 admin-managed PDFs used as Gemini appeal letter examples. */
+  appealLetterSamples?: IAppealLetterSampleFile[];
+}
+
+/** Stored on the Mongoose document (dates not yet serialized). */
+export interface IAppealLetterSampleStored {
+  slot: AppealSampleSlot;
+  pathname: string;
+  blobUrl: string;
+  originalFilename: string;
+  mimeType: string;
+  updatedAt?: Date;
 }
 
 export const DEFAULT_MATCH_TOLERANCE_VALUE = 10;
