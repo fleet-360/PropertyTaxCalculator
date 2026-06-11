@@ -377,6 +377,7 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
     handleSubmit,
     watch,
     setValue,
+    trigger,
     formState: { errors, isSubmitted, isSubmitSuccessful },
   } = useForm<FormData>({
     resolver: zodResolver(schema) as any,
@@ -395,8 +396,8 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
       block: state.block,
       parcel: state.parcel,
       classificationCode: state.classificationCode,
-      zone: state.zone,
-      subType: state.subType,
+      zone: state.zone || "",
+      subType: state.subType || "",
       reportedPayment: state.reportedPayment || ("" as any),
       paymentPeriod: state.paymentPeriod || "bimonthly",
       designations: state.designations,
@@ -499,7 +500,8 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
     watchedArea,
   ]);
 
-  const validateOpts = { shouldValidate: true } as const;
+  /** Programmatic cascade resets — avoid full re-validation fighting user input. */
+  const cascadeOpts = { shouldValidate: false } as const;
 
   // ── Forward cascade: type changes → clear downstream ───────────
   useEffect(() => {
@@ -508,9 +510,9 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
     prevSubTypeRef.current = "";
     prevZoneRef.current = "";
     // prevClassCodeRef.current = '';
-    setValue("subType", "", validateOpts);
-    setValue("zone", "", validateOpts);
-    setValue("classificationCode", "", validateOpts);
+    setValue("subType", "", cascadeOpts);
+    setValue("zone", "", cascadeOpts);
+    setValue("classificationCode", "", cascadeOpts);
   }, [watchedType, setValue]);
 
   // ── Forward cascade: subType changes → clear zone & code (default zone all if no rows) ───────
@@ -523,12 +525,13 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
       ?.subtypes.find((s) => s.code === watchedSubType);
     const zones = selectedSubtype?.zones ?? [];
     if (watchedSubType && watchedType && zones.length === 0) {
-      setValue("zone", ALL_ZONES_TARIFF_CODE, validateOpts);
+      setValue("zone", ALL_ZONES_TARIFF_CODE, cascadeOpts);
+      void trigger("zone");
     } else {
-      setValue("zone", "", validateOpts);
+      setValue("zone", "", cascadeOpts);
     }
-    setValue("classificationCode", "", validateOpts);
-  }, [watchedSubType, watchedType, setValue, types]);
+    setValue("classificationCode", "", cascadeOpts);
+  }, [watchedSubType, watchedType, setValue, types, trigger]);
 
   // ── Auto-save lead when name + phone are filled ──
   const watchedFullName = useWatch({ control, name: "fullName" });
@@ -916,17 +919,24 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
               <Controller
                 name="subType"
                 control={control}
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <TextField
-                    {...field}
+                    name={field.name}
+                    inputRef={field.ref}
+                    onBlur={field.onBlur}
+                    value={field.value ?? ""}
+                    onChange={(e) => {
+                      field.onChange(e.target.value);
+                      void trigger("subType");
+                    }}
                     label="סוג/סיווג"
                     select
                     fullWidth
                     size="small"
                     disabled={!watchedType && !isBusiness}
                     required
-                    error={!!errors?.subType}
-                    helperText={errors?.subType?.message}
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
                   >
                     <MenuItem value="">בחר</MenuItem>
                     {filteredSubtypes.map((s: ISubType) => (
@@ -942,20 +952,29 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
               <Controller
                 name="zone"
                 control={control}
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <TextField
-                    {...field}
+                    name={field.name}
+                    inputRef={field.ref}
+                    onBlur={field.onBlur}
+                    value={field.value ?? ""}
+                    onChange={(e) => {
+                      field.onChange(e.target.value);
+                      void trigger("zone");
+                    }}
                     label="אזור"
                     select
                     fullWidth
                     size="small"
                     disabled={!watchedSubType}
                     required
-                    error={!!errors?.zone}
-                    helperText={errors?.zone?.message}
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
                   >
                     <MenuItem value="">בחר</MenuItem>
-
+                    <MenuItem value={ALL_ZONES_TARIFF_CODE}>
+                      {ALL_ZONES_LABEL_HE} ({ALL_ZONES_TARIFF_CODE})
+                    </MenuItem>
                     {filteredZones.map((z: IZoneRate) => (
                       <MenuItem key={z.zone} value={z.zone}>
                         {z.zoneLabel}
@@ -1171,7 +1190,7 @@ export default function DataEntryStep({ state, dispatch, sx }: StepProps) {
           variant="contained"
           type="submit"
           endIcon={<ChevronLeftIcon />}
-          disabled={!canMoveToNextStep}
+          // disabled={!canMoveToNextStep}
           sx={wizardPrimaryButtonSx}
         >
           לשלב הבא

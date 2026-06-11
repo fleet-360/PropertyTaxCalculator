@@ -402,17 +402,11 @@ function CalculationCard({
             {showPrivateExemptions && (
               <>
                 <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600, mb: 1 }}>
-                  הנחות ומשק בית
+                  הנחות
                 </Typography>
                 <Stack spacing={1}>
-                  {calc.householdSize != null && (
-                    <DetailRow label="גודל משפחה">{calc.householdSize}</DetailRow>
-                  )}
-                  {calc.childrenCount != null && (
-                    <DetailRow label="מספר ילדים">{calc.childrenCount}</DetailRow>
-                  )}
                   {calc.selectedExemptions?.map((ex, exIdx) => (
-                    <DetailRow key={`${ex.sectionCode}-${ex.subSectionCode}-${exIdx}`} label="הנחה">
+                    <DetailRow key={`${ex.sectionCode}-${ex.subSectionCode}-${exIdx}`} label="">
                       סעיף {ex.sectionCode} · תת-סעיף {ex.subSectionCode}
                     </DetailRow>
                   ))}
