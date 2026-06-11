@@ -62,7 +62,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    revalidateTag('system-config');
+    revalidateTag('system-config', { expire: 0 });
     revalidatePath('/calculator');
 
     return NextResponse.json(updatedConfig, { status: 200 });
