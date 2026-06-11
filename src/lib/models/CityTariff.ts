@@ -141,6 +141,11 @@ const AreaTypeDiscountSchema = new Schema<IAreaTypeDiscount>(
     label: { type: String, required: true },
     discountPercent: { type: Number, required: true, min: 0, max: 100 },
     minimumRatePerSqm: { type: Number, required: true, min: 0 },
+    applicableTo: {
+      type: String,
+      enum: ['private', 'business', 'both'],
+      default: 'private',
+    },
   },
   { _id: false }
 );

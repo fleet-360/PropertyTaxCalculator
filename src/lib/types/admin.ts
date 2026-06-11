@@ -9,7 +9,6 @@ import type { ReactNode } from 'react';
 import type {
   LeadSource,
   LeadStatus,
-  CalculationStatus,
   AbandonmentStage,
   ICalculationEntry,
 } from './lead';
@@ -46,12 +45,6 @@ export interface LeadCalculationListItem extends ICalculationEntry {
   paymentOrders: LeadCalculationPaymentOrderView[];
 }
 
-export interface LeadAppealDocumentView {
-  url: string;
-  generatedAt: string;
-  sentAt?: string;
-}
-
 export interface LeadListItem {
   _id: string;
 
@@ -69,9 +62,6 @@ export interface LeadListItem {
   // Payment
   paymentStatus: PaymentStatus;
 
-  // Appeal (lead-level; shown on relevant calculation cards)
-  appealDocument?: LeadAppealDocumentView;
-
   // Calculations history
   calculations: LeadCalculationListItem[];
 
@@ -81,7 +71,7 @@ export interface LeadListItem {
 }
 
 // Re-export lead types for admin consumers
-export type { LeadSource, LeadStatus, CalculationStatus, AbandonmentStage };
+export type { LeadSource, LeadStatus, AbandonmentStage };
 
 // ── Stat card props (admin dashboard) ───────────────────────────────
 export type StatPaletteColor = 'primary' | 'secondary' | 'success' | 'warning' | 'error';

@@ -80,6 +80,7 @@ export interface IAreaTypeDiscount {
   label: string;              // Hebrew: "מרפסת פתוחה", "בריכה", "מחסן"
   discountPercent: number;    // 0-100
   minimumRatePerSqm: number;  // מחיר מינימום למ"ר לאחר הנחה
+  applicableTo?: 'private' | 'business' | 'both';
 }
 
 // ── City fee/surcharge sub-document interface ────────────────────────

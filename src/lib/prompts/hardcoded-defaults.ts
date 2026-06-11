@@ -466,13 +466,15 @@ export const hardcodedDefaults: Record<string, string> = {
       "areaType": "covered_balcony",
       "label": "מרפסת מקורה",
       "discountPercent": 30,
-      "minimumRatePerSqm": 20
+      "minimumRatePerSqm": 20,
+      "applicableTo": "private"
     },
     {
       "areaType": "open_balcony",
       "label": "מרפסת פתוחה",
       "discountPercent": 50,
-      "minimumRatePerSqm": 15
+      "minimumRatePerSqm": 15,
+      "applicableTo": "private"
     }
   ],
   "cityFees": [
@@ -500,6 +502,7 @@ export const hardcodedDefaults: Record<string, string> = {
 • discountPercent — אחוז ההנחה ביחס לתעריף השטח העיקרי (0-100).
   דוגמה: אם מרפסת מקורה מחויבת ב-70% מהתעריף → discountPercent = 30.
 • minimumRatePerSqm — תעריף מינימום למ"ר אם מוגדר. אם לא מוגדר, הכנס 0.
+• applicableTo (חל על סוג נכס) — "private" (מגורים), "business" (עסקי), או "both" (שניהם). ברירת מחדל: "private".
 
 הנחיות לאגרות עירוניות (cityFees):
 ─────────────────────────────────────

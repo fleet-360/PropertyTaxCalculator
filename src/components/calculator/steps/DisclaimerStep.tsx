@@ -161,7 +161,6 @@ export default function DisclaimerStep({ state, dispatch, sx }: StepProps) {
                 updateLead(state.leadId, state.calculationIndex, {
                   abandonmentStage: "results_gate",
                   calculationResult: data,
-                  calculationStatus: data.outcome,
                 });
                 dispatch({ type: "NEXT_STEP" });
               })

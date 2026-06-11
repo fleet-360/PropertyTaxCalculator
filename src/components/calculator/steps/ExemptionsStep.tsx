@@ -89,7 +89,18 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
   const { updateLead } = useLeadUpdate();
   const cityData = state.cityData;
   const isBusiness = state.propertyType === "business";
-  const hasAreaTypeDiscounts = !!(cityData?.areaTypeDiscounts?.length > 0);
+
+  const applicableAreaTypeDiscounts = useMemo(() => {
+    const type = state.propertyType;
+    return (cityData?.areaTypeDiscounts ?? []).filter(
+      (d) =>
+        !d.applicableTo ||
+        d.applicableTo === "both" ||
+        d.applicableTo === type,
+    );
+  }, [cityData?.areaTypeDiscounts, state.propertyType]);
+
+  const hasAreaTypeDiscounts = applicableAreaTypeDiscounts.length > 0;
 
   const allExemptionSections: IExemptionSection[] = cityData?.exemptions ?? [];
   const exemptionSections = useMemo(() => {
@@ -108,18 +119,16 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
   useEffect(() => {
     if (!hasAreaTypeDiscounts) return;
     if (state.additionalAreas?.length > 0) return;
-    const initial = (cityData.areaTypeDiscounts as { areaType: string }[]).map(
-      (d) => ({
-        areaType: d.areaType,
-        areaSqm: 0,
-      }),
-    );
+    const initial = applicableAreaTypeDiscounts.map((d) => ({
+      areaType: d.areaType,
+      areaSqm: 0,
+    }));
     dispatch({
       type: "UPDATE_FIELD",
       field: "additionalAreas",
       value: initial,
     });
-  }, [hasAreaTypeDiscounts, state.additionalAreas, cityData, dispatch]);
+  }, [hasAreaTypeDiscounts, state.additionalAreas, applicableAreaTypeDiscounts, dispatch]);
 
   const rows =
     state.selectedExemptions.length > 0
@@ -160,9 +169,7 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
   // ── Handlers for the moved fields ──
   const handleAdditionalAreaChange = (index: number, value: number) => {
     // Ensure the array is fully sized (matches areaTypeDiscounts order).
-    const discounts = (cityData?.areaTypeDiscounts ?? []) as {
-      areaType: string;
-    }[];
+    const discounts = applicableAreaTypeDiscounts;
     const base =
       state.additionalAreas?.length === discounts.length
         ? state.additionalAreas
@@ -374,13 +381,7 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
             <Typography sx={wizardSectionTitleSx}>שטחים נוספים</Typography>
           </Box>
           <Box sx={additionalAreaFieldsGridSx}>
-            {(
-              cityData.areaTypeDiscounts as {
-                areaType: string;
-                label: string;
-                discountPercent: number;
-              }[]
-            ).map((d, idx) => {
+            {applicableAreaTypeDiscounts.map((d, idx) => {
               const current = state.additionalAreas?.find(
                 (a) => a.areaType === d.areaType,
               );

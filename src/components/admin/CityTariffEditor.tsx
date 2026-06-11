@@ -14,6 +14,7 @@ import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
 import Chip from '@mui/material/Chip';
+import MenuItem from '@mui/material/MenuItem';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import Stack from '@mui/material/Stack';
@@ -158,7 +159,37 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
     [theme.palette.error.main],
   );
 
-  // ── Load imported ordinance data from sessionStorage ──────────────
+  const prepareOrdinanceImport = React.useCallback(
+    (imported: ICityTariffData): ICityTariffData => {
+      const withDefaults: ICityTariffData = {
+        ...emptyCityData,
+        ...imported,
+        types: imported.types ?? [],
+        exemptions: imported.exemptions ?? [],
+        availableZones: imported.availableZones ?? [],
+        areaTypeDiscounts: imported.areaTypeDiscounts ?? [],
+        cityFees: imported.cityFees ?? [],
+      };
+      const normalized = normalizeCityTariffPayload(withDefaults);
+      return city?._id ? { ...normalized, _id: city._id } : normalized;
+    },
+    [city?._id],
+  );
+
+  const handleOrdinanceImported = React.useCallback(
+    (imported: ICityTariffData) => {
+      setData(prepareOrdinanceImport(imported));
+      setImportedFromOrdinance(true);
+      setSnackbar({
+        open: true,
+        message: 'נתונים יובאו מצו ארנונה — בדוק ושמור',
+        severity: 'success',
+      });
+    },
+    [prepareOrdinanceImport],
+  );
+
+  // ── Load imported ordinance data from sessionStorage (create-from-list flow) ──
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
@@ -170,16 +201,12 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
       if (!stored) return;
       const imported: ICityTariffData = JSON.parse(stored);
       sessionStorage.removeItem('ordinanceImportData');
-
-      // For update mode: merge imported data but keep the _id
-      const merged = city ? { ...imported, _id: city._id } : imported;
-      setData(merged);
+      setData(prepareOrdinanceImport(imported));
       setImportedFromOrdinance(true);
     } catch {
       // Ignore parse errors
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [prepareOrdinanceImport]);
 
   // Update slug from English name
   const handleCityNameEnChange = (value: string) => {
@@ -411,7 +438,11 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
           {!isNew && city?._id && (
-            <OrdinanceImportButton mode="update" existingCityId={city._id} />
+            <OrdinanceImportButton
+              mode="update"
+              existingCityId={city._id}
+              onOrdinanceImported={handleOrdinanceImported}
+            />
           )}
           <Button
             variant="contained"
@@ -768,6 +799,27 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                   sx={{ flex: '0 1 120px' }}
                   slotProps={{ htmlInput: { min: 0 } }}
                 />
+                <TextField
+                  select
+                  size="small"
+                  label="חל על סוג נכס"
+                  value={d.applicableTo ?? 'private'}
+                  onChange={(e) => {
+                    setData((prev) => {
+                      const arr = [...(prev.areaTypeDiscounts ?? [])];
+                      arr[di] = {
+                        ...arr[di],
+                        applicableTo: e.target.value as 'private' | 'business' | 'both',
+                      };
+                      return { ...prev, areaTypeDiscounts: arr };
+                    });
+                  }}
+                  sx={{ flex: '0 1 160px' }}
+                >
+                  <MenuItem value="private">מגורים</MenuItem>
+                  <MenuItem value="business">עסקי</MenuItem>
+                  <MenuItem value="both">שניהם</MenuItem>
+                </TextField>
                 <IconButton
                   color="error"
                   onClick={() => {
@@ -790,7 +842,13 @@ export default function CityTariffEditor({ city, isNew = false }: CityTariffEdit
                 ...prev,
                 areaTypeDiscounts: [
                   ...(prev.areaTypeDiscounts ?? []),
-                  { areaType: '', label: '', discountPercent: 0, minimumRatePerSqm: 0 },
+                  {
+                    areaType: '',
+                    label: '',
+                    discountPercent: 0,
+                    minimumRatePerSqm: 0,
+                    applicableTo: 'private',
+                  },
                 ],
               }));
             }}

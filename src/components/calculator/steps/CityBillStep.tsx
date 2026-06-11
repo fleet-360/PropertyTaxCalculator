@@ -10,6 +10,7 @@ import Button from '@mui/material/Button';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import type { StepProps } from '../CalculatorWizard';
+import { useLeadUpdate } from '@/hooks/useLeadUpdate';
 import TaxBillUpload from '../TaxBillUpload';
 import { useBillExtraction } from '../BillExtractionContext';
 import {
@@ -27,6 +28,7 @@ interface CityOption {
 }
 
 export default function CityBillStep({ state, dispatch }: StepProps) {
+  const { updateLead } = useLeadUpdate();
   const [cities, setCities] = useState<CityOption[]>([]);
   const [loadingCities, setLoadingCities] = useState(true);
   const [selectedCity, setSelectedCity] = useState<CityOption | null>(
@@ -45,6 +47,14 @@ export default function CityBillStep({ state, dispatch }: StepProps) {
   useEffect(() => {
     dispatch({ type: 'SET_MIA_MESSAGE', payload: 'step-0-default' });
   }, [dispatch]);
+
+  useEffect(() => {
+    updateLead(state.leadId, state.calculationIndex, {
+      abandonmentStage: 'initial_info',
+      propertyType: state.propertyType ?? undefined,
+      citySlug: state.citySlug || undefined,
+    });
+  }, [state.leadId, state.calculationIndex, state.propertyType, state.citySlug, updateLead]);
 
   useEffect(() => {
     fetch('/api/cities')

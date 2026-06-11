@@ -273,13 +273,6 @@ export async function loadLeadsAdminList(opts: {
       status: l.status,
       message: l.message,
       paymentStatus: l.paymentStatus,
-      appealDocument: l.appealDocument
-        ? {
-            url: l.appealDocument.url,
-            generatedAt: toIso(l.appealDocument.generatedAt),
-            sentAt: l.appealDocument.sentAt ? toIso(l.appealDocument.sentAt) : undefined,
-          }
-        : undefined,
       calculations: (l.calculations || []).map((c, calcIndex) => {
         // Deep-serialize to plain object — strips Mongoose ObjectId buffers
         const plain = JSON.parse(JSON.stringify(c));

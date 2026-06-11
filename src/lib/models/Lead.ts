@@ -14,7 +14,6 @@ import type {
 import type {
   LeadSource,
   LeadStatus,
-  CalculationStatus,
   AbandonmentStage,
   ContactRedirectReason,
   ICalculationEntry,
@@ -37,7 +36,6 @@ export type {
 export type {
   LeadSource,
   LeadStatus,
-  CalculationStatus,
   AbandonmentStage,
   ContactRedirectReason,
   ICalculationEntry,
@@ -183,7 +181,7 @@ const CalculationEntrySchema = new Schema<ICalculationEntry>(
         'contact_redirect',
         'completed',
       ],
-      default: 'data_entry',
+      default: 'initial_info',
     },
     contactRedirectReason: {
       type: String,
@@ -223,10 +221,6 @@ const CalculationEntrySchema = new Schema<ICalculationEntry>(
     designations: { type: [DesignationSchema], default: undefined },
 
     // Calculation result
-    calculationStatus: {
-      type: String,
-      enum: ['in_progress', 'match', 'overpaying', 'underpaying', 'appeal_filed'],
-    },
     calculationResult: { type: CalculationResultSchema },
 
     // Exemptions

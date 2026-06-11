@@ -53,7 +53,6 @@ export type {
 export type {
   LeadSource,
   LeadStatus,
-  CalculationStatus,
   AbandonmentStage,
   ICalculationEntry,
   ILeadData,

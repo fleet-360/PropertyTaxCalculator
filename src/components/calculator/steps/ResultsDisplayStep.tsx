@@ -15,6 +15,7 @@ import type { StepProps } from "../CalculatorWizard";
 import type { AreaBreakdownItem, AppliedFee } from "@/lib/types/calculator";
 import { usePrint } from "@/hooks/usePrint";
 import { useEmailSend } from "@/hooks/useEmailSend";
+import { useLeadUpdate } from "@/hooks/useLeadUpdate";
 import EmailSendDialog from "@/components/common/EmailSendDialog";
 import ResultsDetailsCard from "@/components/calculator/ResultsDetailsCard";
 import { StepIndicator } from "../WizardLayout";
@@ -28,10 +29,17 @@ import {
 
 export default function ResultsDisplayStep({ state, dispatch, sx }: StepProps) {
   const { paymentEnabled } = useCalculatorFeatures();
+  const { updateLead } = useLeadUpdate();
 
   useEffect(() => {
     dispatch({ type: "SET_MIA_MESSAGE", payload: "step-6-default" });
   }, [dispatch]);
+
+  useEffect(() => {
+    updateLead(state.leadId, state.calculationIndex, {
+      abandonmentStage: "results_display",
+    });
+  }, [state.leadId, state.calculationIndex, updateLead]);
 
   const result = state.calculationResult ?? {};
   const outcome: string = result.outcome ?? "match";

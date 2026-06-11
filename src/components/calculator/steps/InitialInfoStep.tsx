@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import type { StepProps } from "../CalculatorWizard";
+import { useLeadUpdate } from "@/hooks/useLeadUpdate";
 import {
   wizardInstructionSx,
   wizardPrimaryButtonSx,
@@ -27,9 +28,18 @@ const PROPERTY_OPTIONS = [
 ];
 
 export default function InitialInfoStep({ state, dispatch }: StepProps) {
+  const { updateLead } = useLeadUpdate();
+
   useEffect(() => {
     dispatch({ type: "SET_MIA_MESSAGE", payload: "step-0-default" });
   }, [dispatch]);
+
+  useEffect(() => {
+    updateLead(state.leadId, state.calculationIndex, {
+      abandonmentStage: "initial_info",
+      propertyType: state.propertyType ?? undefined,
+    });
+  }, [state.leadId, state.calculationIndex, state.propertyType, updateLead]);
 
   const handleSelectType = (value: "private" | "business") => {
     dispatch({ type: "SET_PROPERTY_TYPE", payload: value });

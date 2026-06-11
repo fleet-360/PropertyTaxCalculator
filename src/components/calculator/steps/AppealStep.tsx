@@ -27,6 +27,7 @@ import {
 import type { WizardState } from "@/components/calculator/CalculatorWizard";
 import { useCalculatorFeatures } from "../CalculatorFeaturesContext";
 import { useEmailSend } from "@/hooks/useEmailSend";
+import { useLeadUpdate } from "@/hooks/useLeadUpdate";
 import type { StepProps } from "../CalculatorWizard";
 import {
   wizardPrimaryButtonSx,
@@ -50,6 +51,7 @@ type FlowPhase =
 export default function AppealStep({ state, dispatch }: StepProps) {
   const { paymentEnabled, appealChargeAmount } = useCalculatorFeatures();
   const { sendEmail } = useEmailSend();
+  const { updateLead } = useLeadUpdate();
   const [appealWaiverAccepted, setAppealWaiverAccepted] = useState(false);
 
   const [flow, setFlow] = useState<FlowPhase>("intro");
@@ -88,6 +90,18 @@ export default function AppealStep({ state, dispatch }: StepProps) {
     }
     dispatch({ type: "SET_MIA_MESSAGE", payload: "step-7-default" });
   }, [dispatch, flow]);
+
+  useEffect(() => {
+    if (flow === "done") {
+      updateLead(state.leadId, state.calculationIndex, {
+        abandonmentStage: "completed",
+      });
+      return;
+    }
+    updateLead(state.leadId, state.calculationIndex, {
+      abandonmentStage: "appeal",
+    });
+  }, [flow, state.leadId, state.calculationIndex, updateLead]);
 
   // Mirror the local flow phase into wizard state so the shell can hide its chrome
   // (step indicator, title, sidebar) while we generate / sign / finalize / show the

@@ -14,6 +14,7 @@ import ResultsDetailsCard from "@/components/calculator/ResultsDetailsCard";
 import { StepIndicator } from "../WizardLayout";
 import { useCalculatorFeatures } from "../CalculatorFeaturesContext";
 import { useEmailSend } from "@/hooks/useEmailSend";
+import { useLeadUpdate } from "@/hooks/useLeadUpdate";
 import type { StepProps } from "../CalculatorWizard";
 import type { AreaBreakdownItem, AppliedFee } from "@/lib/types/calculator";
 import {
@@ -26,9 +27,16 @@ import {
 export default function ResultsGateStep({ state, dispatch, sx }: StepProps) {
   const { paymentEnabled, calculatorChargeAmount } = useCalculatorFeatures();
   const { sendEmail } = useEmailSend();
+  const { updateLead } = useLeadUpdate();
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const result = state.calculationResult;
   const outcome: string = result?.outcome ?? "match";
+
+  useEffect(() => {
+    updateLead(state.leadId, state.calculationIndex, {
+      abandonmentStage: "results_gate",
+    });
+  }, [state.leadId, state.calculationIndex, updateLead]);
 
   useEffect(() => {
     if (!result) return;

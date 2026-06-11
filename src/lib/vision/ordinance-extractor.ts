@@ -301,8 +301,8 @@ export async function extractOrdinance(
       const extrasResult = await runPass(await buildExtrasPrompt(), fileUri, mimeType);
       if (extrasResult) {
         if (Array.isArray(extrasResult.areaTypeDiscounts)) {
-          data.areaTypeDiscounts = (extrasResult.areaTypeDiscounts as IAreaTypeDiscount[]).filter(
-            (d) => d && typeof d.areaType === 'string' && typeof d.discountPercent === 'number'
+          data.areaTypeDiscounts = sanitizeAreaTypeDiscounts(
+            extrasResult.areaTypeDiscounts as IAreaTypeDiscount[],
           );
         }
         if (Array.isArray(extrasResult.cityFees)) {
@@ -549,8 +549,8 @@ export async function extractOrdinanceSection(
 
         case 'extras':
           if (Array.isArray(result.areaTypeDiscounts)) {
-            data.areaTypeDiscounts = (result.areaTypeDiscounts as IAreaTypeDiscount[]).filter(
-              (d) => d && typeof d.areaType === 'string' && typeof d.discountPercent === 'number',
+            data.areaTypeDiscounts = sanitizeAreaTypeDiscounts(
+              result.areaTypeDiscounts as IAreaTypeDiscount[],
             );
           }
           if (Array.isArray(result.cityFees)) {
@@ -742,6 +742,32 @@ function sanitizePropertyTypes(types: IPropertyType[]): IPropertyType[] {
                 : [],
             }))
         : [],
+    }));
+}
+
+function sanitizeAreaTypeDiscounts(discounts: IAreaTypeDiscount[]): IAreaTypeDiscount[] {
+  return discounts
+    .filter(
+      (d) =>
+        d &&
+        typeof d.areaType === 'string' &&
+        typeof d.label === 'string' &&
+        typeof d.discountPercent === 'number',
+    )
+    .map((d) => ({
+      areaType: d.areaType,
+      label: d.label,
+      discountPercent: d.discountPercent,
+      minimumRatePerSqm:
+        typeof d.minimumRatePerSqm === 'number' && Number.isFinite(d.minimumRatePerSqm)
+          ? d.minimumRatePerSqm
+          : 0,
+      applicableTo:
+        d.applicableTo === 'business'
+          ? 'business'
+          : d.applicableTo === 'both'
+            ? 'both'
+            : 'private',
     }));
 }
 

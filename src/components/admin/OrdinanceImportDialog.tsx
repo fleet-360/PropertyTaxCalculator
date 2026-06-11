@@ -45,6 +45,8 @@ interface OrdinanceImportDialogProps {
   onClose: () => void;
   mode: 'create' | 'update';
   existingCityId?: string;
+  /** When provided (editor is already open), apply data in-place instead of navigating. */
+  onOrdinanceImported?: (data: ICityTariffData) => void;
 }
 
 // ── Component ────────────────────────────────────────────────────────
@@ -54,6 +56,7 @@ export default function OrdinanceImportDialog({
   onClose,
   mode,
   existingCityId,
+  onOrdinanceImported,
 }: OrdinanceImportDialogProps) {
   const router = useRouter();
   const [step, setStep] = React.useState<DialogStep>('upload');
@@ -234,15 +237,15 @@ export default function OrdinanceImportDialog({
   const handleOpenInEditor = () => {
     if (!result) return;
 
-    // Store data in sessionStorage for the editor to pick up
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(result));
-
-    if (mode === 'update' && existingCityId) {
-      router.push(`/admin/cities/${existingCityId}/edit?fromOrdinance=true`);
-    } else {
-      router.push('/admin/cities/new?fromOrdinance=true');
+    if (onOrdinanceImported) {
+      onOrdinanceImported(result);
+      onClose();
+      return;
     }
 
+    // Create flow from cities list: store for the new-city editor to pick up on mount
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(result));
+    router.push('/admin/cities/new?fromOrdinance=true');
     onClose();
   };
 
@@ -481,7 +484,7 @@ export default function OrdinanceImportDialog({
               onClick={handleOpenInEditor}
               disabled={!result}
             >
-              פתח בעורך לסקירה ושמירה
+              {onOrdinanceImported ? 'החל בעורך' : 'פתח בעורך לסקירה ושמירה'}
             </Button>
           </>
         )}

@@ -34,14 +34,6 @@ export type LeadSource = 'calculator' | 'contact_form' | 'articles';
 // ── Lead status (CRM / management) ──────────────────────────────────
 export type LeadStatus = 'new' | 'contacted' | 'closed';
 
-// ── Calculation status (per calculation entry) ──────────────────────
-export type CalculationStatus =
-  | 'in_progress'
-  | 'match'
-  | 'overpaying'
-  | 'underpaying'
-  | 'appeal_filed';
-
 // ── Contact redirect reason (when abandonmentStage === 'contact_redirect') ─
 export type ContactRedirectReason =
   | 'area'
@@ -89,7 +81,6 @@ export interface ICalculationEntry {
   designations?: IDesignation[];
 
   // Calculation result
-  calculationStatus?: CalculationStatus;
   calculationResult?: ICalculationResult;
 
   // Exemptions

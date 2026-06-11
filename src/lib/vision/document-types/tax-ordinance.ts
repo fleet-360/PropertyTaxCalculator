@@ -29,6 +29,7 @@ export const taxOrdinanceSchema = z.object({
     label: z.string(),
     discountPercent: z.number(),
     minimumRatePerSqm: z.number(),
+    applicableTo: z.enum(['private', 'business', 'both']).optional(),
   })).optional(),
   cityFees: z.array(z.object({
     name: z.string(),

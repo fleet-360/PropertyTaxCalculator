@@ -33,9 +33,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import PeopleIcon from '@mui/icons-material/People';
 import CircularProgress from '@mui/material/CircularProgress';
-import Link from '@mui/material/Link';
 import type {
-  LeadAppealDocumentView,
   LeadCalculationListItem,
   LeadCalculationPaymentOrderView,
   LeadListItem,
@@ -86,20 +84,16 @@ const sourceColorMap: Record<string, 'primary' | 'secondary' | 'warning'> = {
   articles: 'warning',
 };
 
-const calcStatusLabelMap: Record<string, string> = {
-  in_progress: 'בתהליך',
+const outcomeLabelMap: Record<string, string> = {
   match: 'תואם',
   overpaying: 'משלם ביתר',
   underpaying: 'משלם בחסר',
-  appeal_filed: 'השגה הוגשה',
 };
 
-const calcStatusColorMap: Record<string, 'default' | 'info' | 'success' | 'warning' | 'error'> = {
-  in_progress: 'info',
+const outcomeColorMap: Record<string, 'default' | 'info' | 'success' | 'warning' | 'error'> = {
   match: 'success',
   overpaying: 'error',
   underpaying: 'warning',
-  appeal_filed: 'default',
 };
 
 const abandonmentLabelMap: Record<string, string> = {
@@ -193,10 +187,13 @@ function formatPaymentDate(value: Date | string | undefined): string {
   return formatDateTimeHe(d);
 }
 
-function getCalculationCouponCodes(calc: LeadCalculationListItem): string[] {
+function getCalculationCouponCodes(
+  calc: LeadCalculationListItem,
+  product: 'calculator' | 'appeal',
+): string[] {
   const codes = new Set<string>();
   for (const order of calc.paymentOrders) {
-    if (order.couponCode) {
+    if (order.product === product && order.couponCode) {
       codes.add(order.couponCode);
     }
   }
@@ -217,16 +214,11 @@ function getPaidOrders(
   return calc.paymentOrders.filter((o) => o.product === product && o.status === 'paid');
 }
 
-function calcHasAppealActivity(
-  calc: LeadCalculationListItem,
-  appealDocument?: LeadAppealDocumentView,
-): boolean {
+function calcHasAppealActivity(calc: LeadCalculationListItem): boolean {
   return (
     getCalculationPaymentStatus(calc) === 'appeal_paid' ||
-    calc.calculationStatus === 'appeal_filed' ||
     getPaidTransactions(calc, 'appeal').length > 0 ||
-    calc.paymentOrders.some((o) => o.product === 'appeal') ||
-    Boolean(appealDocument)
+    calc.paymentOrders.some((o) => o.product === 'appeal')
   );
 }
 
@@ -296,25 +288,24 @@ function PaymentTransactionRows({
 function CalculationCard({
   calc,
   index,
-  appealDocument,
 }: {
   calc: LeadCalculationListItem;
   index: number;
-  appealDocument?: LeadAppealDocumentView;
 }) {
   const hasResults = Boolean(calc.calculationResult);
   const paymentStatus = getCalculationPaymentStatus(calc);
-  const couponCodes = getCalculationCouponCodes(calc);
+  const calculatorCouponCodes = getCalculationCouponCodes(calc, 'calculator');
+  const appealCouponCodes = getCalculationCouponCodes(calc, 'appeal');
   const calculatorTransactions = getPaidTransactions(calc, 'calculator');
   const appealTransactions = getPaidTransactions(calc, 'appeal');
   const calculatorOrders = getPaidOrders(calc, 'calculator');
   const appealOrders = getPaidOrders(calc, 'appeal');
-  const showAppealSection = calcHasAppealActivity(calc, appealDocument);
-  const showPaymentsSection =
-    couponCodes.length > 0 ||
+  const showAppealSection = calcHasAppealActivity(calc);
+  const showCalculatorPaymentsSection =
+    calculatorCouponCodes.length > 0 ||
     calculatorTransactions.length > 0 ||
-    calculatorOrders.length > 0 ||
-    showAppealSection;
+    calculatorOrders.length > 0;
+  const showPaymentsSection = showCalculatorPaymentsSection || showAppealSection;
   const showContactRedirect =
     calc.abandonmentStage === 'contact_redirect' && Boolean(calc.contactRedirectReason);
   const showPrivateExemptions =
@@ -350,10 +341,12 @@ function CalculationCard({
             variant="outlined"
           />
         )}
-        {calc.calculationStatus && (
+        {calc.calculationResult?.outcome && (
           <Chip
-            label={calcStatusLabelMap[calc.calculationStatus] || calc.calculationStatus}
-            color={calcStatusColorMap[calc.calculationStatus] || 'default'}
+            label={
+              outcomeLabelMap[calc.calculationResult.outcome] || calc.calculationResult.outcome
+            }
+            color={outcomeColorMap[calc.calculationResult.outcome] || 'default'}
             size="small"
           />
         )}
@@ -361,6 +354,15 @@ function CalculationCard({
           label={abandonmentLabelMap[calc.abandonmentStage] || calc.abandonmentStage}
           size="small"
           variant="outlined"
+          color={
+            calc.abandonmentStage === 'completed'
+              ? 'success'
+              : calc.abandonmentStage === 'appeal'
+                ? 'warning'
+                : calc.abandonmentStage === 'results_display'
+                  ? 'info'
+                  : 'default'
+          }
         />
         <Typography
           variant="caption"
@@ -459,20 +461,20 @@ function CalculationCard({
           <>
             <Divider sx={{ my: 2 }} />
             <Grid container spacing={2}>
-              {showPaymentsSection && (
+              {showCalculatorPaymentsSection && (
                 <Grid size={{ xs: 12, md: showAppealSection || showContactRedirect ? 6 : 12 }}>
                   <Stack spacing={2}>
-                    {couponCodes.length > 0 && (
+                    {calculatorCouponCodes.length > 0 && (
                       <Box>
                         <Typography
                           variant="subtitle2"
                           color="text.secondary"
                           sx={{ fontWeight: 600, mb: 1 }}
                         >
-                          קופון
+                          קופון — מחשבון
                         </Typography>
                         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                          {couponCodes.map((code) => (
+                          {calculatorCouponCodes.map((code) => (
                             <Chip key={code} label={code} size="small" variant="outlined" />
                           ))}
                         </Stack>
@@ -488,38 +490,29 @@ function CalculationCard({
               )}
 
               {showAppealSection && (
-                <Grid size={{ xs: 12, md: showPaymentsSection && showContactRedirect ? 6 : showPaymentsSection ? 6 : 12 }}>
+                <Grid size={{ xs: 12, md: showCalculatorPaymentsSection && showContactRedirect ? 6 : showCalculatorPaymentsSection ? 6 : 12 }}>
                   <Stack spacing={2}>
-                    <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600 }}>
-                      השגה
-                    </Typography>
-                    <DetailRow label="סטטוס הגשה">
-                      {calc.calculationStatus === 'appeal_filed'
-                        ? calcStatusLabelMap.appeal_filed
-                        : 'לא הוגשה'}
-                    </DetailRow>
+                    {appealCouponCodes.length > 0 && (
+                      <Box>
+                        <Typography
+                          variant="subtitle2"
+                          color="text.secondary"
+                          sx={{ fontWeight: 600, mb: 1 }}
+                        >
+                          קופון — השגה
+                        </Typography>
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                          {appealCouponCodes.map((code) => (
+                            <Chip key={code} label={code} size="small" variant="outlined" />
+                          ))}
+                        </Stack>
+                      </Box>
+                    )}
                     <PaymentTransactionRows
                       label="סליקה — השגה"
                       transactions={appealTransactions}
                       orders={appealOrders}
                     />
-                    {appealDocument && (
-                      <>
-                        <DetailRow label="מסמך השגה">
-                          <Link href={appealDocument.url} target="_blank" rel="noopener noreferrer">
-                            צפייה במסמך
-                          </Link>
-                        </DetailRow>
-                        <DetailRow label="נוצר בתאריך">
-                          {formatPaymentDate(appealDocument.generatedAt)}
-                        </DetailRow>
-                        {appealDocument.sentAt && (
-                          <DetailRow label="נשלח בתאריך">
-                            {formatPaymentDate(appealDocument.sentAt)}
-                          </DetailRow>
-                        )}
-                      </>
-                    )}
                   </Stack>
                 </Grid>
               )}
@@ -638,7 +631,15 @@ function ExpandableRow({
               label={abandonmentLabelMap[latestCalc.abandonmentStage] || latestCalc.abandonmentStage}
               size="small"
               variant="outlined"
-              color={latestCalc.abandonmentStage === 'completed' ? 'success' : 'default'}
+              color={
+                latestCalc.abandonmentStage === 'completed'
+                  ? 'success'
+                  : latestCalc.abandonmentStage === 'appeal'
+                    ? 'warning'
+                    : latestCalc.abandonmentStage === 'results_display'
+                      ? 'info'
+                      : 'default'
+              }
             />
           ) : (
             <Typography variant="body2" color="text.disabled">
@@ -743,18 +744,7 @@ function ExpandableRow({
                   }}
                 >
                   {lead.calculations.map((calc, idx) => (
-                    <CalculationCard
-                      key={idx}
-                      calc={calc}
-                      index={idx}
-                      appealDocument={
-                        getCalculationPaymentStatus(calc) === 'appeal_paid' ||
-                        calc.calculationStatus === 'appeal_filed' ||
-                        calc.paymentOrders.some((o) => o.product === 'appeal')
-                          ? lead.appealDocument
-                          : undefined
-                      }
-                    />
+                    <CalculationCard key={idx} calc={calc} index={idx} />
                   ))}
                 </Box>
 
