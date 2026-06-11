@@ -1,3 +1,4 @@
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import SystemConfig from '@/lib/models/SystemConfig';
@@ -60,6 +61,9 @@ export async function PUT(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    revalidateTag('system-config');
+    revalidatePath('/calculator');
 
     return NextResponse.json(updatedConfig, { status: 200 });
   } catch (error) {

@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
@@ -104,6 +105,8 @@ export async function PUT(
       );
     }
 
+    revalidatePath('/blog', 'layout');
+
     return NextResponse.json(updatedPost, { status: 200 });
   } catch (error) {
     console.error('Error updating post:', error);
@@ -166,6 +169,8 @@ export async function DELETE(
         { status: 404 }
       );
     }
+
+    revalidatePath('/blog', 'layout');
 
     return NextResponse.json(
       { success: true, message: 'Post deleted successfully' },

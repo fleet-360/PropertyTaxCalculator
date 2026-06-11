@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
@@ -83,6 +84,8 @@ export async function POST(
 
     // Create the duplicate post
     const newPost = await Post.create(postData);
+
+    revalidatePath('/blog', 'layout');
 
     return NextResponse.json(newPost, { status: 201 });
   } catch (error) {
