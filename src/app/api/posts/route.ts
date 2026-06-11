@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
@@ -123,6 +124,8 @@ export async function POST(request: NextRequest) {
     }
 
     const post = await Post.create(body);
+
+    revalidatePath('/blog', 'layout');
 
     return NextResponse.json(post, { status: 201 });
   } catch (error) {
