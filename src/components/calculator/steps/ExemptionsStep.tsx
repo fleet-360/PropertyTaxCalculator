@@ -93,7 +93,7 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
   const applicableAreaTypeDiscounts = useMemo(() => {
     const type = state.propertyType;
     return (cityData?.areaTypeDiscounts ?? []).filter(
-      (d) =>
+      (d:any) =>
         !d.applicableTo ||
         d.applicableTo === "both" ||
         d.applicableTo === type,
@@ -119,7 +119,7 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
   useEffect(() => {
     if (!hasAreaTypeDiscounts) return;
     if (state.additionalAreas?.length > 0) return;
-    const initial = applicableAreaTypeDiscounts.map((d) => ({
+    const initial = applicableAreaTypeDiscounts.map((d:any) => ({
       areaType: d.areaType,
       areaSqm: 0,
     }));
@@ -173,11 +173,11 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
     const base =
       state.additionalAreas?.length === discounts.length
         ? state.additionalAreas
-        : discounts.map((d, i) => ({
+        : discounts.map((d:any, i:any) => ({
             areaType: d.areaType,
             areaSqm: state.additionalAreas?.[i]?.areaSqm ?? 0,
           }));
-    const next = base.map((a, i) =>
+    const next = base.map((a:any, i:any) =>
       i === index ? { ...a, areaSqm: value } : a,
     );
     dispatch({ type: "UPDATE_FIELD", field: "additionalAreas", value: next });
@@ -381,7 +381,7 @@ export default function ExemptionsStep({ state, dispatch, sx }: StepProps) {
             <Typography sx={wizardSectionTitleSx}>שטחים נוספים</Typography>
           </Box>
           <Box sx={additionalAreaFieldsGridSx}>
-            {applicableAreaTypeDiscounts.map((d, idx) => {
+            {applicableAreaTypeDiscounts.map((d:any, idx:any) => {
               const current = state.additionalAreas?.find(
                 (a) => a.areaType === d.areaType,
               );
